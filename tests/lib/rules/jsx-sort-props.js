@@ -13,10 +13,9 @@ const rule = require('../../../lib/rules/jsx-sort-props');
 const RuleTester = require('eslint').RuleTester;
 
 const parserOptions = {
-  ecmaVersion: 8,
+  ecmaVersion: 2018,
   sourceType: 'module',
   ecmaFeatures: {
-    experimentalObjectRestSpread: true,
     jsx: true
   }
 };
@@ -89,6 +88,10 @@ const reservedFirstWithNoSortAlphabeticallyArgs = [{
   noSortAlphabetically: true,
   reservedFirst: true
 }];
+const reservedFirstWithShorthandLast = [{
+  reservedFirst: true,
+  shorthandLast: true
+}];
 const reservedFirstAsEmptyArrayArgs = [{
   reservedFirst: []
 }];
@@ -150,6 +153,10 @@ ruleTester.run('jsx-sort-props', rule, {
     {
       code: '<div ref="r" dangerouslySetInnerHTML={{__html: "EPR"}} key={0} children={<App />} b a c />',
       options: reservedFirstWithNoSortAlphabeticallyArgs
+    },
+    {
+      code: '<App key="key" c="c" b />',
+      options: reservedFirstWithShorthandLast
     }
   ],
   invalid: [
@@ -201,52 +208,72 @@ ruleTester.run('jsx-sort-props', rule, {
       errors: 2
     },
     {
-      code: [
-        '<App',
-        'a={true}',
-        'z',
-        'r',
-        '_onClick={function(){}}',
-        'onHandle={function(){}}',
-        '{...this.props}',
-        'b={false}',
-        '{...otherProps}>',
-        '  {test}',
-        '</App>'
-      ].join('\n'),
-      output: [
-        '<App',
-        '_onClick={function(){}}',
-        'a={true}',
-        'onHandle={function(){}}',
-        'r',
-        'z',
-        '{...this.props}',
-        'b={false}',
-        '{...otherProps}>',
-        '  {test}',
-        '</App>'
-      ].join('\n'),
+      code: `
+      <App
+        a={true}
+        z
+        r
+        _onClick={function(){}}
+        onHandle={function(){}}
+        {...this.props}
+        b={false}
+        {...otherProps}
+      >
+        {test}
+      </App>
+    `,
+      output: `
+      <App
+        _onClick={function(){}}
+        a={true}
+        onHandle={function(){}}
+        r
+        z
+        {...this.props}
+        b={false}
+        {...otherProps}
+      >
+        {test}
+      </App>
+    `,
       errors: 3
+    },
+    {
+      code: '<App key="key" b c="c" />',
+      errors: [expectedShorthandLastError],
+      options: reservedFirstWithShorthandLast
+    },
+    {
+      code: '<App ref="ref" key="key" isShorthand veryLastAttribute="yes" />',
+      errors: [expectedError, expectedShorthandLastError],
+      options: reservedFirstWithShorthandLast
     },
     {
       code: '<App a z onFoo onBar />;',
       errors: [expectedError],
       options: callbacksLastArgs
-    }, {
+    },
+    {
       code: '<App a onBar onFoo z />;',
       errors: [expectedCallbackError],
       options: callbacksLastArgs
-    }, {
+    },
+    {
       code: '<App a="a" b />;',
       errors: [expectedShorthandFirstError],
       options: shorthandFirstArgs
     },
-    {code: '<App z x a="a" />;', errors: [expectedError], options: shorthandFirstArgs}, {
+    {
+      code: '<App z x a="a" />;',
+      errors: [expectedError],
+      options: shorthandFirstArgs
+    },
+    {
       code: '<App b a="a" />;',
       errors: [expectedShorthandLastError],
       options: shorthandLastArgs
-    }, {
+    },
+    {
       code: '<App a="a" onBar onFoo z x />;',
       errors: [shorthandAndCallbackLastArgs],
       options: shorthandLastArgs
@@ -269,9 +296,22 @@ ruleTester.run('jsx-sort-props', rule, {
       errors: [expectedError]
     },
     {
-      code: '<App dangerouslySetInnerHTML={{__html: "EPR"}} key={2} b />',
+      code: '<App key={2} b a />',
       options: reservedFirstAsBooleanArgs,
-      errors: [expectedReservedFirstError]
+      output: '<App key={2} a b />',
+      errors: [expectedError]
+    },
+    {
+      code: '<App b a />',
+      options: reservedFirstAsBooleanArgs,
+      output: '<App a b />',
+      errors: [expectedError]
+    },
+    {
+      code: '<App dangerouslySetInnerHTML={{__html: "EPR"}} e key={2} b />',
+      options: reservedFirstAsBooleanArgs,
+      output: '<App key={2} b dangerouslySetInnerHTML={{__html: "EPR"}} e />',
+      errors: [expectedReservedFirstError, expectedError]
     },
     {
       code: '<App key={3} children={<App />} />',

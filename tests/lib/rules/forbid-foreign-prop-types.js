@@ -11,10 +11,9 @@ const rule = require('../../../lib/rules/forbid-foreign-prop-types');
 const RuleTester = require('eslint').RuleTester;
 
 const parserOptions = {
-  ecmaVersion: 8,
+  ecmaVersion: 2018,
   sourceType: 'module',
   ecmaFeatures: {
-    experimentalObjectRestSpread: true,
     jsx: true
   }
 };
@@ -25,7 +24,7 @@ require('babel-eslint');
 // Tests
 // -----------------------------------------------------------------------------
 
-const ERROR_MESSAGE = 'Using another component\'s propTypes is forbidden';
+const ERROR_MESSAGE = 'Using propTypes from another component is not safe because they may be removed in production builds';
 
 const ruleTester = new RuleTester({parserOptions});
 ruleTester.run('forbid-foreign-prop-types', rule, {
@@ -50,61 +49,76 @@ ruleTester.run('forbid-foreign-prop-types', rule, {
     code: 'Foo["propTypes"] = propTypes'
   }, {
     code: 'const propTypes = "bar"; Foo[propTypes];'
+  },
+  {
+    code: `
+      const Message = (props) => (<div>{props.message}</div>);
+      Message.propTypes = {
+        message: PropTypes.string
+      };
+      const Hello = (props) => (<Message>Hello {props.name}</Message>);
+      Hello.propTypes = {
+        name: Message.propTypes.message
+      };
+    `,
+    options: [{
+      allowInPropTypes: true
+    }]
   }],
 
   invalid: [{
-    code: [
-      'var Foo = createReactClass({',
-      '  propTypes: Bar.propTypes,',
-      '  render: function() {',
-      '    return <Foo className="bar" />;',
-      '  }',
-      '});'
-    ].join('\n'),
+    code: `
+      var Foo = createReactClass({
+        propTypes: Bar.propTypes,
+        render: function() {
+          return <Foo className="bar" />;
+        }
+      });
+    `,
     errors: [{
       message: ERROR_MESSAGE,
       type: 'Identifier'
     }]
   },
   {
-    code: [
-      'var Foo = createReactClass({',
-      '  propTypes: Bar["propTypes"],',
-      '  render: function() {',
-      '    return <Foo className="bar" />;',
-      '  }',
-      '});'
-    ].join('\n'),
+    code: `
+      var Foo = createReactClass({
+        propTypes: Bar["propTypes"],
+        render: function() {
+          return <Foo className="bar" />;
+        }
+      });
+    `,
     errors: [{
       message: ERROR_MESSAGE,
       type: 'Literal'
     }]
   },
   {
-    code: [
-      'var { propTypes } = SomeComponent',
-      'var Foo = createReactClass({',
-      '  propTypes,',
-      '  render: function() {',
-      '    return <Foo className="bar" />;',
-      '  }',
-      '});'
-    ].join('\n'),
+    code: `
+      var { propTypes } = SomeComponent
+      var Foo = createReactClass({
+        propTypes,
+        render: function() {
+          return <Foo className="bar" />;
+        }
+      });
+    `,
     errors: [{
       message: ERROR_MESSAGE,
       type: 'Property'
     }]
   },
   {
-    code: [
-      'var { propTypes: things, ...foo } = SomeComponent',
-      'var Foo = createReactClass({',
-      '  propTypes,',
-      '  render: function() {',
-      '    return <Foo className="bar" />;',
-      '  }',
-      '});'
-    ].join('\n'),
+    code: `
+      var { propTypes: things, ...foo } = SomeComponent
+      var Foo = createReactClass({
+        propTypes,
+        render: function() {
+          return <Foo className="bar" />;
+        }
+      });
+    `,
     parser: 'babel-eslint',
     errors: [{
       message: ERROR_MESSAGE,
@@ -112,13 +126,13 @@ ruleTester.run('forbid-foreign-prop-types', rule, {
     }]
   },
   {
-    code: [
-      'class MyComponent extends React.Component {',
-      '  static fooBar = {',
-      '    baz: Qux.propTypes.baz',
-      '  };',
-      '}'
-    ].join('\n'),
+    code: `
+      class MyComponent extends React.Component {
+        static fooBar = {
+          baz: Qux.propTypes.baz
+        };
+      }
+    `,
     parser: 'babel-eslint',
     errors: [{
       message: ERROR_MESSAGE,
@@ -126,18 +140,37 @@ ruleTester.run('forbid-foreign-prop-types', rule, {
     }]
   },
   {
-    code: [
-      'var { propTypes: typesOfProps } = SomeComponent',
-      'var Foo = createReactClass({',
-      '  propTypes: typesOfProps,',
-      '  render: function() {',
-      '    return <Foo className="bar" />;',
-      '  }',
-      '});'
-    ].join('\n'),
+    code: `
+      var { propTypes: typesOfProps } = SomeComponent
+      var Foo = createReactClass({
+        propTypes: typesOfProps,
+        render: function() {
+          return <Foo className="bar" />;
+        }
+      });
+    `,
     errors: [{
       message: ERROR_MESSAGE,
       type: 'Property'
+    }]
+  },
+  {
+    code: `
+      const Message = (props) => (<div>{props.message}</div>);
+      Message.propTypes = {
+        message: PropTypes.string
+      };
+      const Hello = (props) => (<Message>Hello {props.name}</Message>);
+      Hello.propTypes = {
+        name: Message.propTypes.message
+      };
+    `,
+    options: [{
+      allowInPropTypes: false
+    }],
+    errors: [{
+      message: ERROR_MESSAGE,
+      type: 'Identifier'
     }]
   }]
 });

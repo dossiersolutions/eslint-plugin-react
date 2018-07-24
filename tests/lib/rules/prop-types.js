@@ -12,10 +12,9 @@ const rule = require('../../../lib/rules/prop-types');
 const RuleTester = require('eslint').RuleTester;
 
 const parserOptions = {
-  ecmaVersion: 8,
+  ecmaVersion: 2018,
   sourceType: 'module',
   ecmaFeatures: {
-    experimentalObjectRestSpread: true,
     jsx: true
   }
 };
@@ -904,6 +903,14 @@ ruleTester.run('prop-types', rule, {
       parser: 'babel-eslint'
     }, {
       code: [
+        'type Props = {\'data-action\': string};',
+        'function Button({ \'data-action\': dataAction }: Props) {',
+        '  return <div data-action={dataAction} />;',
+        '}'
+      ].join('\n'),
+      parser: 'babel-eslint'
+    }, {
+      code: [
         'import type Props from "fake";',
         'class Hello extends React.Component {',
         '  props: Props;',
@@ -1127,6 +1134,39 @@ ruleTester.run('prop-types', rule, {
         '    return name;',
         '  }',
         '}'
+      ].join('\n'),
+      parser: 'babel-eslint'
+    }, {
+      code: [
+        'type PropsUnionA = {',
+        '  a: string,',
+        '  b?: void,',
+        '};',
+        'type PropsUnionB = {',
+        '  a?: void,',
+        '  b: string,',
+        '};',
+        'type Props = {',
+        '  name: string,',
+        '} & (PropsUnionA | PropsUnionB);',
+        'class Hello extends React.Component {',
+        '  props: Props;',
+        '  render() {',
+        '    const {name} = this.props;',
+        '    return name;',
+        '  }',
+        '}'
+      ].join('\n'),
+      parser: 'babel-eslint'
+    }, {
+      code: [
+        'import type { FieldProps } from "redux-form"',
+        '',
+        'type Props = {',
+        'label: string,',
+        '  type: string,',
+        '  options: Array<SelectOption>',
+        '} & FieldProps'
       ].join('\n'),
       parser: 'babel-eslint'
     }, {
@@ -1550,6 +1590,20 @@ ruleTester.run('prop-types', rule, {
       parser: 'babel-eslint'
     }, {
       code: [
+        'type Note = {text: string, children?: Note[]};',
+        'type Props = {',
+        '  notes: Note[];',
+        '};',
+        'class Hello extends React.Component<void, Props, void> {',
+        '  render () {',
+        '    return <div>Hello {this.props.notes[0].text}</div>;',
+        '  }',
+        '}'
+      ].join('\n'),
+      settings: {react: {flowVersion: '0.52'}},
+      parser: 'babel-eslint'
+    }, {
+      code: [
         'import type Props from "fake";',
         'class Hello extends React.Component<void, Props, void> {',
         '  render () {',
@@ -1677,7 +1731,7 @@ ruleTester.run('prop-types', rule, {
 
         class Bar extends React.Component {
           props: Props;
-          
+
           render() {
             return <div>{this.props.foo} - {this.props.bar}</div>
           }
@@ -1693,7 +1747,7 @@ ruleTester.run('prop-types', rule, {
 
         class Bar extends React.Component {
           props: Props & PropsC;
-          
+
           render() {
             return <div>{this.props.foo} - {this.props.bar} - {this.props.zap}</div>
           }
@@ -1709,7 +1763,7 @@ ruleTester.run('prop-types', rule, {
 
         class Bar extends React.Component {
           props: Props & PropsC;
-          
+
           render() {
             return <div>{this.props.foo} - {this.props.bar} - {this.props.zap}</div>
           }
@@ -1721,12 +1775,12 @@ ruleTester.run('prop-types', rule, {
         type PropsA = { bar: string };
         type PropsB = { zap: string };
         type Props = PropsA & {
-          baz: string 
+          baz: string
         };
 
         class Bar extends React.Component {
           props: Props & PropsB;
-          
+
           render() {
             return <div>{this.props.bar} - {this.props.zap} - {this.props.baz}</div>
           }
@@ -1738,12 +1792,12 @@ ruleTester.run('prop-types', rule, {
         type PropsA = { bar: string };
         type PropsB = { zap: string };
         type Props =  {
-          baz: string 
+          baz: string
         } & PropsA;
 
         class Bar extends React.Component {
           props: Props & PropsB;
-          
+
           render() {
             return <div>{this.props.bar} - {this.props.zap} - {this.props.baz}</div>
           }
@@ -1824,6 +1878,25 @@ ruleTester.run('prop-types', rule, {
         a: React.PropTypes.string,
         ...SharedPropTypes // eslint-disable-line object-shorthand
       };
+    `,
+      parser: 'babel-eslint'
+    },
+    {
+      code: `
+      // @flow
+      import * as React from 'react'
+
+      type Props = {}
+
+      const func = <OP: *>(arg) => arg
+
+      const hoc = <OP>() => () => {
+        class Inner extends React.Component<Props & OP> {
+          render() {
+            return <div />
+          }
+        }
+      }
     `,
       parser: 'babel-eslint'
     }
@@ -3064,6 +3137,87 @@ ruleTester.run('prop-types', rule, {
       ]
     }, {
       code: [
+        'class Hello extends Component {',
+        '  static propTypes = {',
+        '    bar: PropTypes.func',
+        '  }',
+        '  componentWillReceiveProps({foo}) {',
+        '    if (foo) {',
+        '      return;',
+        '    }',
+        '  }',
+        '  render() {',
+        '    return <div bar={this.props.bar} />;',
+        '  }',
+        '}'
+      ].join('\n'),
+      parser: 'babel-eslint',
+      errors: [
+        {message: '\'foo\' is missing in props validation'}
+      ]
+    }, {
+      code: [
+        'class Hello extends Component {',
+        '  componentWillReceiveProps({foo}) {',
+        '    if (foo) {',
+        '      return;',
+        '    }',
+        '  }',
+        '  render() {',
+        '    return <div bar={this.props.bar} />;',
+        '  }',
+        '}',
+        'Hello.propTypes = {',
+        '    bar: PropTypes.func',
+        '  }'
+      ].join('\n'),
+      errors: [
+        {message: '\'foo\' is missing in props validation'}
+      ]
+    }, {
+      code: [
+        'class Hello extends Component {',
+        '  static propTypes = forbidExtraProps({',
+        '    bar: PropTypes.func',
+        '  })',
+        '  shouldComponentUpdate(nextProps) {',
+        '    if (nextProps.foo) {',
+        '      return;',
+        '    }',
+        '  }',
+        '  render() {',
+        '    return <div bar={this.props.bar} />;',
+        '  }',
+        '}'
+      ].join('\n'),
+      parser: 'babel-eslint',
+      settings: Object.assign({}, settings, {
+        propWrapperFunctions: ['forbidExtraProps']
+      }),
+      errors: [
+        {message: '\'foo\' is missing in props validation'}
+      ]
+    }, {
+      code: [
+        'class Hello extends Component {',
+        '  shouldComponentUpdate({foo}) {',
+        '    if (foo) {',
+        '      return;',
+        '    }',
+        '  }',
+        '  render() {',
+        '    return <div bar={this.props.bar} />;',
+        '  }',
+        '}',
+        'Hello.propTypes = {',
+        '    bar: PropTypes.func',
+        '  }'
+      ].join('\n'),
+      errors: [
+        {message: '\'foo\' is missing in props validation'}
+      ]
+    }, {
+      code: [
         'class Hello extends React.Component {',
         '  static propTypes() {',
         '    return {',
@@ -3431,7 +3585,7 @@ ruleTester.run('prop-types', rule, {
 
         class MyComponent extends React.Component {
           props: Props;
-          
+
           render() {
             return <div>{this.props.foo} - {this.props.bar} - {this.props.fooBar}</div>
           }
@@ -3450,7 +3604,7 @@ ruleTester.run('prop-types', rule, {
 
         class Bar extends React.Component {
           props: Props & PropsC;
-          
+
           render() {
             return <div>{this.props.foo} - {this.props.bar} - {this.props.zap} - {this.props.fooBar}</div>
           }
@@ -3465,12 +3619,12 @@ ruleTester.run('prop-types', rule, {
         type PropsB = { bar: string };
         type PropsC = { zap: string };
         type Props = PropsB & {
-          baz: string 
+          baz: string
         };
 
         class Bar extends React.Component {
           props: Props & PropsC;
-          
+
           render() {
             return <div>{this.props.bar} - {this.props.baz} - {this.props.fooBar}</div>
           }
@@ -3485,12 +3639,12 @@ ruleTester.run('prop-types', rule, {
         type PropsB = { bar: string };
         type PropsC = { zap: string };
         type Props = {
-          baz: string 
+          baz: string
         } & PropsB;
 
         class Bar extends React.Component {
           props: Props & PropsC;
-          
+
           render() {
             return <div>{this.props.bar} - {this.props.baz} - {this.props.fooBar}</div>
           }
@@ -3498,6 +3652,38 @@ ruleTester.run('prop-types', rule, {
       `,
       errors: [{
         message: '\'fooBar\' is missing in props validation'
+      }],
+      parser: 'babel-eslint'
+    },
+    {
+      code: `
+      type ReduxState = {bar: number};
+
+      const mapStateToProps = (state: ReduxState) => ({
+          foo: state.bar,
+      });
+      // utility to extract the return type from a function
+      type ExtractReturn_<R, Fn: (...args: any[]) => R> = R;
+      type ExtractReturn<T> = ExtractReturn_<*, T>;
+
+      type PropsFromRedux = ExtractReturn<typeof mapStateToProps>;
+
+      type OwnProps = {
+          baz: string,
+      }
+
+      // I want my Props to be {baz: string, foo: number}
+      type Props = PropsFromRedux & OwnProps;
+
+      const Component = (props: Props) => (
+        <div>
+            {props.baz}
+            {props.bad}
+        </div>
+      );
+    `,
+      errors: [{
+        message: '\'bad\' is missing in props validation'
       }],
       parser: 'babel-eslint'
     }

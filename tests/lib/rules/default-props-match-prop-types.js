@@ -15,10 +15,9 @@ const RuleTester = require('eslint').RuleTester;
 require('babel-eslint');
 
 const parserOptions = {
-  ecmaVersion: 6,
+  ecmaVersion: 2018,
   sourceType: 'module',
   ecmaFeatures: {
-    experimentalObjectRestSpread: true,
     jsx: true
   }
 };
@@ -750,6 +749,19 @@ ruleTester.run('default-props-match-prop-types', rule, {
         'import type ImportedProps from "fake";',
         'type NestedProps = ImportedProps;',
         'type Props = NestedProps;',
+        'function Hello(props: Props) {',
+        '  return <div>Hello {props.name.firstname}</div>;',
+        '}'
+      ].join('\n'),
+      parser: 'babel-eslint'
+    },
+    // don't error when variable is not in scope with intersection
+    {
+      code: [
+        'import type ImportedProps from "fake";',
+        'type Props = ImportedProps & {',
+        '  foo: string',
+        '};',
         'function Hello(props: Props) {',
         '  return <div>Hello {props.name.firstname}</div>;',
         '}'

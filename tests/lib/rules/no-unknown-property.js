@@ -13,10 +13,9 @@ const rule = require('../../../lib/rules/no-unknown-property');
 const RuleTester = require('eslint').RuleTester;
 
 const parserOptions = {
-  ecmaVersion: 8,
+  ecmaVersion: 2018,
   sourceType: 'module',
   ecmaFeatures: {
-    experimentalObjectRestSpread: true,
     jsx: true
   }
 };
@@ -31,6 +30,8 @@ ruleTester.run('no-unknown-property', rule, {
     {code: '<App class="bar" />;'},
     {code: '<App for="bar" />;'},
     {code: '<App accept-charset="bar" />;'},
+    {code: '<meta charset="utf-8" />;'},
+    {code: '<meta charSet="utf-8" />;'},
     {code: '<App http-equiv="bar" />;'},
     {code: '<App xlink:href="bar" />;'},
     {code: '<App clip-path="bar" />;'},
@@ -41,7 +42,9 @@ ruleTester.run('no-unknown-property', rule, {
     {code: '<atom-panel class="foo"></atom-panel>;'}, {
       code: '<div class="bar"></div>;',
       options: [{ignore: ['class']}]
-    }
+    },
+    {code: '<script crossOrigin />'},
+    {code: '<audio crossOrigin />'}
   ],
   invalid: [{
     code: '<div class="bar"></div>;',
@@ -79,5 +82,14 @@ ruleTester.run('no-unknown-property', rule, {
     code: '<rect clip-path="bar" />;',
     output: '<rect clipPath="bar" />;',
     errors: [{message: 'Unknown property \'clip-path\' found, use \'clipPath\' instead'}]
+  }, {
+    code: '<script crossorigin />',
+    errors: [{message: 'Unknown property \'crossorigin\' found, use \'crossOrigin\' instead'}]
+  }, {
+    code: '<div crossorigin />',
+    errors: [{message: 'Unknown property \'crossorigin\' found, use \'crossOrigin\' instead'}]
+  }, {
+    code: '<div crossOrigin />',
+    errors: [{message: 'Invalid property \'crossOrigin\' found on tag \'div\', but it is only allowed on: script, img, video, audio, link'}]
   }]
 });

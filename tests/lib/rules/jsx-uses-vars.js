@@ -15,10 +15,9 @@ const rulePreferConst = require('eslint/lib/rules/prefer-const');
 const RuleTester = eslint.RuleTester;
 
 const parserOptions = {
-  ecmaVersion: 8,
+  ecmaVersion: 2018,
   sourceType: 'module',
   ecmaFeatures: {
-    experimentalObjectRestSpread: true,
     jsx: true
   }
 };
@@ -209,18 +208,18 @@ ruleTester.run('no-unused-vars', ruleNoUnusedVars, {
 ruleTester.run('prefer-const', rulePreferConst, {
   valid: [],
   invalid: [{
-    code: [
-      '/* eslint jsx-uses-vars:1 */',
-      'let App = <div />;',
-      '<App />;'
-    ].join('\n'),
+    code: `
+      /* eslint jsx-uses-vars:1 */
+      let App = <div />;
+      <App />;
+    `,
     errors: [{message: '\'App\' is never reassigned. Use \'const\' instead.'}]
   }, {
-    code: [
-      '/* eslint jsx-uses-vars:1 */',
-      'let filters = \'foo\';',
-      '<div>{filters}</div>;'
-    ].join('\n'),
+    code: `
+      /* eslint jsx-uses-vars:1 */
+      let filters = 'foo';
+      <div>{filters}</div>;
+    `,
     errors: [{message: '\'filters\' is never reassigned. Use \'const\' instead.'}]
   }]
 });

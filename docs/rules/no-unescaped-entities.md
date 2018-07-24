@@ -59,7 +59,7 @@ The following patterns are considered warnings:
 <div> > </div>
 ```
 
-The following patterns are not considered warnings:
+The following patterns are **not** considered warnings:
 
 ```jsx
 <div> &gt; </div>
@@ -67,4 +67,20 @@ The following patterns are not considered warnings:
 
 ```jsx
 <div> {'>'} </div>
+```
+
+## Rule Options
+
+```js
+...
+"react/no-unescaped-entities": [<enabled>, { "forbid": Array<string> }]
+...
+```
+
+### `forbid`
+
+Overwrite the default forbidden entities array `['>', '"', '\'', '}']` with your own:
+
+```js
+"react/no-unescaped-entities": ["error", {"forbid": [">", "}"]}],
 ```

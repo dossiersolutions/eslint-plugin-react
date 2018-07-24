@@ -8,10 +8,9 @@ const rule = require('../../../lib/rules/no-unused-state');
 const RuleTester = require('eslint').RuleTester;
 
 const parserOptions = {
-  ecmaVersion: 6,
+  ecmaVersion: 2018,
   ecmaFeatures: {
-    jsx: true,
-    experimentalObjectRestSpread: true
+    jsx: true
   }
 };
 
@@ -387,6 +386,22 @@ eslintTester.run('no-unused-state', rule, {
           return <SomeComponent foo={foo} />;
         }
       }`,
+    `class NonRenderClassMethodFalseNegativeTest extends React.Component {
+        constructor() {
+          this.state = { foo: 0, bar: 0 };
+        }
+        doSomething() {
+          const { foo } = this.state;
+          return this.state.foo;
+        }
+        doSomethingElse() {
+          const { state: { bar }} = this;
+          return bar;
+        }
+        render() {
+          return <SomeComponent />;
+        }
+      }`,
     {
       code: `class TypeCastExpressionSpreadFalseNegativeTest extends React.Component {
         constructor() {
@@ -394,6 +409,127 @@ eslintTester.run('no-unused-state', rule, {
         }
         render() {
           return <SomeComponent {...(this.state: any)} />;
+        }
+      }`,
+      parser: 'babel-eslint'
+    },
+    {
+      code: `class ArrowFunctionClassMethodDestructuringFalseNegativeTest extends React.Component {
+        constructor() {
+          this.state = { foo: 0 };
+        }
+
+        doSomething = () => {
+          const { state: { foo } } = this;
+
+          return foo;
+        }
+
+        render() {
+          return <SomeComponent />;
+        }
+      }`,
+      parser: 'babel-eslint'
+    },
+    {
+      code: `class ArrowFunctionClassMethodWithClassPropertyTransformFalseNegativeTest extends React.Component {
+        state = { foo: 0 };
+
+        doSomething = () => {
+          const { state:{ foo } } = this;
+
+          return foo;
+        }
+
+        render() {
+          return <SomeComponent />;
+        }
+      }`,
+      parser: 'babel-eslint'
+    },
+    {
+      code: `class ArrowFunctionClassMethodDeepDestructuringFalseNegativeTest extends React.Component {
+        state = { foo: { bar: 0 } };
+
+        doSomething = () => {
+          const { state: { foo: { bar }}} = this;
+
+          return bar;
+        }
+
+        render() {
+          return <SomeComponent />;
+        }
+      }`,
+      parser: 'babel-eslint'
+    },
+    {
+      code: `class ArrowFunctionClassMethodDestructuringAssignmentFalseNegativeTest extends React.Component {
+        state = { foo: 0 };
+
+        doSomething = () => {
+          const { state: { foo: bar }} = this;
+
+          return bar;
+        }
+
+        render() {
+          return <SomeComponent />;
+        }
+      }`,
+      parser: 'babel-eslint'
+    },
+    {
+      code: `class ThisStateAsAnObject extends React.Component {
+        state = {
+          active: true
+        };
+
+        render() {
+          return <div className={classNames('overflowEdgeIndicator', className, this.state)} />;
+        }
+      }`,
+      parser: 'babel-eslint'
+    },
+    {
+      code: `class ESLintExample extends Component {
+        constructor(props) {
+          super(props);
+          this.state = {
+            id: 123,
+          };
+        }
+        static getDerivedStateFromProps(nextProps, prevState) {
+          if (prevState.id === nextProps.id) {
+            return {
+              selected: true,
+            };
+          }
+          return null;
+        }
+        render() {
+          return (
+            <h1>{this.state.selected ? 'Selected' : 'Not selected'}</h1>
+          );
+        }
+      }`,
+      parser: 'babel-eslint'
+    },
+    {
+      code: `class ESLintExample extends Component {
+        constructor(props) {
+          super(props);
+          this.state = {
+            id: 123,
+          };
+        }
+        shouldComponentUpdate(nextProps, nextState) {
+          return nextState.id === nextProps.id;
+        }
+        render() {
+          return (
+            <h1>{this.state.selected ? 'Selected' : 'Not selected'}</h1>
+          );
         }
       }`,
       parser: 'babel-eslint'
@@ -641,6 +777,21 @@ eslintTester.run('no-unused-state', rule, {
           }
         }`,
       errors: getErrorMessages(['foo'])
+    },
+    {
+      code: `class UnusedStateArrowFunctionMethodTest extends React.Component {
+          constructor() {
+            this.state = { foo: 0 };
+          }
+          doSomething = () => {
+            return null;
+          }
+          render() {
+            return <SomeComponent />;
+          }
+        }`,
+      errors: getErrorMessages(['foo']),
+      parser: 'babel-eslint'
     },
     {
       code: `class TypeCastExpressionTest extends React.Component {

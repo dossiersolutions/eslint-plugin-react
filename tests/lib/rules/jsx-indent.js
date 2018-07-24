@@ -12,10 +12,9 @@ const rule = require('../../../lib/rules/jsx-indent');
 const RuleTester = require('eslint').RuleTester;
 
 const parserOptions = {
-  ecmaVersion: 8,
+  ecmaVersion: 2018,
   sourceType: 'module',
   ecmaFeatures: {
-    experimentalObjectRestSpread: true,
     jsx: true
   }
 };
@@ -409,13 +408,27 @@ ruleTester.run('jsx-indent', rule, {
       '  <span>',
       '    {condition ?',
       '      <Thing',
-      '        foo={super}',
+      '        foo={superFoo}',
       '      /> :',
       '      <Thing/>',
       '    }',
       '  </span>',
       '}'
     ].join('\n'),
+    options: [2]
+  }, {
+    code: `
+      class Test extends React.Component {
+        render() {
+          return (
+            <div>
+              <div />
+              <div />
+            </div>
+          );
+        }
+      }
+    `,
     options: [2]
   }],
 
@@ -962,6 +975,17 @@ ruleTester.run('jsx-indent', rule, {
     ].join('\n'),
     errors: [
       {message: 'Expected indentation of 4 space characters but found 0.'}
+    ]
+  }, {
+    code: [
+      '<p>',
+      '    <div>',
+      '        <SelfClosingTag />Text',
+      '  </div>',
+      '</p>'
+    ].join('\n'),
+    errors: [
+      {message: 'Expected indentation of 4 space characters but found 2.'}
     ]
   }]
 });

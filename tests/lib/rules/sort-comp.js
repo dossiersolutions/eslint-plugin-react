@@ -12,10 +12,9 @@ const rule = require('../../../lib/rules/sort-comp');
 const RuleTester = require('eslint').RuleTester;
 
 const parserOptions = {
-  ecmaVersion: 8,
+  ecmaVersion: 2018,
   sourceType: 'module',
   ecmaFeatures: {
-    experimentalObjectRestSpread: true,
     jsx: true
   }
 };
@@ -30,8 +29,8 @@ const ruleTester = new RuleTester({parserOptions});
 ruleTester.run('sort-comp', rule, {
 
   valid: [{
-    // Must validate a full class
     code: [
+      '// Must validate a full class',
       'var Hello = createReactClass({',
       '  displayName : \'\',',
       '  propTypes: {},',
@@ -55,8 +54,8 @@ ruleTester.run('sort-comp', rule, {
       '});'
     ].join('\n')
   }, {
-    // Must validate a class with missing groups
     code: [
+      '// Must validate a class with missing groups',
       'var Hello = createReactClass({',
       '  render: function() {',
       '    return <div>Hello</div>;',
@@ -64,8 +63,8 @@ ruleTester.run('sort-comp', rule, {
       '});'
     ].join('\n')
   }, {
-    // Must put a custom method in 'everything-else'
     code: [
+      '// Must put a custom method in \'everything-else\'',
       'var Hello = createReactClass({',
       '  onClick: function() {},',
       '  render: function() {',
@@ -74,8 +73,8 @@ ruleTester.run('sort-comp', rule, {
       '});'
     ].join('\n')
   }, {
-    // Must allow us to re-order the groups
     code: [
+      '// Must allow us to re-order the groups',
       'var Hello = createReactClass({',
       '  displayName : \'Hello\',',
       '  render: function() {',
@@ -92,8 +91,79 @@ ruleTester.run('sort-comp', rule, {
       ]
     }]
   }, {
-    // Must allow us to create a RegExp-based group
     code: [
+      '// Must validate a full React 16.3 createReactClass class',
+      'var Hello = createReactClass({',
+      '  displayName : \'\',',
+      '  propTypes: {},',
+      '  contextTypes: {},',
+      '  childContextTypes: {},',
+      '  mixins: [],',
+      '  statics: {},',
+      '  getDefaultProps: function() {},',
+      '  getInitialState: function() {},',
+      '  getChildContext: function() {},',
+      '  UNSAFE_componentWillMount: function() {},',
+      '  componentDidMount: function() {},',
+      '  UNSAFE_componentWillReceiveProps: function() {},',
+      '  shouldComponentUpdate: function() {},',
+      '  UNSAFE_componentWillUpdate: function() {},',
+      '  getSnapshotBeforeUpdate: function() {},',
+      '  componentDidUpdate: function() {},',
+      '  componentDidCatch: function() {},',
+      '  componentWillUnmount: function() {},',
+      '  render: function() {',
+      '    return <div>Hello</div>;',
+      '  }',
+      '});'
+    ].join('\n')
+  }, {
+    code: [
+      '// Must validate React 16.3 lifecycle methods with the default parser',
+      'class Hello extends React.Component {',
+      '  constructor() {}',
+      '  static getDerivedStateFromProps() {}',
+      '  UNSAFE_componentWillMount() {}',
+      '  componentDidMount() {}',
+      '  UNSAFE_componentWillReceiveProps() {}',
+      '  shouldComponentUpdate() {}',
+      '  UNSAFE_componentWillUpdate() {}',
+      '  getSnapshotBeforeUpdate() {}',
+      '  componentDidUpdate() {}',
+      '  componentDidCatch() {}',
+      '  componentWillUnmount() {}',
+      '  testInstanceMethod() {}',
+      '  render() { return (<div>Hello</div>); }',
+      '}'
+    ].join('\n')
+  }, {
+    code: [
+      '// Must validate a full React 16.3 ES6 class',
+      'class Hello extends React.Component {',
+      '  static displayName = \'\'',
+      '  static propTypes = {}',
+      '  static defaultProps = {}',
+      '  constructor() {}',
+      '  state = {}',
+      '  static getDerivedStateFromProps = () => {}',
+      '  UNSAFE_componentWillMount = () => {}',
+      '  componentDidMount = () => {}',
+      '  UNSAFE_componentWillReceiveProps = () => {}',
+      '  shouldComponentUpdate = () => {}',
+      '  UNSAFE_componentWillUpdate = () => {}',
+      '  getSnapshotBeforeUpdate = () => {}',
+      '  componentDidUpdate = () => {}',
+      '  componentDidCatch = () => {}',
+      '  componentWillUnmount = () => {}',
+      '  testArrowMethod = () => {}',
+      '  testInstanceMethod() {}',
+      '  render = () => (<div>Hello</div>)',
+      '}'
+    ].join('\n'),
+    parser: 'babel-eslint'
+  }, {
+    code: [
+      '// Must allow us to create a RegExp-based group',
       'class Hello extends React.Component {',
       '  customHandler() {}',
       '  render() {',
@@ -111,8 +181,8 @@ ruleTester.run('sort-comp', rule, {
       ]
     }]
   }, {
-    // Must allow us to create a named group
     code: [
+      '// Must allow us to create a named group',
       'class Hello extends React.Component {',
       '  customHandler() {}',
       '  render() {',
@@ -135,8 +205,8 @@ ruleTester.run('sort-comp', rule, {
       }
     }]
   }, {
-    // Must allow a method to be in different places if it's matches multiple patterns
     code: [
+      '// Must allow a method to be in different places if it\'s matches multiple patterns',
       'class Hello extends React.Component {',
       '  render() {',
       '    return <div>Hello</div>;',
@@ -152,8 +222,8 @@ ruleTester.run('sort-comp', rule, {
       ]
     }]
   }, {
-    // Must allow us to use 'constructor' as a method name
     code: [
+      '// Must allow us to use \'constructor\' as a method name',
       'class Hello extends React.Component {',
       '  constructor() {}',
       '  displayName() {}',
@@ -171,24 +241,24 @@ ruleTester.run('sort-comp', rule, {
       ]
     }]
   }, {
-    // Must ignore stateless components
     code: [
+      '// Must ignore stateless components',
       'function Hello(props) {',
       '  return <div>Hello {props.name}</div>',
       '}'
     ].join('\n'),
     parser: 'babel-eslint'
   }, {
-    // Must ignore stateless components (arrow function with explicit return)
     code: [
+      '// Must ignore stateless components (arrow function with explicit return)',
       'var Hello = props => (',
       '  <div>Hello {props.name}</div>',
       ')'
     ].join('\n'),
     parser: 'babel-eslint'
   }, {
-    // Must ignore spread operator
     code: [
+      '// Must ignore spread operator',
       'var Hello = createReactClass({',
       '  ...proto,',
       '  render: function() {',
@@ -198,8 +268,8 @@ ruleTester.run('sort-comp', rule, {
     ].join('\n'),
     parser: 'babel-eslint'
   }, {
-    // Type Annotations should be first
     code: [
+      '// Type Annotations should be first',
       'class Hello extends React.Component {',
       '  props: { text: string };',
       '  constructor() {}',
@@ -219,8 +289,8 @@ ruleTester.run('sort-comp', rule, {
       ]
     }]
   }, {
-    // Properties with Type Annotations should not be at the top
     code: [
+      '// Properties with Type Annotations should not be at the top',
       'class Hello extends React.Component {',
       '  props: { text: string };',
       '  constructor() {}',
@@ -241,8 +311,8 @@ ruleTester.run('sort-comp', rule, {
       ]
     }]
   }, {
-    // Non-react classes should be ignored, even in expressions
     code: [
+      '// Non-react classes should be ignored, even in expressions',
       'return class Hello {',
       '  render() {',
       '    return <div>{this.props.text}</div>;',
@@ -255,8 +325,8 @@ ruleTester.run('sort-comp', rule, {
     parser: 'babel-eslint',
     parserOptions: parserOptions
   }, {
-    // Non-react classes should be ignored, even in expressions
     code: [
+      '// Non-react classes should be ignored, even in expressions',
       'return class {',
       '  render() {',
       '    return <div>{this.props.text}</div>;',
@@ -269,8 +339,8 @@ ruleTester.run('sort-comp', rule, {
     parser: 'babel-eslint',
     parserOptions: parserOptions
   }, {
-    // Getters should be at the top
     code: [
+      '// Getters should be at the top',
       'class Hello extends React.Component {',
       '  get foo() {}',
       '  constructor() {}',
@@ -290,8 +360,8 @@ ruleTester.run('sort-comp', rule, {
       ]
     }]
   }, {
-    // Setters should be at the top
     code: [
+      '// Setters should be at the top',
       'class Hello extends React.Component {',
       '  set foo(bar) {}',
       '  constructor() {}',
@@ -310,11 +380,113 @@ ruleTester.run('sort-comp', rule, {
         'render'
       ]
     }]
+  }, {
+    code: [
+      '// Instance methods should be at the top',
+      'class Hello extends React.Component {',
+      '  foo = () => {}',
+      '  constructor() {}',
+      '  classMethod() {}',
+      '  static bar = () => {}',
+      '  render() {',
+      '    return <div>{this.props.text}</div>;',
+      '  }',
+      '}'
+    ].join('\n'),
+    parser: 'babel-eslint',
+    options: [{
+      order: [
+        'instance-methods',
+        'lifecycle',
+        'everything-else',
+        'render'
+      ]
+    }]
+  }, {
+    code: [
+      '// Instance variables should be at the top',
+      'class Hello extends React.Component {',
+      '  foo = \'bar\'',
+      '  constructor() {}',
+      '  state = {}',
+      '  static bar = \'foo\'',
+      '  render() {',
+      '    return <div>{this.props.text}</div>;',
+      '  }',
+      '}'
+    ].join('\n'),
+    parser: 'babel-eslint',
+    options: [{
+      order: [
+        'instance-variables',
+        'lifecycle',
+        'everything-else',
+        'render'
+      ]
+    }]
+  }, {
+    code: [
+      '// Methods can be grouped with any matching group (with statics)',
+      'class Hello extends React.Component {',
+      '  static onFoo() {}',
+      '  static renderFoo() {}',
+      '  render() {',
+      '    return <div>{this.props.text}</div>;',
+      '  }',
+      '  getFoo() {}',
+      '}'
+    ].join('\n'),
+    options: [{
+      order: [
+        'static-methods',
+        'render',
+        '/^get.+$/',
+        '/^on.+$/',
+        '/^render.+$/'
+      ]
+    }]
+  }, {
+    code: [
+      '// Methods can be grouped with any matching group (with RegExp)',
+      'class Hello extends React.Component {',
+      '  render() {',
+      '    return <div>{this.props.text}</div>;',
+      '  }',
+      '  getFoo() {}',
+      '  static onFoo() {}',
+      '  static renderFoo() {}',
+      '}'
+    ].join('\n'),
+    options: [{
+      order: [
+        'static-methods',
+        'render',
+        '/^get.+$/',
+        '/^on.+$/',
+        '/^render.+$/'
+      ]
+    }]
+  }, {
+    code: [
+      '// static lifecycle methods can be grouped (with statics)',
+      'class Hello extends React.Component {',
+      '  static getDerivedStateFromProps() {}',
+      '  constructor() {}',
+      '}'
+    ].join('\n')
+  }, {
+    code: [
+      '// static lifecycle methods can be grouped (with lifecycle)',
+      'class Hello extends React.Component {',
+      '  constructor() {}',
+      '  static getDerivedStateFromProps() {}',
+      '}'
+    ].join('\n')
   }],
 
   invalid: [{
-    // Must force a lifecycle method to be placed before render
     code: [
+      '// Must force a lifecycle method to be placed before render',
       'var Hello = createReactClass({',
       '  render: function() {',
       '    return <div>Hello</div>;',
@@ -324,8 +496,8 @@ ruleTester.run('sort-comp', rule, {
     ].join('\n'),
     errors: [{message: 'render should be placed after displayName'}]
   }, {
-    // Must run rule when render uses createElement instead of JSX
     code: [
+      '// Must run rule when render uses createElement instead of JSX',
       'var Hello = createReactClass({',
       '  render: function() {',
       '    return React.createElement("div", null, "Hello");',
@@ -335,8 +507,8 @@ ruleTester.run('sort-comp', rule, {
     ].join('\n'),
     errors: [{message: 'render should be placed after displayName'}]
   }, {
-    // Must force a custom method to be placed before render
     code: [
+      '// Must force a custom method to be placed before render',
       'var Hello = createReactClass({',
       '  render: function() {',
       '    return <div>Hello</div>;',
@@ -346,8 +518,8 @@ ruleTester.run('sort-comp', rule, {
     ].join('\n'),
     errors: [{message: 'render should be placed after onClick'}]
   }, {
-    // Must force a custom method to be placed before render, even in function
     code: [
+      '// Must force a custom method to be placed before render, even in function',
       'var Hello = () => {',
       '  return class Test extends React.Component {',
       '    render () {',
@@ -360,8 +532,8 @@ ruleTester.run('sort-comp', rule, {
     parserOptions: parserOptions,
     errors: [{message: 'render should be placed after onClick'}]
   }, {
-    // Must force a custom method to be placed after render if no 'everything-else' group is specified
     code: [
+      '// Must force a custom method to be placed after render if no \'everything-else\' group is specified',
       'var Hello = createReactClass({',
       '  displayName: \'Hello\',',
       '  onClick: function() {},',
@@ -378,8 +550,8 @@ ruleTester.run('sort-comp', rule, {
     }],
     errors: [{message: 'onClick should be placed after render'}]
   }, {
-    // Must validate static properties
     code: [
+      '// Must validate static properties',
       'class Hello extends React.Component {',
       '  render() {',
       '    return <div></div>',
@@ -390,8 +562,8 @@ ruleTester.run('sort-comp', rule, {
     parser: 'babel-eslint',
     errors: [{message: 'render should be placed after displayName'}]
   }, {
-    // Type Annotations should not be at the top by default
     code: [
+      '// Type Annotations should not be at the top by default',
       'class Hello extends React.Component {',
       '  props: { text: string };',
       '  constructor() {}',
@@ -404,8 +576,8 @@ ruleTester.run('sort-comp', rule, {
     parser: 'babel-eslint',
     errors: [{message: 'props should be placed after state'}]
   }, {
-    // Type Annotations should be first
     code: [
+      '// Type Annotations should be first',
       'class Hello extends React.Component {',
       '  constructor() {}',
       '  props: { text: string };',
@@ -426,8 +598,8 @@ ruleTester.run('sort-comp', rule, {
       ]
     }]
   }, {
-    // Properties with Type Annotations should not be at the top
     code: [
+      '// Properties with Type Annotations should not be at the top',
       'class Hello extends React.Component {',
       '  props: { text: string };',
       '  state: Object = {};',
@@ -450,6 +622,7 @@ ruleTester.run('sort-comp', rule, {
     }]
   }, {
     code: [
+      '// componentDidMountOk should be placed after getA',
       'export default class View extends React.Component {',
       '  componentDidMountOk() {}',
       '  getB() {}',
@@ -472,8 +645,8 @@ ruleTester.run('sort-comp', rule, {
       ]
     }]
   }, {
-    // Getters should at the top
     code: [
+      '// Getters should at the top',
       'class Hello extends React.Component {',
       '  constructor() {}',
       '  get foo() {}',
@@ -494,8 +667,8 @@ ruleTester.run('sort-comp', rule, {
       ]
     }]
   }, {
-    // Setters should at the top
     code: [
+      '// Setters should at the top',
       'class Hello extends React.Component {',
       '  constructor() {}',
       '  set foo(bar) {}',
@@ -512,6 +685,84 @@ ruleTester.run('sort-comp', rule, {
         'static-methods',
         'lifecycle',
         'everything-else',
+        'render'
+      ]
+    }]
+  }, {
+    code: [
+      '// Instance methods should not be at the top',
+      'class Hello extends React.Component {',
+      '  constructor() {}',
+      '  static bar = () => {}',
+      '  classMethod() {}',
+      '  foo = function() {}',
+      '  render() {',
+      '    return <div>{this.props.text}</div>;',
+      '  }',
+      '}'
+    ].join('\n'),
+    parser: 'babel-eslint',
+    errors: [{message: 'foo should be placed before constructor'}],
+    options: [{
+      order: [
+        'instance-methods',
+        'lifecycle',
+        'everything-else',
+        'render'
+      ]
+    }]
+  }, {
+    code: [
+      '// Instance variables should not be at the top',
+      'class Hello extends React.Component {',
+      '  constructor() {}',
+      '  state = {}',
+      '  static bar = {}',
+      '  foo = {}',
+      '  render() {',
+      '    return <div>{this.props.text}</div>;',
+      '  }',
+      '}'
+    ].join('\n'),
+    parser: 'babel-eslint',
+    errors: [{message: 'foo should be placed before constructor'}],
+    options: [{
+      order: [
+        'instance-variables',
+        'lifecycle',
+        'everything-else',
+        'render'
+      ]
+    }]
+  }, {
+    code: [
+      '// Should not confuse method names with group names',
+      'class Hello extends React.Component {',
+      '  setters() {}',
+      '  constructor() {}',
+      '  render() {}',
+      '}'
+    ].join('\n'),
+    errors: [{message: 'setters should be placed after render'}],
+    options: [{
+      order: [
+        'setters',
+        'lifecycle',
+        'render'
+      ]
+    }]
+  }, {
+    code: [
+      '// Explicitly named methods should appear in the correct order',
+      'class Hello extends React.Component {',
+      '  render() {}',
+      '  foo() {}',
+      '}'
+    ].join('\n'),
+    errors: [{message: 'render should be placed after foo'}],
+    options: [{
+      order: [
+        'foo',
         'render'
       ]
     }]

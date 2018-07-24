@@ -2,6 +2,9 @@
 
 Some developers prefer to sort propTypes declarations alphabetically to be able to find necessary declaration easier at the later time. Others feel that it adds complexity and becomes burden to maintain.
 
+**Fixable:** This rule is automatically fixable using the `--fix` flag on the command line.
+
+
 ## Rule Details
 
 This rule checks all components and verifies that all propTypes declarations are sorted alphabetically. A spread attribute resets the verification. The default configuration of the rule is case-sensitive.
@@ -39,7 +42,7 @@ class Component extends React.Component {
 }
 ```
 
-The following patterns are considered okay and do not cause warnings:
+The following patterns are considered okay and do **not** cause warnings:
 
 ```jsx
 var Component = createReactClass({
@@ -80,6 +83,7 @@ class Component extends React.Component {
   "callbacksLast": <boolean>,
   "ignoreCase": <boolean>,
   "requiredFirst": <boolean>,
+  "sortShapeProp": <boolean>
 }]
 ...
 ```
@@ -115,6 +119,25 @@ var Component = createReactClass({
     fooRequired: PropTypes.any.isRequired,
     a: PropTypes.number,
     z: PropTypes.string,
+  },
+...
+});
+```
+
+### `sortShapeProp`
+
+When `true`, props defined in `PropTypes.shape` must be sorted via the same rules as the top-level props:
+
+```js
+var Component = createReactClass({
+  propTypes: {
+    a: PropTypes.number,
+    b: PropTypes.shape({
+      d: PropTypes.number,
+      e: PropTypes.func,
+      f: PropTypes.bool,
+    }),
+    c: PropTypes.string,
   },
 ...
 });

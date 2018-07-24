@@ -13,10 +13,9 @@ const rule = require('../../../lib/rules/jsx-tag-spacing');
 const RuleTester = require('eslint').RuleTester;
 
 const parserOptions = {
-  ecmaVersion: 8,
+  ecmaVersion: 2018,
   sourceType: 'module',
   ecmaFeatures: {
-    experimentalObjectRestSpread: true,
     jsx: true
   }
 };
@@ -31,7 +30,8 @@ function closingSlashOptions(option) {
   return [{
     closingSlash: option,
     beforeSelfClosing: 'allow',
-    afterOpening: 'allow'
+    afterOpening: 'allow',
+    beforeClosing: 'allow'
   }];
 }
 
@@ -39,7 +39,8 @@ function beforeSelfClosingOptions(option) {
   return [{
     closingSlash: 'allow',
     beforeSelfClosing: option,
-    afterOpening: 'allow'
+    afterOpening: 'allow',
+    beforeClosing: 'allow'
   }];
 }
 
@@ -47,7 +48,17 @@ function afterOpeningOptions(option) {
   return [{
     closingSlash: 'allow',
     beforeSelfClosing: 'allow',
-    afterOpening: option
+    afterOpening: option,
+    beforeClosing: 'allow'
+  }];
+}
+
+function beforeClosingOptions(option) {
+  return [{
+    closingSlash: 'allow',
+    beforeSelfClosing: 'allow',
+    afterOpening: 'allow',
+    beforeClosing: option
   }];
 }
 
@@ -140,18 +151,61 @@ ruleTester.run('jsx-tag-spacing', rule, {
     ].join('\n'),
     options: afterOpeningOptions('allow-multiline')
   }, {
+    code: '<App />',
+    options: beforeClosingOptions('never')
+  }, {
+    code: '<App></App>',
+    options: beforeClosingOptions('never')
+  }, {
+    code: [
+      '<App',
+      'foo="bar"',
+      '>',
+      '</App>'
+    ].join('\n'),
+    options: beforeClosingOptions('never')
+  }, {
+    code: [
+      '<App',
+      '   foo="bar"',
+      '>',
+      '</App>'
+    ].join('\n'),
+    options: beforeClosingOptions('never')
+  }, {
+    code: '<App ></App >',
+    options: beforeClosingOptions('always')
+  }, {
+    code: [
+      '<App',
+      'foo="bar"',
+      '>',
+      '</App >'
+    ].join('\n'),
+    options: beforeClosingOptions('always')
+  }, {
+    code: [
+      '<App',
+      '    foo="bar"',
+      '>',
+      '</App >'
+    ].join('\n'),
+    options: beforeClosingOptions('always')
+  }, {
     code: '<App/>',
     options: [{
       closingSlash: 'never',
       beforeSelfClosing: 'never',
-      afterOpening: 'never'
+      afterOpening: 'never',
+      beforeClosing: 'never'
     }]
   }, {
     code: '< App / >',
     options: [{
       closingSlash: 'always',
       beforeSelfClosing: 'always',
-      afterOpening: 'always'
+      afterOpening: 'always',
+      beforeClosing: 'always'
     }]
   }],
 
@@ -306,5 +360,55 @@ ruleTester.run('jsx-tag-spacing', rule, {
     output: '<App/>',
     errors: [{message: 'A space is forbidden after opening bracket'}],
     options: afterOpeningOptions('allow-multiline')
+  }, {
+    code: '<App ></App>',
+    output: '<App></App>',
+    errors: [{message: 'A space is forbidden before closing bracket'}],
+    options: beforeClosingOptions('never')
+  }, {
+    code: '<App></App >',
+    output: '<App></App>',
+    errors: [{message: 'A space is forbidden before closing bracket'}],
+    options: beforeClosingOptions('never')
+  }, {
+    code: [
+      '<App',
+      'foo="bar"',
+      '>',
+      '</App >'
+    ].join('\n'),
+    output: [
+      '<App',
+      'foo="bar"',
+      '>',
+      '</App>'
+    ].join('\n'),
+    errors: [{message: 'A space is forbidden before closing bracket'}],
+    options: beforeClosingOptions('never')
+  }, {
+    code: '<App></App >',
+    output: '<App ></App >',
+    errors: [{message: 'Whitespace is required before closing bracket'}],
+    options: beforeClosingOptions('always')
+  }, {
+    code: '<App ></App>',
+    output: '<App ></App >',
+    errors: [{message: 'Whitespace is required before closing bracket'}],
+    options: beforeClosingOptions('always')
+  }, {
+    code: [
+      '<App',
+      'foo="bar"',
+      '>',
+      '</App>'
+    ].join('\n'),
+    output: [
+      '<App',
+      'foo="bar"',
+      '>',
+      '</App >'
+    ].join('\n'),
+    errors: [{message: 'Whitespace is required before closing bracket'}],
+    options: beforeClosingOptions('always')
   }]
 });

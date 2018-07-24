@@ -12,10 +12,9 @@
 const rule = require('../../../lib/rules/jsx-curly-spacing');
 const RuleTester = require('eslint').RuleTester;
 const parserOptions = {
-  ecmaVersion: 8,
+  ecmaVersion: 2018,
   sourceType: 'module',
   ecmaFeatures: {
-    experimentalObjectRestSpread: true,
     jsx: true
   }
 };
@@ -59,9 +58,9 @@ ruleTester.run('jsx-curly-spacing', rule, {
       '</App>;'
     ].join('\n')
   }, {
-    code: '<App>{ foo /* comment */ }</App>'
+    code: '<App>{ foo /* comment 1 */ }</App>'
   }, {
-    code: '<App>{ /* comment */ foo }</App>'
+    code: '<App>{ /* comment 1 */ foo }</App>'
   }, {
     code: '<App foo={bar} />;',
     options: [{attributes: true}]
@@ -264,7 +263,7 @@ ruleTester.run('jsx-curly-spacing', rule, {
     ].join('\n'),
     options: [{attributes: {when: 'never', allowMultiline: true}}]
   }, {
-    code: '<App foo={bar/* comment */} />;',
+    code: '<App foo={bar/* comment 2 */} />;',
     options: [{attributes: {when: 'never'}}]
   }, {
     code: '<App foo={ bar } />;',
@@ -345,11 +344,11 @@ ruleTester.run('jsx-curly-spacing', rule, {
     options: [{children: {when: 'never', allowMultiline: true}}]
   }, {
     code: [
-      '<App>{/* comment */}</App>;'
+      '<App>{/* comment 3 */}</App>;'
     ].join('\n'),
     options: [{children: {when: 'never'}}]
   }, {
-    code: '<App>{bar/* comment */}</App>;',
+    code: '<App>{bar/* comment 4 */}</App>;',
     options: [{children: {when: 'never'}}]
   }, {
     code: '<App>{ bar }</App>;',
@@ -411,7 +410,7 @@ ruleTester.run('jsx-curly-spacing', rule, {
     ].join('\n'),
     options: [{attributes: {when: 'never', allowMultiline: true}}]
   }, {
-    code: '<App {...bar/* comment */} />;',
+    code: '<App {...bar/* comment 5 */} />;',
     options: [{attributes: {when: 'never'}}]
   }, {
     code: '<App foo={bar} {...baz} />;'
@@ -440,13 +439,13 @@ ruleTester.run('jsx-curly-spacing', rule, {
     ].join('\n'),
     options: [{attributes: {when: 'always'}}]
   }, {
-    code: '<App foo={bar/* comment */} {...baz/* comment */} />;',
+    code: '<App foo={bar/* comment 6 */} {...baz/* comment 7 */} />;',
     options: [{attributes: {when: 'never'}}]
   }, {
     code: '<App foo={3} bar={ {a: 2} } />',
     options: [{attributes: {when: 'never', spacing: {objectLiterals: 'always'}}}]
   }, {
-    code: '<App>{bar/* comment */}</App>;',
+    code: '<App>{bar/* comment 8 */}</App>;',
     options: [{children: {when: 'never'}}]
   }, {
     code: '<App>{bar} {baz}</App>;'
@@ -475,7 +474,7 @@ ruleTester.run('jsx-curly-spacing', rule, {
     ].join('\n'),
     options: [{children: {when: 'always'}}]
   }, {
-    code: '<App>{bar/* comment */} {baz/* comment */}</App>;',
+    code: '<App>{bar/* comment 9 */} {baz/* comment 10 */}</App>;',
     options: [{children: {when: 'never'}}]
   }, {
     code: '<App>{3} { {a: 2} }</App>',
@@ -572,11 +571,11 @@ ruleTester.run('jsx-curly-spacing', rule, {
     options: ['never']
   }, {
     code: [
-      '<App>{/* comment */}</App>;'
+      '<App>{/* comment 11 */}</App>;'
     ].join('\n'),
     options: ['never']
   }, {
-    code: '<App foo={bar/* comment */} />;',
+    code: '<App foo={bar/* comment 12 */} />;',
     options: ['never']
   }, {
     code: '<App foo={ bar } />;',
@@ -636,7 +635,7 @@ ruleTester.run('jsx-curly-spacing', rule, {
     ].join('\n'),
     options: ['never']
   }, {
-    code: '<App {...bar/* comment */} />;',
+    code: '<App {...bar/* comment 13 */} />;',
     options: ['never']
   }, {
     code: '<App foo={bar} {...baz} />;',
@@ -663,7 +662,7 @@ ruleTester.run('jsx-curly-spacing', rule, {
     ].join('\n'),
     options: ['always']
   }, {
-    code: '<App foo={bar/* comment */} {...baz/* comment */} />;',
+    code: '<App foo={bar/* comment 14 */} {...baz/* comment 15 */} />;',
     options: ['never']
   }, {
     code: '<App foo={3} bar={ {a: 2} } />',
@@ -671,6 +670,13 @@ ruleTester.run('jsx-curly-spacing', rule, {
   }, {
     code: '<App foo={ bar }>{bar}</App>',
     options: ['always']
+  }, {
+    code: [
+      '<App>{`',
+      'text',
+      '`}</App>'
+    ].join('\n'),
+    options: [{children: {when: 'never', allowMultiline: false}}]
   }],
 
   invalid: [{
@@ -1507,16 +1513,16 @@ ruleTester.run('jsx-curly-spacing', rule, {
       message: 'A space is required before \'}\''
     }]
   }, {
-    code: '<App foo={ foo /* comment */ } />',
-    output: '<App foo={foo /* comment */} />',
+    code: '<App foo={ foo /* comment 16 */ } />',
+    output: '<App foo={foo /* comment 16 */} />',
     errors: [{
       message: 'There should be no space after \'{\''
     }, {
       message: 'There should be no space before \'}\''
     }]
   }, {
-    code: '<App foo={foo /* comment */} />',
-    output: '<App foo={ foo /* comment */ } />',
+    code: '<App foo={foo /* comment 17 */} />',
+    output: '<App foo={ foo /* comment 17 */ } />',
     options: [{attributes: {when: 'always'}}],
     errors: [{
       message: 'A space is required after \'{\''
@@ -1524,16 +1530,16 @@ ruleTester.run('jsx-curly-spacing', rule, {
       message: 'A space is required before \'}\''
     }]
   }, {
-    code: '<App foo={ /* comment */ foo } />',
-    output: '<App foo={/* comment */ foo} />',
+    code: '<App foo={ /* comment 18 */ foo } />',
+    output: '<App foo={/* comment 18 */ foo} />',
     errors: [{
       message: 'There should be no space after \'{\''
     }, {
       message: 'There should be no space before \'}\''
     }]
   }, {
-    code: '<App foo={/* comment */ foo} />',
-    output: '<App foo={ /* comment */ foo } />',
+    code: '<App foo={/* comment 19 */ foo} />',
+    output: '<App foo={ /* comment 19 */ foo } />',
     options: [{attributes: {when: 'always'}}],
     errors: [{
       message: 'A space is required after \'{\''
@@ -1680,8 +1686,8 @@ ruleTester.run('jsx-curly-spacing', rule, {
       message: 'A space is required before \'}\''
     }]
   }, {
-    code: '<App>{foo /* comment */}</App>',
-    output: '<App>{ foo /* comment */ }</App>',
+    code: '<App>{foo /* comment 20 */}</App>',
+    output: '<App>{ foo /* comment 20 */ }</App>',
     options: [{children: {when: 'always'}}],
     errors: [{
       message: 'A space is required after \'{\''
@@ -1689,8 +1695,8 @@ ruleTester.run('jsx-curly-spacing', rule, {
       message: 'A space is required before \'}\''
     }]
   }, {
-    code: '<App>{/* comment */ foo}</App>',
-    output: '<App>{ /* comment */ foo }</App>',
+    code: '<App>{/* comment 21 */ foo}</App>',
+    output: '<App>{ /* comment 21 */ foo }</App>',
     options: [{children: {when: 'always'}}],
     errors: [{
       message: 'A space is required after \'{\''
@@ -2101,8 +2107,8 @@ ruleTester.run('jsx-curly-spacing', rule, {
       message: 'A space is required before \'}\''
     }]
   }, {
-    code: '<App foo={foo /* comment */} />',
-    output: '<App foo={ foo /* comment */ } />',
+    code: '<App foo={foo /* comment 22 */} />',
+    output: '<App foo={ foo /* comment 22 */ } />',
     options: ['always'],
     errors: [{
       message: 'A space is required after \'{\''
@@ -2110,13 +2116,157 @@ ruleTester.run('jsx-curly-spacing', rule, {
       message: 'A space is required before \'}\''
     }]
   }, {
-    code: '<App foo={/* comment */ foo} />',
-    output: '<App foo={ /* comment */ foo } />',
+    code: '<App foo={/* comment 23 */ foo} />',
+    output: '<App foo={ /* comment 23 */ foo } />',
     options: ['always'],
     errors: [{
       message: 'A space is required after \'{\''
     }, {
       message: 'A space is required before \'}\''
+    }]
+  }, {
+    code: '<App>{/*comment24*/ }</App>',
+    output: '<App>{/*comment24*/}</App>',
+    options: [{children: {when: 'never'}}],
+    errors: [{
+      message: 'There should be no space before \'}\''
+    }]
+  }, {
+    code: '<App>{ /*comment25*/}</App>',
+    output: '<App>{/*comment25*/}</App>',
+    options: [{children: {when: 'never'}}],
+    errors: [{
+      message: 'There should be no space after \'{\''
+    }]
+  }, {
+    code: '<App>{/*comment26*/}</App>',
+    output: '<App>{ /*comment26*/ }</App>',
+    options: [{children: {when: 'always'}}],
+    errors: [{
+      message: 'A space is required after \'{\''
+    }, {
+      message: 'A space is required before \'}\''
+    }]
+  }, {
+    code: [
+      '<App>',
+      '{ /* comment 27 */ }',
+      '</App>;'
+    ].join('\n'),
+    output: [
+      '<App>',
+      '{/* comment 27 */}',
+      '</App>;'
+    ].join('\n'),
+    options: [{when: 'never', children: true}],
+    errors: [{
+      message: 'There should be no space after \'{\''
+    }, {
+      message: 'There should be no space before \'}\''
+    }]
+  }, {
+    code: [
+      '<App>',
+      '{/* comment 28 */}',
+      '</App>;'
+    ].join('\n'),
+    output: [
+      '<App>',
+      '{ /* comment 28 */ }',
+      '</App>;'
+    ].join('\n'),
+    options: [{when: 'always', children: true}],
+    errors: [{
+      message: 'A space is required after \'{\''
+    }, {
+      message: 'A space is required before \'}\''
+    }]
+  }, {
+    code: [
+      '<App>',
+      '{/*comment29*/',
+      '}',
+      '</App>'
+    ].join('\n'),
+    output: [
+      '<App>',
+      '{/*comment29*/}',
+      '</App>'
+    ].join('\n'),
+    options: [{children: {when: 'never', allowMultiline: false}}],
+    errors: [{
+      message: 'There should be no newline before \'}\''
+    }]
+  }, {
+    code: [
+      '<App>',
+      '{',
+      '/*comment30*/}',
+      '</App>'
+    ].join('\n'),
+    output: [
+      '<App>',
+      '{/*comment30*/}',
+      '</App>'
+    ].join('\n'),
+    options: [{children: {when: 'never', allowMultiline: false}}],
+    errors: [{
+      message: 'There should be no newline after \'{\''
+    }]
+  }, {
+    code: [
+      '<App>{ /* comment 31 */',
+      'bar',
+      '} {',
+      'baz',
+      '/* comment 32 */ }</App>;'
+    ].join('\n'),
+    output: [
+      '<App>{/* comment 31 */',
+      'bar',
+      '} {',
+      'baz',
+      '/* comment 32 */}</App>;'
+    ].join('\n'),
+    options: [{when: 'never', children: true}],
+    errors: [{
+      message: 'There should be no space after \'{\''
+    }, {
+      message: 'There should be no space before \'}\''
+    }]
+  }, {
+    code: [
+      '<App>{/* comment 33 */',
+      'bar',
+      '} {',
+      'baz',
+      '/* comment 33 */}</App>;'
+    ].join('\n'),
+    output: [
+      '<App>{ /* comment 33 */',
+      'bar',
+      '} {',
+      'baz',
+      '/* comment 33 */ }</App>;'
+    ].join('\n'),
+    options: [{when: 'always', children: true}],
+    errors: [{
+      message: 'A space is required after \'{\''
+    }, {
+      message: 'A space is required before \'}\''
+    }]
+  }, {
+    code: [
+      '<div className={ this.state.renderInfo ? "infoPanel col-xs-12" : "unToggled col-xs-12" } />'
+    ].join('\n'),
+    output: [
+      '<div className={this.state.renderInfo ? "infoPanel col-xs-12" : "unToggled col-xs-12"} />'
+    ].join('\n'),
+    options: ['never', {allowMultiline: true}],
+    errors: [{
+      message: 'There should be no space after \'{\''
+    }, {
+      message: 'There should be no space before \'}\''
     }]
   }]
 });
