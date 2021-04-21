@@ -2,10 +2,13 @@
  * @fileoverview Enforce React components to have a shouldComponentUpdate method
  * @author Evgueni Naverniouk
  */
+
 'use strict';
 
-const rule = require('../../../lib/rules/require-optimization');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/require-optimization');
+
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -14,8 +17,6 @@ const parserOptions = {
     jsx: true
   }
 };
-
-const MESSAGE = 'Component is not optimized. Please add a shouldComponentUpdate method.';
 
 const ruleTester = new RuleTester({parserOptions});
 ruleTester.run('react-require-optimization', rule, {
@@ -46,7 +47,7 @@ ruleTester.run('react-require-optimization', rule, {
         render() {}
       }
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       import React from "react";
@@ -66,28 +67,28 @@ ruleTester.run('react-require-optimization', rule, {
       @reactMixin.decorate(PureRenderMixin)
       class DecoratedComponent extends Component {}
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       const FunctionalComponent = function (props) {
         return <div />;
       }
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       function FunctionalComponent(props) {
         return <div />;
       }
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       const FunctionalComponent = (props) => {
         return <div />;
       }
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       @bar
@@ -95,26 +96,43 @@ ruleTester.run('react-require-optimization', rule, {
       @foo
       class DecoratedComponent extends Component {}
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: [{allowDecorators: ['renderPure', 'pureRender']}]
   }, {
     code: `
       import React from "react";
       class YourComponent extends React.PureComponent {}
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: [{allowDecorators: ['renderPure', 'pureRender']}]
   }, {
     code: `
       import React, {PureComponent} from "react";
       class YourComponent extends PureComponent {}
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: [{allowDecorators: ['renderPure', 'pureRender']}]
   }, {
     code: `
       const obj = { prop: [,,,,,] }
     `
+  }, {
+    code: `
+      import React from "react";
+      class YourComponent extends React.Component {
+        handleClick = () => {}
+        shouldComponentUpdate(){
+          return true;
+        }
+        render() {
+          return <div onClick={this.handleClick}>123</div>
+        }
+      }
+    `,
+    parser: parsers.BABEL_ESLINT,
+    errors: [{
+      messageId: 'noShouldComponentUpdate'
+    }]
   }],
 
   invalid: [{
@@ -123,7 +141,7 @@ ruleTester.run('react-require-optimization', rule, {
       class YourComponent extends React.Component {}
     `,
     errors: [{
-      message: MESSAGE
+      messageId: 'noShouldComponentUpdate'
     }]
   }, {
     code: `
@@ -135,9 +153,23 @@ ruleTester.run('react-require-optimization', rule, {
         }
       }
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: [{
-      message: MESSAGE
+      messageId: 'noShouldComponentUpdate'
+    }]
+  }, {
+    code: `
+      import React from "react";
+      class YourComponent extends React.Component {
+        handleClick = () => {}
+        render() {
+          return <div onClick={this.handleClick}>123</div>
+        }
+      }
+    `,
+    parser: parsers.BABEL_ESLINT,
+    errors: [{
+      messageId: 'noShouldComponentUpdate'
     }]
   }, {
     code: `
@@ -145,7 +177,7 @@ ruleTester.run('react-require-optimization', rule, {
       class YourComponent extends Component {}
     `,
     errors: [{
-      message: MESSAGE
+      messageId: 'noShouldComponentUpdate'
     }]
   }, {
     code: `
@@ -153,7 +185,7 @@ ruleTester.run('react-require-optimization', rule, {
       createReactClass({})
     `,
     errors: [{
-      message: MESSAGE
+      messageId: 'noShouldComponentUpdate'
     }]
   }, {
     code: `
@@ -163,7 +195,7 @@ ruleTester.run('react-require-optimization', rule, {
       })
     `,
     errors: [{
-      message: MESSAGE
+      messageId: 'noShouldComponentUpdate'
     }]
   }, {
     code: `
@@ -171,9 +203,9 @@ ruleTester.run('react-require-optimization', rule, {
       class DecoratedComponent extends Component {}
     `,
     errors: [{
-      message: MESSAGE
+      messageId: 'noShouldComponentUpdate'
     }],
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       @bar
@@ -182,9 +214,9 @@ ruleTester.run('react-require-optimization', rule, {
       class DecoratedComponent extends Component {}
     `,
     errors: [{
-      message: MESSAGE
+      messageId: 'noShouldComponentUpdate'
     }],
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: [{allowDecorators: ['renderPure', 'pureRender']}]
   }]
 });

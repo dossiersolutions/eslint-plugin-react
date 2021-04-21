@@ -9,8 +9,8 @@
 // Requirements
 // -----------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/no-danger');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/no-danger');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -33,6 +33,9 @@ ruleTester.run('no-danger', rule, {
   ],
   invalid: [{
     code: '<div dangerouslySetInnerHTML={{ __html: "" }}></div>;',
-    errors: [{message: 'Dangerous property \'dangerouslySetInnerHTML\' found'}]
+    errors: [{
+      messageId: 'dangerousProp',
+      data: {name: 'dangerouslySetInnerHTML'}
+    }]
   }]
 });

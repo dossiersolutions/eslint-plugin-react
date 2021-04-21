@@ -2,14 +2,17 @@
  * @fileoverview Validate JSX indentation
  * @author Yannick Croissant
  */
+
 'use strict';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/jsx-indent');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/jsx-indent');
+
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -31,15 +34,42 @@ ruleTester.run('jsx-indent', rule, {
     ].join('\n')
   }, {
     code: [
+      '<></>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: [
       '<App>',
       '</App>'
     ].join('\n')
+  }, {
+    code: [
+      '<>',
+      '</>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
   }, {
     code: [
       '<App>',
       '  <Foo />',
       '</App>'
     ].join('\n'),
+    options: [2]
+  }, {
+    code: [
+      '<App>',
+      '  <></>',
+      '</App>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    options: [2]
+  }, {
+    code: [
+      '<>',
+      '  <Foo />',
+      '</>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
     options: [2]
   }, {
     code: [
@@ -74,11 +104,31 @@ ruleTester.run('jsx-indent', rule, {
   }, {
     code: [
       'function App() {',
+      '  return <App>',
+      '    <></>',
+      '  </App>;',
+      '}'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    options: [2]
+  }, {
+    code: [
+      'function App() {',
       '  return (<App>',
       '    <Foo />',
       '  </App>);',
       '}'
     ].join('\n'),
+    options: [2]
+  }, {
+    code: [
+      'function App() {',
+      '  return (<App>',
+      '    <></>',
+      '  </App>);',
+      '}'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
     options: [2]
   }, {
     code: [
@@ -93,6 +143,18 @@ ruleTester.run('jsx-indent', rule, {
     options: [2]
   }, {
     code: [
+      'function App() {',
+      '  return (',
+      '    <App>',
+      '      <></>',
+      '    </App>',
+      '  );',
+      '}'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    options: [2]
+  }, {
+    code: [
       'it(',
       '  (',
       '    <div>',
@@ -101,6 +163,18 @@ ruleTester.run('jsx-indent', rule, {
       '  )',
       ')'
     ].join('\n'),
+    options: [2]
+  }, {
+    code: [
+      'it(',
+      '  (',
+      '    <div>',
+      '      <></>',
+      '    </div>',
+      '  )',
+      ')'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
     options: [2]
   }, {
     code: [
@@ -131,6 +205,17 @@ ruleTester.run('jsx-indent', rule, {
       '  </h1>',
       '}'
     ].join('\n'),
+    options: [2]
+  }, {
+    code: [
+      '{',
+      '  head.title &&',
+      '  <>',
+      '    {head.title}',
+      '  </>',
+      '}'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
     options: [2]
   }, {
     code: [
@@ -173,6 +258,15 @@ ruleTester.run('jsx-indent', rule, {
     options: [2]
   }, {
     code: [
+      '[',
+      '  <></>,',
+      '  <></>',
+      ']'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    options: [2]
+  }, {
+    code: [
       '<div>',
       '    {',
       '        [',
@@ -194,15 +288,36 @@ ruleTester.run('jsx-indent', rule, {
       '</div>'
     ].join('\n')
   }, {
-    // Literals indentation is not touched
     code: [
       '<div>',
-      'bar <div>',
-      '   bar',
-      '   bar {foo}',
-      'bar </div>',
+      '    {foo &&',
+      '        [',
+      '            <></>,',
+      '            <></>',
+      '        ]',
+      '    }',
+      '</div>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: [
+      '<div>',
+      '    bar <div>',
+      '        bar',
+      '        bar {foo}',
+      '        bar </div>',
       '</div>'
     ].join('\n')
+  }, {
+    code: [
+      '<>',
+      '    bar <>',
+      '        bar',
+      '        bar {foo}',
+      '        bar </>',
+      '</>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
   }, {
     // Multiline ternary
     // (colon at the end of the first expression)
@@ -212,6 +327,13 @@ ruleTester.run('jsx-indent', rule, {
       '    <Bar />'
     ].join('\n')
   }, {
+    code: [
+      'foo ?',
+      '    <></> :',
+      '    <></>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
+  }, {
     // Multiline ternary
     // (colon at the start of the second expression)
     code: [
@@ -219,6 +341,13 @@ ruleTester.run('jsx-indent', rule, {
       '    <Foo />',
       '    : <Bar />'
     ].join('\n')
+  }, {
+    code: [
+      'foo ?',
+      '    <></>',
+      '    : <></>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
   }, {
     // Multiline ternary
     // (colon on its own line)
@@ -228,6 +357,14 @@ ruleTester.run('jsx-indent', rule, {
       ':',
       '    <Bar />'
     ].join('\n')
+  }, {
+    code: [
+      'foo ?',
+      '    <></>',
+      ':',
+      '    <></>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
   }, {
     // Multiline ternary
     // (multiline JSX, colon on its own line)
@@ -250,12 +387,24 @@ ruleTester.run('jsx-indent', rule, {
       '<Bar />'
     ].join('\n')
   }, {
+    code: [
+      'foo ? <></> :',
+      '<></>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
+  }, {
     // Multiline ternary
     // (first expression on test line, colon at the start of the second expression)
     code: [
       'foo ? <Foo />',
       ': <Bar />'
     ].join('\n')
+  }, {
+    code: [
+      'foo ? <></>',
+      ': <></>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
   }, {
     // Multiline ternary
     // (first expression on test line, colon on its own line)
@@ -264,6 +413,13 @@ ruleTester.run('jsx-indent', rule, {
       ':',
       '<Bar />'
     ].join('\n')
+  }, {
+    code: [
+      'foo ? <></>',
+      ':',
+      '<></>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
   }, {
     // Multiline ternary
     // (colon at the end of the first expression, parenthesized first expression)
@@ -274,6 +430,14 @@ ruleTester.run('jsx-indent', rule, {
       '    <Bar />'
     ].join('\n')
   }, {
+    code: [
+      'foo ? (',
+      '    <></>',
+      ') :',
+      '    <></>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
+  }, {
     // Multiline ternary
     // (colon at the start of the second expression, parenthesized first expression)
     code: [
@@ -282,6 +446,14 @@ ruleTester.run('jsx-indent', rule, {
       ')',
       '    : <Bar />'
     ].join('\n')
+  }, {
+    code: [
+      'foo ? (',
+      '    <></>',
+      ')',
+      '    : <></>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
   }, {
     // Multiline ternary
     // (colon on its own line, parenthesized first expression)
@@ -293,6 +465,15 @@ ruleTester.run('jsx-indent', rule, {
       '    <Bar />'
     ].join('\n')
   }, {
+    code: [
+      'foo ? (',
+      '    <></>',
+      ')',
+      ':',
+      '    <></>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
+  }, {
     // Multiline ternary
     // (colon at the end of the first expression, parenthesized second expression)
     code: [
@@ -301,6 +482,14 @@ ruleTester.run('jsx-indent', rule, {
       '        <Bar />',
       '    )'
     ].join('\n')
+  }, {
+    code: [
+      'foo ?',
+      '    <></> : (',
+      '        <></>',
+      '    )'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
   }, {
     // Multiline ternary
     // (colon on its own line, parenthesized second expression)
@@ -312,6 +501,15 @@ ruleTester.run('jsx-indent', rule, {
       ')'
     ].join('\n')
   }, {
+    code: [
+      'foo ?',
+      '    <></>',
+      ': (',
+      '    <></>',
+      ')'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
+  }, {
     // Multiline ternary
     // (colon indented on its own line, parenthesized second expression)
     code: [
@@ -321,6 +519,15 @@ ruleTester.run('jsx-indent', rule, {
       '        <Bar />',
       '    )'
     ].join('\n')
+  }, {
+    code: [
+      'foo ?',
+      '    <></>',
+      '    : (',
+      '        <></>',
+      '    )'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
   }, {
     // Multiline ternary
     // (colon at the end of the first expression, both expression parenthesized)
@@ -332,6 +539,15 @@ ruleTester.run('jsx-indent', rule, {
       ')'
     ].join('\n')
   }, {
+    code: [
+      'foo ? (',
+      '    <></>',
+      ') : (',
+      '    <></>',
+      ')'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
+  }, {
     // Multiline ternary
     // (colon on its own line, both expression parenthesized)
     code: [
@@ -342,6 +558,16 @@ ruleTester.run('jsx-indent', rule, {
       '    <Bar />',
       ')'
     ].join('\n')
+  }, {
+    code: [
+      'foo ? (',
+      '    <></>',
+      ')',
+      ': (',
+      '    <></>',
+      ')'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
   }, {
     // Multiline ternary
     // (colon on its own line, both expression parenthesized)
@@ -355,6 +581,17 @@ ruleTester.run('jsx-indent', rule, {
       ')'
     ].join('\n')
   }, {
+    code: [
+      'foo ? (',
+      '    <></>',
+      ')',
+      ':',
+      '(',
+      '    <></>',
+      ')'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
+  }, {
     // Multiline ternary
     // (first expression on test line, colon at the end of the first expression, parenthesized second expression)
     code: [
@@ -363,12 +600,25 @@ ruleTester.run('jsx-indent', rule, {
       ')'
     ].join('\n')
   }, {
+    code: [
+      'foo ? <></> : (',
+      '    <></>',
+      ')'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
+  }, {
     // Multiline ternary
     // (first expression on test line, colon at the start of the second expression, parenthesized second expression)
     code: [
       'foo ? <Foo />',
       ': (<Bar />)'
     ].join('\n')
+  }, {
+    code: [
+      'foo ? <></>',
+      ': (<></>)'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
   }, {
     // Multiline ternary
     // (first expression on test line, colon on its own line, parenthesized second expression)
@@ -378,6 +628,14 @@ ruleTester.run('jsx-indent', rule, {
       '    <Bar />',
       ')'
     ].join('\n')
+  }, {
+    code: [
+      'foo ? <></>',
+      ': (',
+      '    <></>',
+      ')'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
   }, {
     code: [
       '<span>',
@@ -417,6 +675,129 @@ ruleTester.run('jsx-indent', rule, {
     ].join('\n'),
     options: [2]
   }, {
+    code: [
+      'function foo() {',
+      '  <span>',
+      '    {condition ?',
+      '      <Thing',
+      '        foo={superFoo}',
+      '      /> :',
+      '      <></>',
+      '    }',
+      '  </span>',
+      '}'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    options: [2]
+  }, {
+    code: [
+      '<span>',
+      '    {do {',
+      '        const num = rollDice();',
+      '        <Thing num={num} />;',
+      '    }}',
+      '</span>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: [
+      '<span>',
+      '    {(do {',
+      '        const num = rollDice();',
+      '        <Thing num={num} />;',
+      '    })}',
+      '</span>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: [
+      '<span>',
+      '    {do {',
+      '        const purposeOfLife = getPurposeOfLife();',
+      '        if (purposeOfLife == 42) {',
+      '            <Thing />;',
+      '        } else {',
+      '            <AnotherThing />;',
+      '        }',
+      '    }}',
+      '</span>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: [
+      '<span>',
+      '    {(do {',
+      '        const purposeOfLife = getPurposeOfLife();',
+      '        if (purposeOfLife == 42) {',
+      '            <Thing />;',
+      '        } else {',
+      '            <AnotherThing />;',
+      '        }',
+      '    })}',
+      '</span>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: [
+      '<span>',
+      '    {do {',
+      '        <Thing num={rollDice()} />;',
+      '    }}',
+      '</span>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: [
+      '<span>',
+      '    {(do {',
+      '        <Thing num={rollDice()} />;',
+      '    })}',
+      '</span>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: [
+      '<span>',
+      '    {do {',
+      '        <Thing num={rollDice()} />;',
+      '        <Thing num={rollDice()} />;',
+      '    }}',
+      '</span>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: [
+      '<span>',
+      '    {(do {',
+      '        <Thing num={rollDice()} />;',
+      '        <Thing num={rollDice()} />;',
+      '    })}',
+      '</span>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: [
+      '<span>',
+      '    {do {',
+      '        const purposeOfLife = 42;',
+      '        <Thing num={purposeOfLife} />;',
+      '        <Thing num={purposeOfLife} />;',
+      '    }}',
+      '</span>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: [
+      '<span>',
+      '    {(do {',
+      '        const purposeOfLife = 42;',
+      '        <Thing num={purposeOfLife} />;',
+      '        <Thing num={purposeOfLife} />;',
+      '    })}',
+      '</span>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
+  }, {
     code: `
       class Test extends React.Component {
         render() {
@@ -430,9 +811,233 @@ ruleTester.run('jsx-indent', rule, {
       }
     `,
     options: [2]
+  }, {
+    code: `
+      class Test extends React.Component {
+        render() {
+          return (
+            <>
+              <></>
+              <></>
+            </>
+          );
+        }
+      }
+    `,
+    parser: parsers.BABEL_ESLINT,
+    options: [2]
+  }, {
+    code: `
+    const Component = () => (
+      <View
+        ListFooterComponent={(
+          <View
+            rowSpan={3}
+            placeholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do"
+          />
+    )}
+      />
+    );
+    `,
+    output: `
+    const Component = () => (
+      <View
+        ListFooterComponent={(
+          <View
+            rowSpan={3}
+            placeholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do"
+          />
+        )}
+      />
+    );
+    `,
+    options: [2]
+  }, {
+    code: `
+const Component = () => (
+\t<View
+\t\tListFooterComponent={(
+\t\t\t<View
+\t\t\t\trowSpan={3}
+\t\t\t\tplaceholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do"
+\t\t\t/>
+)}
+\t/>
+);
+    `,
+    output: `
+const Component = () => (
+\t<View
+\t\tListFooterComponent={(
+\t\t\t<View
+\t\t\t\trowSpan={3}
+\t\t\t\tplaceholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do"
+\t\t\t/>
+\t\t)}
+\t/>
+);
+    `,
+    options: ['tab']
+  }, {
+    code: `
+    const Component = () => (
+      <View
+        ListFooterComponent={(
+          <View
+            rowSpan={3}
+            placeholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do"
+          />
+    )}
+      />
+    );
+    `,
+    output: `
+    const Component = () => (
+      <View
+        ListFooterComponent={(
+          <View
+            rowSpan={3}
+            placeholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do"
+          />
+        )}
+      />
+    );
+    `,
+    options: [2, {checkAttributes: false}]
+  }, {
+    code: `
+const Component = () => (
+\t<View
+\t\tListFooterComponent={(
+\t\t\t<View
+\t\t\t\trowSpan={3}
+\t\t\t\tplaceholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do"
+\t\t\t/>
+)}
+\t/>
+);
+    `,
+    output: `
+const Component = () => (
+\t<View
+\t\tListFooterComponent={(
+\t\t\t<View
+\t\t\t\trowSpan={3}
+\t\t\t\tplaceholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do"
+\t\t\t/>
+\t\t)}
+\t/>
+);
+    `,
+    options: ['tab', {checkAttributes: false}]
+  }, {
+    code: `
+    function Foo() {
+      return (
+        <input
+          type="radio"
+          defaultChecked
+        />
+      );
+    }
+    `,
+    options: [2, {checkAttributes: true}]
+  }, {
+    code: `
+    function Foo() {
+      return (
+        <div>
+          {condition && (
+            <p>Bar</p>
+          )}
+        </div>
+      );
+    }
+    `,
+    options: [2, {indentLogicalExpressions: true}]
+  }, {
+    code: [
+      '<App>',
+      '    text',
+      '</App>'
+    ].join('\n')
+  }, {
+    code: [
+      '<App>',
+      '    text',
+      '    text',
+      '    text',
+      '</App>'
+    ].join('\n')
+  }, {
+    code: [
+      '<App>',
+      '\ttext',
+      '</App>'
+    ].join('\n'),
+    options: ['tab']
+  }, {
+    code: [
+      '<App>',
+      '\t{undefined}',
+      '\t{null}',
+      '\t{true}',
+      '\t{false}',
+      '\t{42}',
+      '\t{NaN}',
+      '\t{"foo"}',
+      '</App>'
+    ].join('\n'),
+    options: ['tab']
+  }, {
+    // don't check literals not within JSX. See #2563
+    code: [
+      'function foo() {',
+      'const a = `aa`;',
+      'const b = `b\nb`;',
+      '}'
+    ].join('\n')
   }],
 
   invalid: [{
+    code: [
+      '<div>',
+      'bar <div>',
+      '   bar',
+      '   bar {foo}',
+      '   bar </div>',
+      '</div>'
+    ].join('\n'),
+    output: [
+      '<div>',
+      '    bar <div>',
+      '    bar',
+      '    bar {foo}',
+      '    bar </div>',
+      '</div>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    }, {
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 3
+      }
+    }, {
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 3
+      }
+    }, {
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 3
+      }
+    }]
+  }, {
     code: [
       '<App>',
       '  <Foo />',
@@ -443,7 +1048,48 @@ ruleTester.run('jsx-indent', rule, {
       '    <Foo />',
       '</App>'
     ].join('\n'),
-    errors: [{message: 'Expected indentation of 4 space characters but found 2.'}]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 2
+      }
+    }]
+  }, {
+    code: [
+      '<App>',
+      '  <></>',
+      '</App>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    output: [
+      '<App>',
+      '    <></>',
+      '</App>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 2
+      }
+    }]
+  }, {
+    code: [
+      '<>',
+      '  <Foo />',
+      '</>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    output: [
+      '<>',
+      '    <Foo />',
+      '</>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 2
+      }
+    }]
   }, {
     code: [
       '<App>',
@@ -456,7 +1102,12 @@ ruleTester.run('jsx-indent', rule, {
       '</App>'
     ].join('\n'),
     options: [2],
-    errors: [{message: 'Expected indentation of 2 space characters but found 4.'}]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 2, type: 'space', characters: 'characters', gotten: 4
+      }
+    }]
   }, {
     code: [
       '<App>',
@@ -469,7 +1120,12 @@ ruleTester.run('jsx-indent', rule, {
       '</App>'
     ].join('\n'),
     options: ['tab'],
-    errors: [{message: 'Expected indentation of 1 tab character but found 0.'}]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 1, type: 'tab', characters: 'character', gotten: 0
+      }
+    }]
   }, {
     code: [
       'function App() {',
@@ -486,7 +1142,12 @@ ruleTester.run('jsx-indent', rule, {
       '}'
     ].join('\n'),
     options: [2],
-    errors: [{message: 'Expected indentation of 2 space characters but found 9.'}]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 2, type: 'space', characters: 'characters', gotten: 9
+      }
+    }]
   }, {
     code: [
       'function App() {',
@@ -503,7 +1164,12 @@ ruleTester.run('jsx-indent', rule, {
       '}'
     ].join('\n'),
     options: [2],
-    errors: [{message: 'Expected indentation of 2 space characters but found 4.'}]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 2, type: 'space', characters: 'characters', gotten: 4
+      }
+    }]
   }, {
     code: [
       'function App() {',
@@ -518,17 +1184,22 @@ ruleTester.run('jsx-indent', rule, {
     // two lines following. I *think* because it incorrectly uses <App>'s indention
     // as the baseline for the next two, instead of the realizing the entire three
     // lines are wrong together. See #608
-    /* output: [
+    output: [
       'function App() {',
       '  return (',
       '    <App>',
-      '      <Foo />',
-      '    </App>',
+      '  <Foo />',
+      '</App>',
       '  );',
       '}'
-    ].join('\n'), */
+    ].join('\n'),
     options: [2],
-    errors: [{message: 'Expected indentation of 4 space characters but found 0.'}]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    }]
   }, {
     code: [
       '<App>',
@@ -540,9 +1211,12 @@ ruleTester.run('jsx-indent', rule, {
       '    {test}',
       '</App>'
     ].join('\n'),
-    errors: [
-      {message: 'Expected indentation of 4 space characters but found 3.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 3
+      }
+    }]
   }, {
     code: [
       '<App>',
@@ -562,9 +1236,12 @@ ruleTester.run('jsx-indent', rule, {
       '    ))}',
       '</App>'
     ].join('\n'),
-    errors: [
-      {message: 'Expected indentation of 12 space characters but found 11.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 12, type: 'space', characters: 'characters', gotten: 11
+      }
+    }]
   }, {
     code: [
       '<App>',
@@ -577,9 +1254,12 @@ ruleTester.run('jsx-indent', rule, {
       '</App>'
     ].join('\n'),
     options: ['tab'],
-    errors: [
-      {message: 'Expected indentation of 1 tab character but found 0.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 1, type: 'tab', characters: 'character', gotten: 0
+      }
+    }]
   }, {
     code: [
       '<App>',
@@ -600,9 +1280,12 @@ ruleTester.run('jsx-indent', rule, {
       '</App>'
     ].join('\n'),
     options: ['tab'],
-    errors: [
-      {message: 'Expected indentation of 3 tab characters but found 2.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 3, type: 'tab', characters: 'characters', gotten: 2
+      }
+    }]
   }, {
     code: [
       '<App>\n',
@@ -615,9 +1298,12 @@ ruleTester.run('jsx-indent', rule, {
       '</App>'
     ].join('\n'),
     options: ['tab'],
-    errors: [
-      {message: 'Expected indentation of 1 tab character but found 0.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 1, type: 'tab', characters: 'character', gotten: 0
+      }
+    }]
   }, {
     code: [
       '[',
@@ -632,9 +1318,33 @@ ruleTester.run('jsx-indent', rule, {
       ']'
     ].join('\n'),
     options: [2],
-    errors: [
-      {message: 'Expected indentation of 2 space characters but found 4.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 2, type: 'space', characters: 'characters', gotten: 4
+      }
+    }]
+  }, {
+    code: [
+      '[',
+      '  <div />,',
+      '    <></>',
+      ']'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    output: [
+      '[',
+      '  <div />,',
+      '  <></>',
+      ']'
+    ].join('\n'),
+    options: [2],
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 2, type: 'space', characters: 'characters', gotten: 4
+      }
+    }]
   }, {
     code: [
       '<App>\n',
@@ -647,9 +1357,12 @@ ruleTester.run('jsx-indent', rule, {
       '</App>'
     ].join('\n'),
     options: ['tab'],
-    errors: [
-      {message: 'Expected indentation of 1 tab character but found 0.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 1, type: 'tab', characters: 'character', gotten: 0
+      }
+    }]
   }, {
     code: [
       '<App>\n',
@@ -662,9 +1375,12 @@ ruleTester.run('jsx-indent', rule, {
       '</App>'
     ].join('\n'),
     options: [2],
-    errors: [
-      {message: 'Expected indentation of 2 space characters but found 0.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 2, type: 'space', characters: 'characters', gotten: 0
+      }
+    }]
   }, {
     code: [
       '<div>',
@@ -686,9 +1402,12 @@ ruleTester.run('jsx-indent', rule, {
       '    }',
       '</div>'
     ].join('\n'),
-    errors: [
-      {message: 'Expected indentation of 12 space characters but found 8.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 12, type: 'space', characters: 'characters', gotten: 8
+      }
+    }]
   }, {
     code: [
       '<div>',
@@ -710,9 +1429,12 @@ ruleTester.run('jsx-indent', rule, {
       '    }',
       '</div>'
     ].join('\n'),
-    errors: [
-      {message: 'Expected indentation of 12 space characters but found 8.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 12, type: 'space', characters: 'characters', gotten: 8
+      }
+    }]
   }, {
     // Multiline ternary
     // (colon at the end of the first expression)
@@ -726,9 +1448,30 @@ ruleTester.run('jsx-indent', rule, {
       '    <Foo /> :',
       '    <Bar />'
     ].join('\n'),
-    errors: [
-      {message: 'Expected indentation of 4 space characters but found 0.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    }]
+  }, {
+    code: [
+      'foo ?',
+      '    <Foo /> :',
+      '<></>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    output: [
+      'foo ?',
+      '    <Foo /> :',
+      '    <></>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    }]
   }, {
     // Multiline ternary
     // (colon on its own line)
@@ -744,9 +1487,12 @@ ruleTester.run('jsx-indent', rule, {
       ':',
       '    <Bar />'
     ].join('\n'),
-    errors: [
-      {message: 'Expected indentation of 4 space characters but found 0.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    }]
   }, {
     // Multiline ternary
     // (first expression on test line, colon at the end of the first expression)
@@ -758,9 +1504,32 @@ ruleTester.run('jsx-indent', rule, {
       'foo ? <Foo /> :',
       '<Bar />'
     ].join('\n'),
-    errors: [
-      {message: 'Expected indentation of 0 space characters but found 4.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 0, type: 'space', characters: 'characters', gotten: 4
+      }
+    }]
+  }, {
+    code: [
+      'foo ?',
+      '    <Foo />',
+      ':',
+      '<></>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    output: [
+      'foo ?',
+      '    <Foo />',
+      ':',
+      '    <></>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    }]
   }, {
     // Multiline ternary
     // (first expression on test line, colon on its own line)
@@ -774,9 +1543,12 @@ ruleTester.run('jsx-indent', rule, {
       ':',
       '<Bar />'
     ].join('\n'),
-    errors: [
-      {message: 'Expected indentation of 0 space characters but found 6.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 0, type: 'space', characters: 'characters', gotten: 6
+      }
+    }]
   }, {
     // Multiline ternary
     // (colon at the end of the first expression, parenthesized first expression)
@@ -792,9 +1564,32 @@ ruleTester.run('jsx-indent', rule, {
       ') :',
       '    <Bar />'
     ].join('\n'),
-    errors: [
-      {message: 'Expected indentation of 4 space characters but found 0.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    }]
+  }, {
+    code: [
+      'foo ? (',
+      '    <Foo />',
+      ') :',
+      '<></>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    output: [
+      'foo ? (',
+      '    <Foo />',
+      ') :',
+      '    <></>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    }]
   }, {
     // Multiline ternary
     // (colon on its own line, parenthesized first expression)
@@ -812,9 +1607,12 @@ ruleTester.run('jsx-indent', rule, {
       ':',
       '    <Bar />'
     ].join('\n'),
-    errors: [
-      {message: 'Expected indentation of 4 space characters but found 0.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    }]
   }, {
     // Multiline ternary
     // (colon at the end of the first expression, parenthesized second expression)
@@ -830,9 +1628,32 @@ ruleTester.run('jsx-indent', rule, {
       '        <Bar />',
       '    )'
     ].join('\n'),
-    errors: [
-      {message: 'Expected indentation of 8 space characters but found 4.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 8, type: 'space', characters: 'characters', gotten: 4
+      }
+    }]
+  }, {
+    code: [
+      'foo ?',
+      '    <Foo /> : (',
+      '    <></>',
+      '    )'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    output: [
+      'foo ?',
+      '    <Foo /> : (',
+      '        <></>',
+      '    )'
+    ].join('\n'),
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 8, type: 'space', characters: 'characters', gotten: 4
+      }
+    }]
   }, {
     // Multiline ternary
     // (colon on its own line, parenthesized second expression)
@@ -850,9 +1671,12 @@ ruleTester.run('jsx-indent', rule, {
       '    <Bar />',
       ')'
     ].join('\n'),
-    errors: [
-      {message: 'Expected indentation of 4 space characters but found 0.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    }]
   }, {
     // Multiline ternary
     // (colon indented on its own line, parenthesized second expression)
@@ -870,9 +1694,34 @@ ruleTester.run('jsx-indent', rule, {
       '        <Bar />',
       '    )'
     ].join('\n'),
-    errors: [
-      {message: 'Expected indentation of 8 space characters but found 4.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 8, type: 'space', characters: 'characters', gotten: 4
+      }
+    }]
+  }, {
+    code: [
+      'foo ?',
+      '    <Foo />',
+      '    : (',
+      '    <></>',
+      '    )'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    output: [
+      'foo ?',
+      '    <Foo />',
+      '    : (',
+      '        <></>',
+      '    )'
+    ].join('\n'),
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 8, type: 'space', characters: 'characters', gotten: 4
+      }
+    }]
   }, {
     // Multiline ternary
     // (colon at the end of the first expression, both expression parenthesized)
@@ -890,10 +1739,46 @@ ruleTester.run('jsx-indent', rule, {
       '    <Bar />',
       ')'
     ].join('\n'),
-    errors: [
-      {message: 'Expected indentation of 4 space characters but found 0.'},
-      {message: 'Expected indentation of 4 space characters but found 0.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    },
+    {
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    }]
+  }, {
+    code: [
+      'foo ? (',
+      '<></>',
+      ') : (',
+      '<></>',
+      ')'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    output: [
+      'foo ? (',
+      '    <></>',
+      ') : (',
+      '    <></>',
+      ')'
+    ].join('\n'),
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    },
+    {
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    }]
   }, {
     // Multiline ternary
     // (colon on its own line, both expression parenthesized)
@@ -913,10 +1798,18 @@ ruleTester.run('jsx-indent', rule, {
       '    <Bar />',
       ')'
     ].join('\n'),
-    errors: [
-      {message: 'Expected indentation of 4 space characters but found 0.'},
-      {message: 'Expected indentation of 4 space characters but found 0.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    },
+    {
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    }]
   }, {
     // Multiline ternary
     // (colon on its own line, both expression parenthesized)
@@ -938,10 +1831,50 @@ ruleTester.run('jsx-indent', rule, {
       '    <Bar />',
       ')'
     ].join('\n'),
-    errors: [
-      {message: 'Expected indentation of 4 space characters but found 0.'},
-      {message: 'Expected indentation of 4 space characters but found 0.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    },
+    {
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    }]
+  }, {
+    code: [
+      'foo ? (',
+      '<></>',
+      ')',
+      ':',
+      '(',
+      '<></>',
+      ')'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    output: [
+      'foo ? (',
+      '    <></>',
+      ')',
+      ':',
+      '(',
+      '    <></>',
+      ')'
+    ].join('\n'),
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    },
+    {
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    }]
   }, {
     // Multiline ternary
     // (first expression on test line, colon at the end of the first expression, parenthesized second expression)
@@ -955,9 +1888,30 @@ ruleTester.run('jsx-indent', rule, {
       '    <Bar />',
       ')'
     ].join('\n'),
-    errors: [
-      {message: 'Expected indentation of 4 space characters but found 0.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    }]
+  }, {
+    code: [
+      'foo ? <Foo /> : (',
+      '<></>',
+      ')'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    output: [
+      'foo ? <Foo /> : (',
+      '    <></>',
+      ')'
+    ].join('\n'),
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    }]
   }, {
     // Multiline ternary
     // (first expression on test line, colon on its own line, parenthesized second expression)
@@ -973,9 +1927,32 @@ ruleTester.run('jsx-indent', rule, {
       '    <Bar />',
       ')'
     ].join('\n'),
-    errors: [
-      {message: 'Expected indentation of 4 space characters but found 0.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    }]
+  }, {
+    code: [
+      'foo ? <Foo />',
+      ': (',
+      '<></>',
+      ')'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    output: [
+      'foo ? <Foo />',
+      ': (',
+      '    <></>',
+      ')'
+    ].join('\n'),
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    }]
   }, {
     code: [
       '<p>',
@@ -984,8 +1961,308 @@ ruleTester.run('jsx-indent', rule, {
       '  </div>',
       '</p>'
     ].join('\n'),
-    errors: [
-      {message: 'Expected indentation of 4 space characters but found 2.'}
-    ]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 2
+      }
+    }],
+    output: [
+      '<p>',
+      '    <div>',
+      '        <SelfClosingTag />Text',
+      '    </div>',
+      '</p>'
+    ].join('\n')
+  }, {
+    code: `
+    const Component = () => (
+      <View
+        ListFooterComponent={(
+          <View
+            rowSpan={3}
+            placeholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do"
+          />
+    )}
+      />
+    );
+    `,
+    output: `
+    const Component = () => (
+      <View
+        ListFooterComponent={(
+          <View
+            rowSpan={3}
+            placeholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do"
+          />
+        )}
+      />
+    );
+    `,
+    options: [2, {checkAttributes: true}],
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 8, type: 'space', characters: 'characters', gotten: 4
+      }
+    }]
+  }, {
+    code: `
+const Component = () => (
+\t<View
+\t\tListFooterComponent={(
+\t\t\t<View
+\t\t\t\trowSpan={3}
+\t\t\t\tplaceholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do"
+\t\t\t/>
+)}
+\t/>
+);
+    `,
+    output: `
+const Component = () => (
+\t<View
+\t\tListFooterComponent={(
+\t\t\t<View
+\t\t\t\trowSpan={3}
+\t\t\t\tplaceholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do"
+\t\t\t/>
+\t\t)}
+\t/>
+);
+    `,
+    options: ['tab', {checkAttributes: true}],
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 2, type: 'tab', characters: 'characters', gotten: 0
+      }
+    }]
+  }, {
+    code: `
+    function Foo() {
+      return (
+        <div>
+          {condition && (
+          <p>Bar</p>
+          )}
+        </div>
+      );
+    }
+    `,
+    output: `
+    function Foo() {
+      return (
+        <div>
+          {condition && (
+            <p>Bar</p>
+          )}
+        </div>
+      );
+    }
+    `,
+    options: [2, {indentLogicalExpressions: true}],
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 12, type: 'space', characters: 'characters', gotten: 10
+      }
+    }]
+  }, {
+    code: [
+      '<span>',
+      '    {do {',
+      '        const num = rollDice();',
+      '            <Thing num={num} />;',
+      '    }}',
+      '</span>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    output: [
+      '<span>',
+      '    {do {',
+      '        const num = rollDice();',
+      '        <Thing num={num} />;',
+      '    }}',
+      '</span>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 8, type: 'space', characters: 'characters', gotten: 12
+      }
+    }]
+  }, {
+    code: [
+      '<span>',
+      '    {(do {',
+      '        const num = rollDice();',
+      '            <Thing num={num} />;',
+      '    })}',
+      '</span>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    output: [
+      '<span>',
+      '    {(do {',
+      '        const num = rollDice();',
+      '        <Thing num={num} />;',
+      '    })}',
+      '</span>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 8, type: 'space', characters: 'characters', gotten: 12
+      }
+    }]
+  }, {
+    code: [
+      '<span>',
+      '    {do {',
+      '    <Thing num={getPurposeOfLife()} />;',
+      '    }}',
+      '</span>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    output: [
+      '<span>',
+      '    {do {',
+      '        <Thing num={getPurposeOfLife()} />;',
+      '    }}',
+      '</span>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 8, type: 'space', characters: 'characters', gotten: 4
+      }
+    }]
+  }, {
+    code: [
+      '<span>',
+      '    {(do {',
+      '    <Thing num={getPurposeOfLife()} />;',
+      '    })}',
+      '</span>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    output: [
+      '<span>',
+      '    {(do {',
+      '        <Thing num={getPurposeOfLife()} />;',
+      '    })}',
+      '</span>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 8, type: 'space', characters: 'characters', gotten: 4
+      }
+    }]
+  }, {
+    code: [
+      '<div>',
+      'text',
+      '</div>'
+    ].join('\n'),
+    output: [
+      '<div>',
+      '    text',
+      '</div>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    }]
+  }, {
+    code: [
+      '<div>',
+      '  text',
+      'text',
+      '</div>'
+    ].join('\n'),
+    output: [
+      '<div>',
+      '    text',
+      '    text',
+      '</div>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 2
+      }
+    },
+    {
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    }]
+  }, {
+    code: [
+      '<div>',
+      '\t  text',
+      '  \t  text',
+      '</div>'
+    ].join('\n'),
+    output: [
+      '<div>',
+      '    text',
+      '    text',
+      '</div>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    },
+    {
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 2
+      }
+    }]
+  }, {
+    code: [
+      '<div>',
+      '\t\ttext',
+      '</div>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    options: ['tab'],
+    output: [
+      '<div>',
+      '\ttext',
+      '</div>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 1, type: 'tab', characters: 'character', gotten: 2
+      }
+    }]
+  }, {
+    code: [
+      '<>',
+      'aaa',
+      '</>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    output: [
+      '<>',
+      '    aaa',
+      '</>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 0
+      }
+    }]
   }]
 });

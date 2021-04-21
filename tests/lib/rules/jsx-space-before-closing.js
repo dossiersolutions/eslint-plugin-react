@@ -2,14 +2,15 @@
  * @fileoverview Validate spacing before closing bracket in JSX.
  * @author ryym
  */
+
 'use strict';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/jsx-space-before-closing');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/jsx-space-before-closing');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -69,53 +70,53 @@ ruleTester.run('jsx-space-before-closing', rule, {
     code: '<App/>',
     output: '<App />',
     errors: [
-      {message: 'A space is required before closing bracket'}
+      {messageId: 'needSpaceBeforeClose'}
     ]
   }, {
     code: '<App foo/>',
     output: '<App foo />',
     errors: [
-      {message: 'A space is required before closing bracket'}
+      {messageId: 'needSpaceBeforeClose'}
     ]
   }, {
     code: '<App foo={bar}/>',
     output: '<App foo={bar} />',
     errors: [
-      {message: 'A space is required before closing bracket'}
+      {messageId: 'needSpaceBeforeClose'}
     ]
   }, {
     code: '<App {...props}/>',
     output: '<App {...props} />',
     errors: [
-      {message: 'A space is required before closing bracket'}
+      {messageId: 'needSpaceBeforeClose'}
     ]
   }, {
     code: '<App />',
     output: '<App/>',
     options: ['never'],
     errors: [
-      {message: 'A space is forbidden before closing bracket'}
+      {messageId: 'noSpaceBeforeClose'}
     ]
   }, {
     code: '<App foo />',
     output: '<App foo/>',
     options: ['never'],
     errors: [
-      {message: 'A space is forbidden before closing bracket'}
+      {messageId: 'noSpaceBeforeClose'}
     ]
   }, {
     code: '<App foo={bar} />',
     output: '<App foo={bar}/>',
     options: ['never'],
     errors: [
-      {message: 'A space is forbidden before closing bracket'}
+      {messageId: 'noSpaceBeforeClose'}
     ]
   }, {
     code: '<App {...props} />',
     output: '<App {...props}/>',
     options: ['never'],
     errors: [
-      {message: 'A space is forbidden before closing bracket'}
+      {messageId: 'noSpaceBeforeClose'}
     ]
   }]
 });

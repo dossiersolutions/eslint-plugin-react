@@ -2,21 +2,25 @@
  * @fileoverview Ensure proper position of the first property in JSX
  * @author Joachim Seminck
  */
+
 'use strict';
 
 // -----------------------------------------------------------------------------
 // Requirements
 // -----------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/jsx-first-prop-new-line');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/jsx-first-prop-new-line');
+
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
   sourceType: 'module',
   ecmaFeatures: {
     jsx: true
-  }
+  },
+  jsx: true
 };
 
 // -----------------------------------------------------------------------------
@@ -30,22 +34,22 @@ ruleTester.run('jsx-first-prop-new-line', rule, {
     {
       code: '<Foo />',
       options: ['never'],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: '<Foo prop="bar" />',
       options: ['never'],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: '<Foo {...this.props} />',
       options: ['never'],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: '<Foo a a a />',
       options: ['never'],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -54,27 +58,27 @@ ruleTester.run('jsx-first-prop-new-line', rule, {
         '/>'
       ].join('\n'),
       options: ['never'],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: '<Foo />',
       options: ['multiline'],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: '<Foo prop="one" />',
       options: ['multiline'],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: '<Foo {...this.props} />',
       options: ['multiline'],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: '<Foo a a a />',
       options: ['multiline'],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -84,7 +88,7 @@ ruleTester.run('jsx-first-prop-new-line', rule, {
         '/>'
       ].join('\n'),
       options: ['multiline'],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -94,21 +98,21 @@ ruleTester.run('jsx-first-prop-new-line', rule, {
         '/>'
       ].join('\n'),
       options: ['multiline'],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
         '<Foo bar />'
       ].join('\n'),
       options: ['multiline-multiprop'],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
         '<Foo bar baz />'
       ].join('\n'),
       options: ['multiline-multiprop'],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -116,7 +120,7 @@ ruleTester.run('jsx-first-prop-new-line', rule, {
         '}} />'
       ].join('\n'),
       options: ['multiline-multiprop'],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -127,12 +131,23 @@ ruleTester.run('jsx-first-prop-new-line', rule, {
         '/>'
       ].join('\n'),
       options: ['multiline-multiprop'],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: [
+        '<Foo ',
+        '  foo={{',
+        '  }}',
+        '  bar',
+        '/>'
+      ].join('\n'),
+      options: ['multiline-multiprop'],
+      parser: parsers.TYPESCRIPT_ESLINT
     },
     {
       code: '<Foo />',
       options: ['always'],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -142,7 +157,7 @@ ruleTester.run('jsx-first-prop-new-line', rule, {
         '/>'
       ].join('\n'),
       options: ['always'],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -152,7 +167,7 @@ ruleTester.run('jsx-first-prop-new-line', rule, {
         '/>'
       ].join('\n'),
       options: ['always'],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }
   ],
 
@@ -164,8 +179,18 @@ ruleTester.run('jsx-first-prop-new-line', rule, {
         'propOne="one" propTwo="two" />'
       ].join('\n'),
       options: ['always'],
-      errors: [{message: 'Property should be placed on a new line'}],
-      parser: 'babel-eslint'
+      errors: [{messageId: 'propOnNewLine'}],
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: '<Foo propOne="one" propTwo="two" />',
+      output: [
+        '<Foo',
+        'propOne="one" propTwo="two" />'
+      ].join('\n'),
+      options: ['always'],
+      errors: [{messageId: 'propOnNewLine'}],
+      parser: parsers.TYPESCRIPT_ESLINT
     },
     {
       code: [
@@ -180,8 +205,24 @@ ruleTester.run('jsx-first-prop-new-line', rule, {
         '/>'
       ].join('\n'),
       options: ['always'],
-      errors: [{message: 'Property should be placed on a new line'}],
-      parser: 'babel-eslint'
+      errors: [{messageId: 'propOnNewLine'}],
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: [
+        '<Foo propOne="one"',
+        '  propTwo="two"',
+        '/>'
+      ].join('\n'),
+      output: [
+        '<Foo',
+        'propOne="one"',
+        '  propTwo="two"',
+        '/>'
+      ].join('\n'),
+      options: ['always'],
+      errors: [{messageId: 'propOnNewLine'}],
+      parser: parsers.TYPESCRIPT_ESLINT
     },
     {
       code: [
@@ -196,8 +237,24 @@ ruleTester.run('jsx-first-prop-new-line', rule, {
         '/>'
       ].join('\n'),
       options: ['never'],
-      errors: [{message: 'Property should be placed on the same line as the component declaration'}],
-      parser: 'babel-eslint'
+      errors: [{messageId: 'propOnSameLine'}],
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: [
+        '<Foo',
+        '  propOne="one"',
+        '  propTwo="two"',
+        '/>'
+      ].join('\n'),
+      output: [
+        '<Foo propOne="one"',
+        '  propTwo="two"',
+        '/>'
+      ].join('\n'),
+      options: ['never'],
+      errors: [{messageId: 'propOnSameLine'}],
+      parser: parsers.TYPESCRIPT_ESLINT
     },
     {
       code: [
@@ -210,8 +267,22 @@ ruleTester.run('jsx-first-prop-new-line', rule, {
         '}} />'
       ].join('\n'),
       options: ['multiline'],
-      errors: [{message: 'Property should be placed on a new line'}],
-      parser: 'babel-eslint'
+      errors: [{messageId: 'propOnNewLine'}],
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: [
+        '<Foo prop={{',
+        '}} />'
+      ].join('\n'),
+      output: [
+        '<Foo',
+        'prop={{',
+        '}} />'
+      ].join('\n'),
+      options: ['multiline'],
+      errors: [{messageId: 'propOnNewLine'}],
+      parser: parsers.TYPESCRIPT_ESLINT
     },
     {
       code: [
@@ -224,8 +295,22 @@ ruleTester.run('jsx-first-prop-new-line', rule, {
         '}} baz />'
       ].join('\n'),
       options: ['multiline-multiprop'],
-      errors: [{message: 'Property should be placed on a new line'}],
-      parser: 'babel-eslint'
+      errors: [{messageId: 'propOnNewLine'}],
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: [
+        '<Foo bar={{',
+        '}} baz />'
+      ].join('\n'),
+      output: [
+        '<Foo',
+        'bar={{',
+        '}} baz />'
+      ].join('\n'),
+      options: ['multiline-multiprop'],
+      errors: [{messageId: 'propOnNewLine'}],
+      parser: parsers.TYPESCRIPT_ESLINT
     }
   ]
 });

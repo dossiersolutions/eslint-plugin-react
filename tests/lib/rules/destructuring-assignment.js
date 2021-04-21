@@ -1,13 +1,13 @@
-
 /**
  * @fileoverview Rule to forbid or enforce destructuring assignment consistency.
- **/
+ */
+
 'use strict';
 
-const rule = require('../../../lib/rules/destructuring-assignment');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/destructuring-assignment');
 
-require('babel-eslint');
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -20,15 +20,6 @@ const parserOptions = {
 const ruleTester = new RuleTester({parserOptions});
 ruleTester.run('destructuring-assignment', rule, {
   valid: [{
-    code: `const Foo = class extends React.PureComponent {
-      render() {
-        const { foo } = this.props;
-        return <div>{foo}</div>;
-      }
-    };`,
-    options: ['always'],
-    parser: 'babel-eslint'
-  }, {
     code: `const MyComponent = ({ id, className }) => (
       <div id={id} className={className} />
     );`
@@ -37,7 +28,7 @@ ruleTester.run('destructuring-assignment', rule, {
       const { id, className } = props;
       return <div id={id} className={className} />
     };`,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `const MyComponent = ({ id, className }) => (
       <div id={id} className={className} />
@@ -101,15 +92,7 @@ ruleTester.run('destructuring-assignment', rule, {
         return <div>{foo}</div>;
       }
     };`,
-    options: ['always'],
-    parser: 'babel-eslint'
-  }, {
-    code: `const Foo = class extends React.PureComponent {
-      render() {
-        const { foo } = this.props;
-        return <div>{foo}</div>;
-      }
-    };`
+    options: ['always']
   }, {
     code: `const Foo = class extends React.PureComponent {
       render() {
@@ -118,14 +101,23 @@ ruleTester.run('destructuring-assignment', rule, {
       }
     };`,
     options: ['always'],
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: `const Foo = class extends React.PureComponent {
+      render() {
+        const { foo } = this.props;
+        return <div>{foo}</div>;
+      }
+    };`,
+    options: ['always'],
+    parser: parsers.TYPESCRIPT_ESLINT
   }, {
     code: `const MyComponent = (props) => {
       const { h, i } = hi;
       return <div id={props.id} className={props.className} />
     };`,
     options: ['never'],
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `const Foo = class extends React.PureComponent {
       constructor() {
@@ -134,58 +126,123 @@ ruleTester.run('destructuring-assignment', rule, {
       }
     };`,
     options: ['always']
+  }, {
+    code: [
+      'const div = styled.div`',
+      '  & .button {',
+      '    border-radius: ${props => props.borderRadius}px;',
+      '  }',
+      '`'
+    ].join('\n')
+  }, {
+    code: `
+      export default (context: $Context) => ({
+        foo: context.bar
+      });
+    `,
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: `
+      class Foo {
+        bar(context) {
+          return context.baz;
+        }
+      }
+    `
+  }, {
+    code: `
+      class Foo {
+        bar(props) {
+          return props.baz;
+        }
+      }
+    `
+  }, {
+    code: `
+      class Foo extends React.Component {
+        bar = this.props.bar
+      }
+    `,
+    options: ['always', {ignoreClassFields: true}],
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: [
+      'class Input extends React.Component {',
+      '  id = `${this.props.name}`;',
+      '  render() {',
+      '    return <div />;',
+      '  }',
+      '}'
+    ].join('\n'),
+    options: ['always', {ignoreClassFields: true}],
+    parser: parsers.BABEL_ESLINT
+  },
+  // https://github.com/yannickcr/eslint-plugin-react/issues/2911
+  {
+    code: `
+      function Foo({context}) {
+        const d = context.describe()
+        return <div>{d}</div>
+      }
+    `,
+    options: ['always'],
+    parser: parsers.BABEL_ESLINT
   }],
 
   invalid: [{
     code: `const MyComponent = (props) => {
       return (<div id={props.id} />)
     };`,
-    errors: [
-      {message: 'Must use destructuring props assignment'}
-    ]
+    errors: [{
+      messageId: 'useDestructAssignment',
+      data: {type: 'props'}
+    }]
   }, {
     code: `const MyComponent = ({ id, className }) => (
       <div id={id} className={className} />
     );`,
     options: ['never'],
-    errors: [
-      {message: 'Must never use destructuring props assignment in SFC argument'}
-    ]
+    errors: [{
+      messageId: 'noDestructPropsInSFCArg'
+    }]
   }, {
     code: `const MyComponent = (props, { color }) => (
       <div id={props.id} className={props.className} />
     );`,
     options: ['never'],
-    errors: [
-      {message: 'Must never use destructuring context assignment in SFC argument'}
-    ]
+    errors: [{
+      messageId: 'noDestructContextInSFCArg'
+    }]
   }, {
     code: `const Foo = class extends React.PureComponent {
       render() {
         return <div>{this.props.foo}</div>;
       }
     };`,
-    errors: [
-      {message: 'Must use destructuring props assignment'}
-    ]
+    errors: [{
+      messageId: 'useDestructAssignment',
+      data: {type: 'props'}
+    }]
   }, {
     code: `const Foo = class extends React.PureComponent {
       render() {
         return <div>{this.state.foo}</div>;
       }
     };`,
-    errors: [
-      {message: 'Must use destructuring state assignment'}
-    ]
+    errors: [{
+      messageId: 'useDestructAssignment',
+      data: {type: 'state'}
+    }]
   }, {
     code: `const Foo = class extends React.PureComponent {
       render() {
         return <div>{this.context.foo}</div>;
       }
     };`,
-    errors: [
-      {message: 'Must use destructuring context assignment'}
-    ]
+    errors: [{
+      messageId: 'useDestructAssignment',
+      data: {type: 'context'}
+    }]
   }, {
     code: `class Foo extends React.Component {
       render() { return this.foo(); }
@@ -193,18 +250,52 @@ ruleTester.run('destructuring-assignment', rule, {
         return this.props.children;
       }
     }`,
-    errors: [
-      {message: 'Must use destructuring props assignment'}
-    ]
+    errors: [{
+      messageId: 'useDestructAssignment',
+      data: {type: 'props'}
+    }]
   }, {
     code: `var Hello = React.createClass({
       render: function() {
         return <Text>{this.props.foo}</Text>;
       }
     });`,
-    errors: [
-      {message: 'Must use destructuring props assignment'}
-    ]
+    errors: [{
+      messageId: 'useDestructAssignment',
+      data: {type: 'props'}
+    }]
+  }, {
+    code: `
+      module.exports = {
+        Foo(props) {
+          return <p>{props.a}</p>;
+        }
+      }
+    `,
+    errors: [{
+      messageId: 'useDestructAssignment',
+      data: {type: 'props'}
+    }]
+  }, {
+    code: `
+      export default function Foo(props) {
+        return <p>{props.a}</p>;
+      }
+    `,
+    errors: [{
+      messageId: 'useDestructAssignment',
+      data: {type: 'props'}
+    }]
+  }, {
+    code: `
+      function hof() {
+        return (props) => <p>{props.a}</p>;
+      }
+    `,
+    errors: [{
+      messageId: 'useDestructAssignment',
+      data: {type: 'props'}
+    }]
   }, {
     code: `const Foo = class extends React.PureComponent {
       render() {
@@ -212,9 +303,10 @@ ruleTester.run('destructuring-assignment', rule, {
         return <div>{foo}</div>;
       }
     };`,
-    errors: [
-      {message: 'Must use destructuring props assignment'}
-    ]
+    errors: [{
+      messageId: 'useDestructAssignment',
+      data: {type: 'props'}
+    }]
   }, {
     code: `const Foo = class extends React.PureComponent {
       render() {
@@ -223,20 +315,22 @@ ruleTester.run('destructuring-assignment', rule, {
       }
     };`,
     options: ['never'],
-    parser: 'babel-eslint',
-    errors: [
-      {message: 'Must never use destructuring props assignment'}
-    ]
+    parser: parsers.BABEL_ESLINT,
+    errors: [{
+      messageId: 'noDestructAssignment',
+      data: {type: 'props'}
+    }]
   }, {
     code: `const MyComponent = (props) => {
       const { id, className } = props;
       return <div id={id} className={className} />
     };`,
     options: ['never'],
-    parser: 'babel-eslint',
-    errors: [
-      {message: 'Must never use destructuring props assignment'}
-    ]
+    parser: parsers.BABEL_ESLINT,
+    errors: [{
+      messageId: 'noDestructAssignment',
+      data: {type: 'props'}
+    }]
   }, {
     code: `const Foo = class extends React.PureComponent {
       render() {
@@ -245,9 +339,10 @@ ruleTester.run('destructuring-assignment', rule, {
       }
     };`,
     options: ['never'],
-    parser: 'babel-eslint',
-    errors: [
-      {message: 'Must never use destructuring state assignment'}
-    ]
+    parser: parsers.BABEL_ESLINT,
+    errors: [{
+      messageId: 'noDestructAssignment',
+      data: {type: 'state'}
+    }]
   }]
 });

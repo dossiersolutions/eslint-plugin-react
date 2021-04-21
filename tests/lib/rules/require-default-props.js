@@ -2,14 +2,17 @@
  * @fileoverview Enforce a defaultProps definition for every prop that is not a required prop.
  * @author Vitor Balocco
  */
+
 'use strict';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/require-default-props');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/require-default-props');
+
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -18,8 +21,6 @@ const parserOptions = {
     jsx: true
   }
 };
-
-require('babel-eslint');
 
 const ruleTester = new RuleTester({parserOptions});
 
@@ -31,7 +32,7 @@ ruleTester.run('require-default-props', rule, {
 
   valid: [
     //
-    // stateless components
+    // stateless components as function declarations
     {
       code: [
         'function MyStatelessComponent({ foo, bar }) {',
@@ -151,6 +152,207 @@ ruleTester.run('require-default-props', rule, {
         'MyStatelessComponent.defaultProps = defaults;'
       ].join('\n')
     },
+    {
+      code: [
+        'function MyStatelessComponent({ foo, bar }) {',
+        '  return <div>{foo}{bar}</div>;',
+        '}',
+        'MyStatelessComponent.propTypes = {',
+        '  foo: PropTypes.string,',
+        '  bar: PropTypes.string.isRequired',
+        '};'
+      ].join('\n'),
+      options: [{ignoreFunctionalComponents: true}]
+    },
+    {
+      code: [
+        'function MyStatelessComponent({ foo = "test", bar }) {',
+        '  return <div>{foo}{bar}</div>;',
+        '}',
+        'MyStatelessComponent.propTypes = {',
+        '  foo: PropTypes.string,',
+        '  bar: PropTypes.string.isRequired',
+        '};'
+      ].join('\n'),
+      options: [{ignoreFunctionalComponents: true}]
+    },
+    {
+      code: [
+        'function MyStatelessComponent({ foo = "test", bar }) {',
+        '  return <div>{foo}{bar}</div>;',
+        '}',
+        'MyStatelessComponent.propTypes = {',
+        '  foo: PropTypes.string,',
+        '};'
+      ].join('\n'),
+      options: [{forbidDefaultForRequired: true, ignoreFunctionalComponents: true}]
+    },
+    {
+      code: [
+        'export function MyStatelessComponent({ foo, bar }) {',
+        '  return <div>{foo}{bar}</div>;',
+        '}',
+        'MyStatelessComponent.propTypes = {',
+        '  foo: PropTypes.string,',
+        '  bar: PropTypes.string.isRequired',
+        '};'
+      ].join('\n'),
+      options: [{ignoreFunctionalComponents: true}],
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: [
+        'export function MyStatelessComponent({ foo, bar }) {',
+        '  return <div>{foo}{bar}</div>;',
+        '}',
+        'MyStatelessComponent.propTypes = {',
+        '  foo: PropTypes.string,',
+        '  bar: PropTypes.string.isRequired',
+        '};'
+      ].join('\n'),
+      options: [{ignoreFunctionalComponents: true}],
+      parser: parsers.TYPESCRIPT_ESLINT
+    },
+    {
+      code: [
+        'export default function MyStatelessComponent({ foo, bar }) {',
+        '  return <div>{foo}{bar}</div>;',
+        '}',
+        'MyStatelessComponent.propTypes = {',
+        '  foo: PropTypes.string,',
+        '  bar: PropTypes.string.isRequired',
+        '};'
+      ].join('\n'),
+      options: [{ignoreFunctionalComponents: true}],
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: [
+        'export default function MyStatelessComponent({ foo, bar }) {',
+        '  return <div>{foo}{bar}</div>;',
+        '}',
+        'MyStatelessComponent.propTypes = {',
+        '  foo: PropTypes.string,',
+        '  bar: PropTypes.string.isRequired',
+        '};'
+      ].join('\n'),
+      options: [{ignoreFunctionalComponents: true}],
+      parser: parsers.TYPESCRIPT_ESLINT
+    },
+
+    //
+    // stateless components as function expressions
+    {
+      code: `
+        import PropTypes from 'prop-types';
+        import React from 'react';
+
+        const MyComponent = function({ foo, bar }) {
+          return <div>{foo}{bar}</div>;
+        };
+
+        MyComponent.propTypes = {
+          foo: PropTypes.string,
+          bar: PropTypes.string.isRequired
+        };
+
+        export default MyComponent;
+      `,
+      options: [{ignoreFunctionalComponents: true}]
+    },
+    {
+      code: `
+        import PropTypes from 'prop-types';
+        import React from 'react';
+
+        export const MyComponent = function({ foo, bar }) {
+          return <div>{foo}{bar}</div>;
+        };
+
+        MyComponent.propTypes = {
+          foo: PropTypes.string,
+          bar: PropTypes.string.isRequired
+        };
+      `,
+      options: [{ignoreFunctionalComponents: true}],
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: `
+        import PropTypes from 'prop-types';
+        import React from 'react';
+
+        export const MyComponent = function({ foo, bar }) {
+          return <div>{foo}{bar}</div>;
+        };
+
+        MyComponent.propTypes = {
+          foo: PropTypes.string,
+          bar: PropTypes.string.isRequired
+        };
+      `,
+      options: [{ignoreFunctionalComponents: true}],
+      parser: parsers.TYPESCRIPT_ESLINT
+    },
+
+    //
+    // stateless components as arrow function expressions
+    {
+      code: `
+        import PropTypes from 'prop-types';
+        import React from 'react';
+
+        const MyComponent = ({ foo, bar }) => {
+          return <div>{foo}{bar}</div>;
+        };
+
+        MyComponent.propTypes = {
+          foo: PropTypes.string,
+          bar: PropTypes.string.isRequired
+        };
+
+        export default MyComponent;
+      `,
+      options: [{ignoreFunctionalComponents: true}]
+    },
+    {
+      code: `
+        import PropTypes from 'prop-types';
+        import React from 'react';
+
+        export const MyComponent = ({ foo, bar }) => {
+          return <div>{foo}{bar}</div>;
+        };
+
+        MyComponent.propTypes = {
+          foo: PropTypes.string,
+          bar: PropTypes.string.isRequired
+        };
+
+        export default MyComponent;
+      `,
+      options: [{ignoreFunctionalComponents: true}],
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: `
+        import PropTypes from 'prop-types';
+        import React from 'react';
+
+        export const MyComponent = ({ foo, bar }) => {
+          return <div>{foo}{bar}</div>;
+        };
+
+        MyComponent.propTypes = {
+          foo: PropTypes.string,
+          bar: PropTypes.string.isRequired
+        };
+
+        export default MyComponent;
+      `,
+      options: [{ignoreFunctionalComponents: true}],
+      parser: parsers.TYPESCRIPT_ESLINT
+    },
 
     //
     // createReactClass components
@@ -212,6 +414,26 @@ ruleTester.run('require-default-props', rule, {
         '  }',
         '});'
       ].join('\n')
+    },
+    {
+      code: [
+        'var Greeting = createReactClass({',
+        '  render: function() {',
+        '    return <div>Hello {this.props.foo} {this.props.bar}</div>;',
+        '  },',
+        '  propTypes: {',
+        '    foo: PropTypes.string,',
+        '    bar: PropTypes.string',
+        '  },',
+        '  getDefaultProps: function() {',
+        '    return {',
+        '      foo: "foo",',
+        '      bar: "bar"',
+        '    };',
+        '  }',
+        '});'
+      ].join('\n'),
+      options: [{ignoreFunctionalComponents: true}]
     },
 
     //
@@ -312,6 +534,25 @@ ruleTester.run('require-default-props', rule, {
         'Greeting.defaultProps = {};',
         'Greeting.defaultProps.foo = "foo";'
       ].join('\n')
+    },
+    {
+      code: [
+        'class Greeting extends React.Component {',
+        '  render() {',
+        '    return (',
+        '      <h1>Hello, {this.props.foo} {this.props.bar}</h1>',
+        '    );',
+        '  }',
+        '}',
+        'Greeting.propTypes = {',
+        '  foo: PropTypes.string,',
+        '  bar: PropTypes.string.isRequired',
+        '};',
+        'Greeting.defaultProps = {',
+        '  foo: "foo"',
+        '};'
+      ].join('\n'),
+      options: [{ignoreFunctionalComponents: true}]
     },
 
     //
@@ -513,7 +754,8 @@ ruleTester.run('require-default-props', rule, {
         '  ...defaults,',
         '  bar: "bar"',
         '};'
-      ].join('\n')
+      ].join('\n'),
+      parser: parsers.BABEL_ESLINT
     },
 
     //
@@ -532,7 +774,7 @@ ruleTester.run('require-default-props', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -553,7 +795,7 @@ ruleTester.run('require-default-props', rule, {
         '  bar: "bar"',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -572,7 +814,7 @@ ruleTester.run('require-default-props', rule, {
         '  bar: "bar"',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -586,7 +828,7 @@ ruleTester.run('require-default-props', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -596,7 +838,7 @@ ruleTester.run('require-default-props', rule, {
 
         'Hello.defaultProps = { foo: "foo" };'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -604,7 +846,7 @@ ruleTester.run('require-default-props', rule, {
         '  return <div>Hello {foo}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -614,7 +856,7 @@ ruleTester.run('require-default-props', rule, {
 
         'Hello.defaultProps = { foo: "foo" };'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -622,7 +864,7 @@ ruleTester.run('require-default-props', rule, {
         '  return <div>Hello {foo}</div>;',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -632,7 +874,7 @@ ruleTester.run('require-default-props', rule, {
 
         'Hello.defaultProps = { foo: "foo" };'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -640,7 +882,7 @@ ruleTester.run('require-default-props', rule, {
         '  return <div>Hello {foo}</div>;',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -663,7 +905,7 @@ ruleTester.run('require-default-props', rule, {
         '  baz: "baz"',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -675,7 +917,7 @@ ruleTester.run('require-default-props', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -685,7 +927,7 @@ ruleTester.run('require-default-props', rule, {
         '  return <div>Hello {foo}</div>;',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -695,7 +937,7 @@ ruleTester.run('require-default-props', rule, {
         '  return <div>Hello {props.name.firstname}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     // don't error when variable is not in scope
     {
@@ -706,7 +948,7 @@ ruleTester.run('require-default-props', rule, {
         '  return <div>Hello {props.name.firstname}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     // make sure error is not thrown with multiple assignments
     {
@@ -718,7 +960,7 @@ ruleTester.run('require-default-props', rule, {
         '  return <div>Hello {props.name.firstname}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     // make sure defaultProps are correctly detected with quoted properties
     {
@@ -733,7 +975,7 @@ ruleTester.run('require-default-props', rule, {
         '  "bar": "bar"',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -746,7 +988,7 @@ ruleTester.run('require-default-props', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       options: [{forbidDefaultForRequired: true}]
     },
     // test support for React PropTypes as Component's class generic
@@ -767,7 +1009,7 @@ ruleTester.run('require-default-props', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       options: [{forbidDefaultForRequired: true}]
     },
     {
@@ -787,7 +1029,7 @@ ruleTester.run('require-default-props', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       options: [{forbidDefaultForRequired: true}]
     },
     {
@@ -811,7 +1053,7 @@ ruleTester.run('require-default-props', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       options: [{forbidDefaultForRequired: true}]
     },
     {
@@ -832,8 +1074,21 @@ ruleTester.run('require-default-props', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       options: [{forbidDefaultForRequired: true}]
+    }, {
+      code: `
+        type Props = {
+          +name?: string,
+        };
+        function Hello(props: Props) {
+          return <div>Hello {props.name}</div>;
+        }
+        Hello.defaultProps = {
+          name: 'foo'
+        };
+      `,
+      parser: parsers.BABEL_ESLINT
     }
   ],
 
@@ -851,7 +1106,8 @@ ruleTester.run('require-default-props', rule, {
         '};'
       ].join('\n'),
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
         line: 5,
         column: 3
       }]
@@ -867,7 +1123,8 @@ ruleTester.run('require-default-props', rule, {
         '});'
       ].join('\n'),
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
         line: 5,
         column: 3
       }],
@@ -887,7 +1144,8 @@ ruleTester.run('require-default-props', rule, {
         'MyStatelessComponent.propTypes = forbidExtraProps(propTypes);'
       ].join('\n'),
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
         line: 5,
         column: 3
       }],
@@ -908,12 +1166,14 @@ ruleTester.run('require-default-props', rule, {
       ].join('\n'),
       errors: [
         {
-          message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+          messageId: 'shouldHaveDefault',
+          data: {name: 'foo'},
           line: 5,
           column: 3
         },
         {
-          message: 'propType "baz" is not required, but has no corresponding defaultProp declaration.',
+          messageId: 'shouldHaveDefault',
+          data: {name: 'baz'},
           line: 8,
           column: 1
         }
@@ -932,7 +1192,8 @@ ruleTester.run('require-default-props', rule, {
         'MyStatelessComponent.propTypes = types;'
       ].join('\n'),
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
         line: 2,
         column: 3
       }]
@@ -953,7 +1214,8 @@ ruleTester.run('require-default-props', rule, {
         'MyStatelessComponent.defaultProps = defaults;'
       ].join('\n'),
       errors: [{
-        message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'bar'},
         line: 9,
         column: 3
       }]
@@ -975,7 +1237,8 @@ ruleTester.run('require-default-props', rule, {
         'MyStatelessComponent.defaultProps = defaults;'
       ].join('\n'),
       errors: [{
-        message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'bar'},
         line: 6,
         column: 3
       }]
@@ -996,7 +1259,28 @@ ruleTester.run('require-default-props', rule, {
         '});'
       ].join('\n'),
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
+        line: 6,
+        column: 5
+      }]
+    },
+    {
+      code: [
+        'var Greeting = createReactClass({',
+        '  render: function() {',
+        '    return <div>Hello {this.props.foo} {this.props.bar}</div>;',
+        '  },',
+        '  propTypes: {',
+        '    foo: PropTypes.string,',
+        '    bar: PropTypes.string.isRequired',
+        '  }',
+        '});'
+      ].join('\n'),
+      options: [{ignoreFunctionalComponents: true}],
+      errors: [{
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
         line: 6,
         column: 5
       }]
@@ -1019,7 +1303,8 @@ ruleTester.run('require-default-props', rule, {
         '});'
       ].join('\n'),
       errors: [{
-        message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'bar'},
         line: 7,
         column: 5
       }]
@@ -1042,7 +1327,30 @@ ruleTester.run('require-default-props', rule, {
         '};'
       ].join('\n'),
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
+        line: 9,
+        column: 3
+      }]
+    },
+    {
+      code: [
+        'class Greeting extends React.Component {',
+        '  render() {',
+        '    return (',
+        '      <h1>Hello, {this.props.foo} {this.props.bar}</h1>',
+        '    );',
+        '  }',
+        '}',
+        'Greeting.propTypes = {',
+        '  foo: PropTypes.string,',
+        '  bar: PropTypes.string.isRequired',
+        '};'
+      ].join('\n'),
+      options: [{ignoreFunctionalComponents: true}],
+      errors: [{
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
         line: 9,
         column: 3
       }]
@@ -1065,7 +1373,8 @@ ruleTester.run('require-default-props', rule, {
         '};'
       ].join('\n'),
       errors: [{
-        message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'bar'},
         line: 10,
         column: 3
       }]
@@ -1085,7 +1394,8 @@ ruleTester.run('require-default-props', rule, {
         'Greeting.propTypes.foo = PropTypes.string;'
       ].join('\n'),
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
         line: 11,
         column: 1
       }]
@@ -1107,7 +1417,8 @@ ruleTester.run('require-default-props', rule, {
         'Greeting.defaultProps.foo = "foo";'
       ].join('\n'),
       errors: [{
-        message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'bar'},
         line: 9,
         column: 3
       }]
@@ -1127,7 +1438,8 @@ ruleTester.run('require-default-props', rule, {
         'Greeting.defaultProps.bar = "bar";'
       ].join('\n'),
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
         line: 9,
         column: 1
       }]
@@ -1148,7 +1460,8 @@ ruleTester.run('require-default-props', rule, {
         'Greeting.propTypes = props;'
       ].join('\n'),
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
         line: 9,
         column: 3
       }]
@@ -1173,7 +1486,8 @@ ruleTester.run('require-default-props', rule, {
         'Greeting.defaultProps = defaults;'
       ].join('\n'),
       errors: [{
-        message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'bar'},
         line: 10,
         column: 3
       }]
@@ -1195,7 +1509,29 @@ ruleTester.run('require-default-props', rule, {
         '}'
       ].join('\n'),
       errors: [{
-        message: 'propType "name" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'name'},
+        line: 4,
+        column: 7
+      }]
+    },
+    {
+      code: [
+        'class Hello extends React.Component {',
+        '  static get propTypes() {',
+        '    return {',
+        '      name: PropTypes.string',
+        '    };',
+        '  }',
+        '  render() {',
+        '    return <div>Hello {this.props.name}</div>;',
+        '  }',
+        '}'
+      ].join('\n'),
+      options: [{ignoreFunctionalComponents: true}],
+      errors: [{
+        messageId: 'shouldHaveDefault',
+        data: {name: 'name'},
         line: 4,
         column: 7
       }]
@@ -1220,7 +1556,8 @@ ruleTester.run('require-default-props', rule, {
         '}'
       ].join('\n'),
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
         line: 4,
         column: 7
       }]
@@ -1241,7 +1578,8 @@ ruleTester.run('require-default-props', rule, {
         '}'
       ].join('\n'),
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
         line: 2,
         column: 3
       }]
@@ -1268,7 +1606,8 @@ ruleTester.run('require-default-props', rule, {
         '}'
       ].join('\n'),
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
         line: 7,
         column: 7
       }]
@@ -1290,9 +1629,33 @@ ruleTester.run('require-default-props', rule, {
         '  };',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
+        line: 8,
+        column: 5
+      }]
+    },
+    {
+      code: [
+        'class Greeting extends React.Component {',
+        '  render() {',
+        '    return (',
+        '      <h1>Hello, {this.props.foo} {this.props.bar}</h1>',
+        '    );',
+        '  }',
+        '  static propTypes = {',
+        '    foo: PropTypes.string,',
+        '    bar: PropTypes.string.isRequired',
+        '  };',
+        '}'
+      ].join('\n'),
+      parser: parsers.BABEL_ESLINT,
+      options: [{ignoreFunctionalComponents: true}],
+      errors: [{
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
         line: 8,
         column: 5
       }]
@@ -1314,9 +1677,10 @@ ruleTester.run('require-default-props', rule, {
         '  };',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'bar'},
         line: 9,
         column: 5
       }]
@@ -1336,9 +1700,10 @@ ruleTester.run('require-default-props', rule, {
         '  static propTypes = props;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
         line: 2,
         column: 3
       }]
@@ -1362,9 +1727,10 @@ ruleTester.run('require-default-props', rule, {
         '  static defaultProps = defaults;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'bar'},
         line: 3,
         column: 3
       }]
@@ -1385,7 +1751,8 @@ ruleTester.run('require-default-props', rule, {
         '};'
       ].join('\n'),
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
         line: 8,
         column: 3
       }]
@@ -1400,7 +1767,8 @@ ruleTester.run('require-default-props', rule, {
         '};'
       ].join('\n'),
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
         line: 5,
         column: 3
       }]
@@ -1420,7 +1788,8 @@ ruleTester.run('require-default-props', rule, {
         '};'
       ].join('\n'),
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
         line: 8,
         column: 3
       }]
@@ -1444,9 +1813,10 @@ ruleTester.run('require-default-props', rule, {
         '  foo: "foo"',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'bar'},
         line: 4,
         column: 5
       }]
@@ -1466,9 +1836,10 @@ ruleTester.run('require-default-props', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'bar'},
         line: 3,
         column: 3
       }]
@@ -1489,9 +1860,10 @@ ruleTester.run('require-default-props', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
         line: 2,
         column: 3
       }]
@@ -1509,9 +1881,10 @@ ruleTester.run('require-default-props', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'bar'},
         line: 4,
         column: 5
       }]
@@ -1529,15 +1902,17 @@ ruleTester.run('require-default-props', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
         {
-          message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+          messageId: 'shouldHaveDefault',
+          data: {name: 'foo'},
           line: 3,
           column: 5
         },
         {
-          message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.',
+          messageId: 'shouldHaveDefault',
+          data: {name: 'bar'},
           line: 4,
           column: 5
         }
@@ -1557,9 +1932,10 @@ ruleTester.run('require-default-props', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
         line: 3,
         column: 5
       }]
@@ -1583,9 +1959,10 @@ ruleTester.run('require-default-props', rule, {
         '  foo: "foo"',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'bar'},
         line: 3,
         column: 3
       }]
@@ -1611,9 +1988,10 @@ ruleTester.run('require-default-props', rule, {
         '  foo: "foo"',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'bar'},
         line: 3,
         column: 3
       }]
@@ -1637,9 +2015,10 @@ ruleTester.run('require-default-props', rule, {
         '  foo: "foo"',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'bar'},
         line: 4,
         column: 5
       }]
@@ -1650,9 +2029,10 @@ ruleTester.run('require-default-props', rule, {
         '  return <div>Hello {props.foo}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
         line: 1,
         column: 25
       }]
@@ -1663,9 +2043,10 @@ ruleTester.run('require-default-props', rule, {
         '  return <div>Hello {foo}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
         line: 1,
         column: 35
       }]
@@ -1677,9 +2058,10 @@ ruleTester.run('require-default-props', rule, {
         '}',
         'Hello.defaultProps = { foo: "foo" };'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'bar'},
         line: 1,
         column: 39
       }]
@@ -1690,15 +2072,17 @@ ruleTester.run('require-default-props', rule, {
         '  return <div>Hello {props.foo}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
         {
-          message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+          messageId: 'shouldHaveDefault',
+          data: {name: 'foo'},
           line: 1,
           column: 25
         },
         {
-          message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.',
+          messageId: 'shouldHaveDefault',
+          data: {name: 'bar'},
           line: 1,
           column: 39
         }
@@ -1714,9 +2098,10 @@ ruleTester.run('require-default-props', rule, {
         '  return <div>Hello {props.foo}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
         line: 2,
         column: 3
       }]
@@ -1727,9 +2112,10 @@ ruleTester.run('require-default-props', rule, {
         '  return <div>Hello {props.foo}</div>;',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
         line: 1,
         column: 25
       }]
@@ -1741,9 +2127,10 @@ ruleTester.run('require-default-props', rule, {
         '};',
         'Hello.defaultProps = { foo: "foo" };'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'bar'},
         line: 1,
         column: 39
       }]
@@ -1754,9 +2141,10 @@ ruleTester.run('require-default-props', rule, {
         '  return <div>Hello {props.foo}</div>;',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'},
         line: 1,
         column: 33
       }]
@@ -1768,28 +2156,12 @@ ruleTester.run('require-default-props', rule, {
         '};',
         'Hello.defaultProps = { foo: "foo" };'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'bar'},
         line: 1,
         column: 47
-      }]
-    },
-    {
-      code: [
-        'type Props = {',
-        '  foo?: string',
-        '};',
-
-        'function Hello(props: Props) {',
-        '  return <div>Hello {props.foo}</div>;',
-        '}'
-      ].join('\n'),
-      parser: 'babel-eslint',
-      errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
-        line: 2,
-        column: 3
       }]
     },
     {
@@ -1804,9 +2176,10 @@ ruleTester.run('require-default-props', rule, {
         '}',
         'Hello.defaultProps = { foo: "foo" };'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.',
+        messageId: 'shouldHaveDefault',
+        data: {name: 'bar'},
         line: 3,
         column: 3
       }]
@@ -1819,15 +2192,17 @@ ruleTester.run('require-default-props', rule, {
         '  return <div>Hello {props.foo}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
         {
-          message: 'propType "one" is not required, but has no corresponding defaultProp declaration.',
+          messageId: 'shouldHaveDefault',
+          data: {name: 'one'},
           line: 1,
           column: 25
         },
         {
-          message: 'propType "two" is not required, but has no corresponding defaultProp declaration.',
+          messageId: 'shouldHaveDefault',
+          data: {name: 'two'},
           line: 1,
           column: 44
         }
@@ -1849,15 +2224,17 @@ ruleTester.run('require-default-props', rule, {
         '  return <div>Hello {props.foo}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
         {
-          message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.',
+          messageId: 'shouldHaveDefault',
+          data: {name: 'bar'},
           line: 3,
           column: 3
         },
         {
-          message: 'propType "baz" is not required, but has no corresponding defaultProp declaration.',
+          messageId: 'shouldHaveDefault',
+          data: {name: 'baz'},
           line: 7,
           column: 3
         }
@@ -1883,10 +2260,11 @@ ruleTester.run('require-default-props', rule, {
         '  bar: "bar"',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
         {
-          message: 'propType "baz" is not required, but has no corresponding defaultProp declaration.',
+          messageId: 'shouldHaveDefault',
+          data: {name: 'baz'},
           line: 7,
           column: 3
         }
@@ -1902,15 +2280,17 @@ ruleTester.run('require-default-props', rule, {
         '  return <div>Hello {props.foo}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
         {
-          message: 'propType "two" is not required, but has no corresponding defaultProp declaration.',
+          messageId: 'shouldHaveDefault',
+          data: {name: 'two'},
           line: 2,
           column: 3
         },
         {
-          message: 'propType "one" is not required, but has no corresponding defaultProp declaration.',
+          messageId: 'shouldHaveDefault',
+          data: {name: 'one'},
           line: 5,
           column: 25
         }
@@ -1926,10 +2306,11 @@ ruleTester.run('require-default-props', rule, {
         '  return <div>Hello {props.foo}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
         {
-          message: 'propType "two" is not required, but has no corresponding defaultProp declaration.',
+          messageId: 'shouldHaveDefault',
+          data: {name: 'two'},
           line: 2,
           column: 3
         }
@@ -1946,10 +2327,11 @@ ruleTester.run('require-default-props', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
         {
-          message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.',
+          messageId: 'shouldHaveDefault',
+          data: {name: 'foo'},
           line: 3,
           column: 5
         }
@@ -1973,9 +2355,10 @@ ruleTester.run('require-default-props', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "name" is not required, but has no corresponding defaultProp declaration.'
+        messageId: 'shouldHaveDefault',
+        data: {name: 'name'}
       }]
     },
     {
@@ -1991,9 +2374,10 @@ ruleTester.run('require-default-props', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "first-name" is not required, but has no corresponding defaultProp declaration.'
+        messageId: 'shouldHaveDefault',
+        data: {name: 'first-name'}
       }]
     },
     {
@@ -2012,7 +2396,8 @@ ruleTester.run('require-default-props', rule, {
       ].join('\n'),
       options: [{forbidDefaultForRequired: true}],
       errors: [{
-        message: 'propType "foo" is required and should not have a defaultProp declaration.'
+        messageId: 'noDefaultWithRequired',
+        data: {name: 'foo'}
       }]
     },
     {
@@ -2029,7 +2414,8 @@ ruleTester.run('require-default-props', rule, {
       ].join('\n'),
       options: [{forbidDefaultForRequired: true}],
       errors: [{
-        message: 'propType "foo" is required and should not have a defaultProp declaration.'
+        messageId: 'noDefaultWithRequired',
+        data: {name: 'foo'}
       }]
     },
     {
@@ -2046,7 +2432,8 @@ ruleTester.run('require-default-props', rule, {
       ].join('\n'),
       options: [{forbidDefaultForRequired: true}],
       errors: [{
-        message: 'propType "foo" is required and should not have a defaultProp declaration.'
+        messageId: 'noDefaultWithRequired',
+        data: {name: 'foo'}
       }]
     },
     {
@@ -2063,10 +2450,11 @@ ruleTester.run('require-default-props', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       options: [{forbidDefaultForRequired: true}],
       errors: [{
-        message: 'propType "foo" is required and should not have a defaultProp declaration.'
+        messageId: 'noDefaultWithRequired',
+        data: {name: 'foo'}
       }]
     },
     {
@@ -2089,7 +2477,8 @@ ruleTester.run('require-default-props', rule, {
       ].join('\n'),
       options: [{forbidDefaultForRequired: true}],
       errors: [{
-        message: 'propType "foo" is required and should not have a defaultProp declaration.'
+        messageId: 'noDefaultWithRequired',
+        data: {name: 'foo'}
       }]
     },
     // test support for React PropTypes as Component's class generic
@@ -2107,9 +2496,10 @@ ruleTester.run('require-default-props', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.'
+        messageId: 'shouldHaveDefault',
+        data: {name: 'bar'}
       }]
     },
     {
@@ -2126,9 +2516,10 @@ ruleTester.run('require-default-props', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.'
+        messageId: 'shouldHaveDefault',
+        data: {name: 'bar'}
       }]
     },
     {
@@ -2149,9 +2540,10 @@ ruleTester.run('require-default-props', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.'
+        messageId: 'shouldHaveDefault',
+        data: {name: 'bar'}
       }]
     },
     {
@@ -2168,11 +2560,67 @@ ruleTester.run('require-default-props', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'propType "foo" is not required, but has no corresponding defaultProp declaration.'
+        messageId: 'shouldHaveDefault',
+        data: {name: 'foo'}
       }, {
-        message: 'propType "bar" is not required, but has no corresponding defaultProp declaration.'
+        messageId: 'shouldHaveDefault',
+        data: {name: 'bar'}
+      }]
+    },
+    {
+      code: `
+        type Props = {
+          +name?: string,
+        };
+        function Hello(props: Props) {
+          return <div>Hello {props.name}</div>;
+        }
+      `,
+      parser: parsers.BABEL_ESLINT,
+      errors: [{
+        messageId: 'shouldHaveDefault',
+        data: {name: 'name'}
+      }]
+    }, {
+      code: `
+        import PropTypes from 'prop-types';
+        import React from 'react';
+
+        const MyComponent= (props) => {
+          switch (props.usedProp) {
+            case 1:
+              return (<div />);
+            default:
+              return <div />;
+          }
+        };
+
+        MyComponent.propTypes = {
+          usedProp: PropTypes.string,
+        };
+
+        export default MyComponent;
+      `,
+      errors: [{
+        messageId: 'shouldHaveDefault',
+        data: {name: 'usedProp'}
+      }]
+    },
+    {
+      code: `
+        Foo.propTypes = {
+          a: PropTypes.string,
+        }
+
+        export default function Foo(props) {
+          return <p>{props.a}</p>
+        };
+      `,
+      errors: [{
+        messageId: 'shouldHaveDefault',
+        data: {name: 'a'}
       }]
     }
   ]

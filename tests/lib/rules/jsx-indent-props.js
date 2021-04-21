@@ -2,14 +2,15 @@
  * @fileoverview Validate props indentation in JSX
  * @author Yannick Croissant
  */
+
 'use strict';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/jsx-indent-props');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/jsx-indent-props');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -35,6 +36,23 @@ ruleTester.run('jsx-indent-props', rule, {
       '<App',
       '  foo',
       '/>'
+    ].join('\n'),
+    options: [2]
+  }, {
+    code: [
+      'const Test = () => ([',
+      '  (x',
+      '    ? <div key="1" />',
+      '    : <div key="2" />),',
+      '  <div',
+      '    key="3"',
+      '    align="left"',
+      '  />,',
+      '  <div',
+      '    key="4"',
+      '    align="left"',
+      '  />,',
+      ']);'
     ].join('\n'),
     options: [2]
   }, {
@@ -135,6 +153,48 @@ ruleTester.run('jsx-indent-props', rule, {
       '/>'
     ].join('\n'),
     options: ['first']
+  }, {
+    code: [
+      '{this.props.ignoreTernaryOperatorFalse',
+      '  ? <span',
+      '      className="value"',
+      '      some={{aaa}}',
+      '    />',
+      '  : null}'
+    ].join('\n'),
+    output: [
+      '{this.props.ignoreTernaryOperatorFalse',
+      '  ? <span',
+      '    className="value"',
+      '    some={{aaa}}',
+      '  />',
+      '  : null}'
+    ].join('\n'),
+    options: [{
+      indentMode: 2,
+      ignoreTernaryOperator: false
+    }]
+  }, {
+    code: [
+      '{this.props.ignoreTernaryOperatorTrue',
+      '  ? <span',
+      '    className="value"',
+      '    some={{aaa}}',
+      '    />',
+      '  : null}'
+    ].join('\n'),
+    output: [
+      '{this.props.ignoreTernaryOperatorTrue',
+      '  ? <span',
+      '    className="value"',
+      '    some={{aaa}}',
+      '  />',
+      '  : null}'
+    ].join('\n'),
+    options: [{
+      indentMode: 2,
+      ignoreTernaryOperator: true
+    }]
   }],
 
   invalid: [{
@@ -148,7 +208,12 @@ ruleTester.run('jsx-indent-props', rule, {
       '    foo',
       '/>'
     ].join('\n'),
-    errors: [{message: 'Expected indentation of 4 space characters but found 2.'}]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 4, type: 'space', characters: 'characters', gotten: 2
+      }
+    }]
   }, {
     code: [
       '<App',
@@ -161,7 +226,156 @@ ruleTester.run('jsx-indent-props', rule, {
       '/>'
     ].join('\n'),
     options: [2],
-    errors: [{message: 'Expected indentation of 2 space characters but found 4.'}]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 2, type: 'space', characters: 'characters', gotten: 4
+      }
+    }]
+  }, {
+    code: [
+      'const test = true',
+      '  ? <span',
+      '    attr="value"',
+      '    />',
+      '  : <span',
+      '    attr="otherValue"',
+      '    />'
+    ].join('\n'),
+    output: [
+      'const test = true',
+      '  ? <span',
+      '      attr="value"',
+      '    />',
+      '  : <span',
+      '      attr="otherValue"',
+      '    />'
+    ].join('\n'),
+    options: [2],
+    errors: [
+      {
+        messageId: 'wrongIndent',
+        data: {
+          needed: 6, type: 'space', characters: 'characters', gotten: 4
+        }
+      }, {
+        messageId: 'wrongIndent',
+        data: {
+          needed: 6, type: 'space', characters: 'characters', gotten: 4
+        }
+      }
+    ]
+  }, {
+    code: [
+      'const test = true',
+      '  ? <span attr="value" />',
+      '  : (',
+      '    <span',
+      '        attr="otherValue"',
+      '    />',
+      '  )'
+    ].join('\n'),
+    output: [
+      'const test = true',
+      '  ? <span attr="value" />',
+      '  : (',
+      '    <span',
+      '      attr="otherValue"',
+      '    />',
+      '  )'
+    ].join('\n'),
+    options: [2],
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 6, type: 'space', characters: 'characters', gotten: 8
+      }
+    }]
+  }, {
+    code: [
+      '{test.isLoading',
+      '  ? <Value/>',
+      '  : <OtherValue',
+      '    some={aaa}/>',
+      '}'
+    ].join('\n'),
+    output: [
+      '{test.isLoading',
+      '  ? <Value/>',
+      '  : <OtherValue',
+      '      some={aaa}/>',
+      '}'
+    ].join('\n'),
+    options: [2],
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 6, type: 'space', characters: 'characters', gotten: 4
+      }
+    }]
+  }, {
+    code: [
+      '{test.isLoading',
+      '  ? <Value/>',
+      '  : <OtherValue',
+      '    some={aaa}',
+      '    other={bbb}/>',
+      '}'
+    ].join('\n'),
+    output: [
+      '{test.isLoading',
+      '  ? <Value/>',
+      '  : <OtherValue',
+      '      some={aaa}',
+      '      other={bbb}/>',
+      '}'
+    ].join('\n'),
+    options: [2],
+    errors: [
+      {
+        messageId: 'wrongIndent',
+        data: {
+          needed: 6, type: 'space', characters: 'characters', gotten: 4
+        }
+      },
+      {
+        messageId: 'wrongIndent',
+        data: {
+          needed: 6, type: 'space', characters: 'characters', gotten: 4
+        }
+      }
+    ]
+  }, {
+    code: [
+      '{this.props.test',
+      '  ? <span',
+      '    className="value"',
+      '    some={{aaa}}',
+      '    />',
+      '  : null}'
+    ].join('\n'),
+    output: [
+      '{this.props.test',
+      '  ? <span',
+      '      className="value"',
+      '      some={{aaa}}',
+      '    />',
+      '  : null}'
+    ].join('\n'),
+    options: [2],
+    errors: [
+      {
+        messageId: 'wrongIndent',
+        data: {
+          needed: 6, type: 'space', characters: 'characters', gotten: 4
+        }
+      }, {
+        messageId: 'wrongIndent',
+        data: {
+          needed: 6, type: 'space', characters: 'characters', gotten: 4
+        }
+      }
+    ]
   }, {
     code: [
       '<App',
@@ -174,7 +388,12 @@ ruleTester.run('jsx-indent-props', rule, {
       '/>'
     ].join('\n'),
     options: ['tab'],
-    errors: [{message: 'Expected indentation of 1 tab character but found 0.'}]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 1, type: 'tab', characters: 'character', gotten: 0
+      }
+    }]
   }, {
     code: [
       '<App',
@@ -187,7 +406,12 @@ ruleTester.run('jsx-indent-props', rule, {
       '/>'
     ].join('\n'),
     options: ['tab'],
-    errors: [{message: 'Expected indentation of 1 tab character but found 3.'}]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 1, type: 'tab', characters: 'character', gotten: 3
+      }
+    }]
   }, {
     code: [
       '<App a',
@@ -200,7 +424,12 @@ ruleTester.run('jsx-indent-props', rule, {
       '/>'
     ].join('\n'),
     options: ['first'],
-    errors: [{message: 'Expected indentation of 5 space characters but found 2.'}]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 5, type: 'space', characters: 'characters', gotten: 2
+      }
+    }]
   }, {
     code: [
       '<App  a',
@@ -213,7 +442,12 @@ ruleTester.run('jsx-indent-props', rule, {
       '/>'
     ].join('\n'),
     options: ['first'],
-    errors: [{message: 'Expected indentation of 6 space characters but found 3.'}]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 6, type: 'space', characters: 'characters', gotten: 3
+      }
+    }]
   }, {
     code: [
       '<App',
@@ -228,7 +462,12 @@ ruleTester.run('jsx-indent-props', rule, {
       '/>'
     ].join('\n'),
     options: ['first'],
-    errors: [{message: 'Expected indentation of 6 space characters but found 3.'}]
+    errors: [{
+      messageId: 'wrongIndent',
+      data: {
+        needed: 6, type: 'space', characters: 'characters', gotten: 3
+      }
+    }]
   }, {
     code: [
       '<App',
@@ -246,8 +485,18 @@ ruleTester.run('jsx-indent-props', rule, {
     ].join('\n'),
     options: ['first'],
     errors: [
-      {message: 'Expected indentation of 2 space characters but found 1.'},
-      {message: 'Expected indentation of 2 space characters but found 3.'}
+      {
+        messageId: 'wrongIndent',
+        data: {
+          needed: 2, type: 'space', characters: 'characters', gotten: 1
+        }
+      },
+      {
+        messageId: 'wrongIndent',
+        data: {
+          needed: 2, type: 'space', characters: 'characters', gotten: 3
+        }
+      }
     ]
   }]
 });

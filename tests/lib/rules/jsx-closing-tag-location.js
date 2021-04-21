@@ -2,23 +2,25 @@
  * @fileoverview Validate closing tag location in JSX
  * @author Ross Solomon
  */
+
 'use strict';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/jsx-closing-tag-location');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/jsx-closing-tag-location');
+
+const parsers = require('../../helpers/parsers');
+
 const parserOptions = {
   sourceType: 'module',
+  ecmaVersion: 2015,
   ecmaFeatures: {
     jsx: true
   }
 };
-
-const MESSAGE_MATCH_INDENTATION = [{message: 'Expected closing tag to match indentation of opening.'}];
-const MESSAGE_OWN_LINE = [{message: 'Closing tag of a multiline JSX expression must be on its own line.'}];
 
 // ------------------------------------------------------------------------------
 // Tests
@@ -36,6 +38,18 @@ ruleTester.run('jsx-closing-tag-location', rule, {
     code: `
       <App>foo</App>
     `
+  }, {
+    code: `
+      <>
+        foo
+      </>
+    `,
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: `
+      <>foo</>
+    `,
+    parser: parsers.BABEL_ESLINT
   }],
 
   invalid: [{
@@ -49,7 +63,7 @@ ruleTester.run('jsx-closing-tag-location', rule, {
         foo
       </App>
     `,
-    errors: MESSAGE_MATCH_INDENTATION
+    errors: [{messageId: 'matchIndent'}]
   }, {
     code: `
       <App>
@@ -60,6 +74,31 @@ ruleTester.run('jsx-closing-tag-location', rule, {
         foo
       </App>
     `,
-    errors: MESSAGE_OWN_LINE
+    errors: [{messageId: 'onOwnLine'}]
+  }, {
+    code: `
+      <>
+        foo
+        </>
+    `,
+    parser: parsers.BABEL_ESLINT,
+    output: `
+      <>
+        foo
+      </>
+    `,
+    errors: [{messageId: 'matchIndent'}]
+  }, {
+    code: `
+      <>
+        foo</>
+    `,
+    parser: parsers.BABEL_ESLINT,
+    output: `
+      <>
+        foo
+      </>
+    `,
+    errors: [{messageId: 'onOwnLine'}]
   }]
 });

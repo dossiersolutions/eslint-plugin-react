@@ -9,8 +9,10 @@
 // Requirements
 // -----------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/react-in-jsx-scope');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/react-in-jsx-scope');
+
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -35,14 +37,18 @@ ruleTester.run('react-in-jsx-scope', rule, {
   valid: [
     {code: 'var React, App; <App />;'},
     {code: 'var React; <img />;'},
-    {code: 'var React; <>fragment</>;', parser: 'babel-eslint'},
+    {code: 'var React; <>fragment</>;', parser: parsers.BABEL_ESLINT},
     {code: 'var React; <x-gif />;'},
     {code: 'var React, App, a=1; <App attr={a} />;'},
     {code: 'var React, App, a=1; function elem() { return <App attr={a} />; }'},
-    {code: 'var React, App; <App />;'},
+    {
+      code: 'var React, App; <App />;',
+      parser: parsers.BABEL_ESLINT
+    },
     {code: '/** @jsx Foo */ var Foo, App; <App />;'},
     {code: '/** @jsx Foo.Bar */ var Foo, App; <App />;'},
-    {code: `
+    {
+      code: `
       import React from 'react/addons';
       const Button = createReactClass({
         render() {
@@ -52,30 +58,53 @@ ruleTester.run('react-in-jsx-scope', rule, {
         }
       });
       export default Button;
-    `},
-    {code: 'var Foo, App; <App />;', settings: settings}
+    `
+    },
+    {code: 'var Foo, App; <App />;', settings}
   ],
   invalid: [{
     code: 'var App, a = <App />;',
-    errors: [{message: '\'React\' must be in scope when using JSX'}]
+    errors: [{
+      messageId: 'notInScope',
+      data: {name: 'React'}
+    }]
   }, {
     code: 'var a = <App />;',
-    errors: [{message: '\'React\' must be in scope when using JSX'}]
+    errors: [{
+      messageId: 'notInScope',
+      data: {name: 'React'}
+    }]
   }, {
     code: 'var a = <img />;',
-    errors: [{message: '\'React\' must be in scope when using JSX'}]
+    errors: [{
+      messageId: 'notInScope',
+      data: {name: 'React'}
+    }]
   }, {
     code: 'var a = <>fragment</>;',
-    parser: 'babel-eslint',
-    errors: [{message: '\'React\' must be in scope when using JSX'}]
+    parser: parsers.BABEL_ESLINT,
+    errors: [{
+      messageId: 'notInScope',
+      data: {name: 'React'}
+    }]
   }, {
     code: '/** @jsx React.DOM */ var a = <img />;',
-    errors: [{message: '\'React\' must be in scope when using JSX'}]
+    errors: [{
+      messageId: 'notInScope',
+      data: {name: 'React'}
+    }]
   }, {
     code: '/** @jsx Foo.bar */ var React, a = <img />;',
-    errors: [{message: '\'Foo\' must be in scope when using JSX'}]
+    errors: [{
+      messageId: 'notInScope',
+      data: {name: 'Foo'}
+    }]
   }, {
     code: 'var React, a = <img />;',
-    errors: [{message: '\'Foo\' must be in scope when using JSX'}], settings: settings
+    errors: [{
+      messageId: 'notInScope',
+      data: {name: 'Foo'}
+    }],
+    settings
   }]
 });

@@ -1,44 +1,72 @@
-# Prevent definitions of unused prop types (react/no-unused-prop-types)
+# Prevent definitions of unused propTypes (react/no-unused-prop-types)
 
-Warns you if you have defined a prop type but it is never being used anywhere.
+Warns if a prop with a defined type isn't being used.
+
+> **Note**: You can provide types in runtime types using [PropTypes] and/or
+statically using [TypeScript] or [Flow]. This rule will validate your prop types
+regardless of how you define them.
 
 ## Rule Details
 
-The following patterns are considered warnings:
+Examples of **incorrect** code for this rule:
 
 ```jsx
-var Hello = createReactClass({
-  propTypes: {
-    name: PropTypes.string
-  },
-  render: function() {
+class Hello extends React.Component {
+  render() {
     return <div>Hello Bob</div>;
   }
 });
 
-var Hello = createReactClass({
-  propTypes: {
-    firstname: PropTypes.string.isRequired,
-    middlename: PropTypes.string.isRequired, // middlename is never used below
-    lastname: PropTypes.string.isRequired
-  },
-  render: function() {
-    return <div>Hello {this.props.firstname} {this.props.lastname}</div>;
-  }
-});
+Hello.propTypes = {
+  name: PropTypes.string
+},
 ```
 
-The following patterns are **not** considered warnings:
+```jsx
+type Props = {
+  firstname: string,
+  middlename: string, // middlename is never used by the Hello component
+  lastname: string
+}
+
+class Hello extends React.Component<Props> {
+  render() {
+    return <div>Hello {this.props.firstname} {this.props.lastname}</div>;
+  }
+}
+```
 
 ```jsx
-var Hello = createReactClass({
-  propTypes: {
-    name: PropTypes.string
-  },
-  render: function() {
+type Props = {
+  firstname: string;
+  lastname: string;  // lastname isn't used by the Hello component
+};
+
+class Hello extends React.Component<Props> {
+  render() {
+    return <div>Hello {this.props.firstname}</div>;
+  }
+}
+
+class Greetings extends React.Component<Props> {
+  render() {
+    return <div>Greetings  {this.props.firstname} {this.props.lastname}</div>;
+  }
+}
+```
+
+Examples of **correct** code for this rule:
+
+```jsx
+class Hello extends React.Component {
+  render() {
     return <div>Hello {this.props.name}</div>;
   }
-});
+};
+
+Hello.propTypes: {
+  name: PropTypes.string
+},
 ```
 
 ## Rule Options
@@ -58,14 +86,14 @@ This rule can take one argument to ignore some specific props during validation.
 ## Known Issues/Limitations
 
 - [False Positives: SFC (helper render methods)](#false-positives-sfc)
-- [False Positives: Intermediate variables](#false-positives-intermediate-variables)
 
-### False positives SFC
-For components with Stateless Functional Components (often used as helper render methods);
-SFC is a function that takes prop(s) as an argument and returns a JSX expression.
-Even if this function gets called from a component the props that are only used inside SFC would not be considered used by a component.
+### False Positives SFC
+
+Stateless Function Components (SFCs) accept props as an argument and return a JSX expression.
+Even if the function gets called from a component, the props that are only used inside the component are not be considered used by a component.
 
 Triggers false positive:
+
 ```js
 function AComponent(props) {
   function helperRenderer(aProp) { // is considered SFC
@@ -110,49 +138,6 @@ AComponent.propTypes = {
 };
 ```
 
-### False positives intermediate variables
-when assigning a part or a whole props object to a variable and using it to access a prop value.
-
-```js
-class AComponent extends React.Component {
-  render() {
-    const { props } = this;
-
-    return <div>{props.aProp}</div>;
-  }
-}
-AComponent.propTypes = {
-  aProp: PropTypes.string // aProp PropType is defined but prop is never used
-};
-```
-
-suggested code structure to avoid the issue:
-
-- accessing prop directly
-```js
-class AComponent extends React.Component {
-  render() {
-    return <div>{this.props.aProp}</div>;
-  }
-}
-AComponent.propTypes = {
-  aProp: PropTypes.string
-};
-```
-
-- or assigning a final prop to a variable.
-
-```js
-class AComponent extends React.Component {
-  const { aProp } = this.props;
-  render() {
-    return <div>{aProp}</div>;
-  }
-}
-AComponent.propTypes = {
-  aProp: PropTypes.string
-};
-```
-
-Using Intermediate variables might be desired and unavoidable for more complex props structure.
-Like for shape prop types. To avoid false positive in this case make sure `skipShapeProps` is set to `true`.
+[PropTypes]: https://reactjs.org/docs/typechecking-with-proptypes.html
+[TypeScript]: http://www.typescriptlang.org/
+[Flow]: https://flow.org/

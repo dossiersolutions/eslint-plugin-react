@@ -2,14 +2,15 @@
  * @fileoverview Prevent usage of isMounted
  * @author Joe Lencioni
  */
+
 'use strict';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/no-is-mounted');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/no-is-mounted');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -66,9 +67,7 @@ ruleTester.run('no-is-mounted', rule, {
         }
       });
     `,
-    errors: [{
-      message: 'Do not use isMounted'
-    }]
+    errors: [{messageId: 'noIsMounted'}]
   }, {
     code: `
       var Hello = createReactClass({
@@ -82,9 +81,7 @@ ruleTester.run('no-is-mounted', rule, {
         }
       });
     `,
-    errors: [{
-      message: 'Do not use isMounted'
-    }]
+    errors: [{messageId: 'noIsMounted'}]
   }, {
     code: `
       class Hello extends React.Component {
@@ -98,8 +95,6 @@ ruleTester.run('no-is-mounted', rule, {
         }
       };
     `,
-    errors: [{
-      message: 'Do not use isMounted'
-    }]
+    errors: [{messageId: 'noIsMounted'}]
   }]
 });

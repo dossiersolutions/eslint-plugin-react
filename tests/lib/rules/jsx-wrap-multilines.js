@@ -2,14 +2,17 @@
  * @fileoverview Prevent missing parentheses around multilines JSX
  * @author Yannick Croissant
  */
+
 'use strict';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/jsx-wrap-multilines');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/jsx-wrap-multilines');
+
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -23,8 +26,15 @@ const parserOptions = {
 // Constants/Code Snippets
 // ------------------------------------------------------------------------------
 
-const MISSING_PARENS = 'Missing parentheses around multilines JSX';
-const PARENS_NEW_LINES = 'Parentheses around JSX should be on separate lines';
+const OPTIONS_ALL_NEW_LINES = {
+  declaration: 'parens-new-line',
+  assignment: 'parens-new-line',
+  return: 'parens-new-line',
+  arrow: 'parens-new-line',
+  condition: 'parens-new-line',
+  logical: 'parens-new-line',
+  prop: 'parens-new-line'
+};
 
 const RETURN_SINGLE_LINE = `
   var Hello = createReactClass({
@@ -44,12 +54,32 @@ const RETURN_PAREN = `
   });
 `;
 
+const RETURN_PAREN_FRAGMENT = `
+  var Hello = createReactClass({
+    render: function() {
+      return (<>
+        <p>Hello {this.props.name}</p>
+      </>);
+    }
+  });
+`;
+
 const RETURN_NO_PAREN = `
   var Hello = createReactClass({
     render: function() {
       return <div>
         <p>Hello {this.props.name}</p>
       </div>;
+    }
+  });
+`;
+
+const RETURN_NO_PAREN_FRAGMENT = `
+  var Hello = createReactClass({
+    render: function() {
+      return <>
+        <p>Hello {this.props.name}</p>
+      </>;
     }
   });
 `;
@@ -66,7 +96,79 @@ const RETURN_PAREN_NEW_LINE = `
   });
 `;
 
+const RETURN_PAREN_NEW_LINE_OPENING = `
+  var Hello = createReactClass({
+    render: function() {
+      return (
+
+      <div>
+        <p>Hello {this.props.name}</p>
+      </div>);
+    }
+  });
+`;
+
+const RETURN_PAREN_NEW_LINE_OPENING_FIXED = `
+  var Hello = createReactClass({
+    render: function() {
+      return (
+
+      <div>
+        <p>Hello {this.props.name}</p>
+      </div>
+);
+    }
+  });
+`;
+
+const RETURN_PAREN_NEW_LINE_CLOSING = `
+  var Hello = createReactClass({
+    render: function() {
+      return (<div>
+        <p>Hello {this.props.name}</p>
+      </div>
+
+      );
+    }
+  });
+`;
+
+const RETURN_PAREN_NEW_LINE_CLOSING_FIXED = `
+  var Hello = createReactClass({
+    render: function() {
+      return (
+<div>
+        <p>Hello {this.props.name}</p>
+      </div>
+
+      );
+    }
+  });
+`;
+
+const RETURN_PAREN_NEW_LINE_FRAGMENT = `
+  var Hello = createReactClass({
+    render: function() {
+      return (
+        <>
+          <p>Hello {this.props.name}</p>
+        </>
+      );
+    }
+  });
+`;
+
+const RETURN_SINGLE_LINE_FRAGMENT = `
+  var Hello = createReactClass({
+    render: function() {
+      return <>Hello {this.props.name}</>;
+    }
+  });
+`;
+
 const DECLARATION_TERNARY_SINGLE_LINE = 'var hello = foo ? <p>Hello</p> : <p>Hi</p>;';
+
+const DECLARATION_TERNARY_SINGLE_LINE_FRAGMENT = 'var hello = foo ? <>Hello</> : <>Hi</>;';
 
 const DECLARATION_TERNARY_PAREN = `
   var hello = foo ? (<div>
@@ -76,12 +178,28 @@ const DECLARATION_TERNARY_PAREN = `
   </div>);
 `;
 
+const DECLARATION_TERNARY_PAREN_FRAGMENT = `
+  var hello = foo ? (<>
+    <p>Hello</p>
+  </>) : (<>
+    <p>Hi</p>
+  </>);
+`;
+
 const DECLARATION_TERNARY_NO_PAREN = `
   var hello = foo ? <div>
     <p>Hello</p>
   </div> : <div>
     <p>Hi</p>
   </div>;
+`;
+
+const DECLARATION_TERNARY_NO_PAREN_FRAGMENT = `
+  var hello = foo ? <>
+    <p>Hello</p>
+  </> : <>
+    <p>Hi</p>
+  </>;
 `;
 
 const DECLARATION_TERNARY_PAREN_NEW_LINE = `
@@ -107,6 +225,15 @@ const ASSIGNMENT_TERNARY_PAREN = `
   </div>);
 `;
 
+const ASSIGNMENT_TERNARY_PAREN_FRAGMENT = `
+  var hello;
+  hello = foo ? (<>
+    <p>Hello</p>
+  </>) : (<>
+    <p>Hi</p>
+  </>);
+`;
+
 const ASSIGNMENT_TERNARY_NO_PAREN = `
   var hello;
   hello = foo ? <div>
@@ -114,6 +241,15 @@ const ASSIGNMENT_TERNARY_NO_PAREN = `
   </div> : <div>
     <p>Hi</p>
   </div>;
+`;
+
+const ASSIGNMENT_TERNARY_NO_PAREN_FRAGMENT = `
+  var hello;
+  hello = foo ? <>
+    <p>Hello</p>
+  </> : <>
+    <p>Hi</p>
+  </>;
 `;
 
 const ASSIGNMENT_TERNARY_PAREN_NEW_LINE = `
@@ -137,10 +273,22 @@ const DECLARATION_PAREN = `
   </div>);
 `;
 
+const DECLARATION_PAREN_FRAGMENT = `
+  var hello = (<>
+    <p>Hello</p>
+  </>);
+`;
+
 const DECLARATION_NO_PAREN = `
   var hello = <div>
     <p>Hello</p>
   </div>;
+`;
+
+const DECLARATION_NO_PAREN_FRAGMENT = `
+  var hello = <>
+    <p>Hello</p>
+  </>;
 `;
 
 const DECLARATION_PAREN_NEW_LINE = `
@@ -160,11 +308,25 @@ const ASSIGNMENT_PAREN = `
   </div>);
 `;
 
+const ASSIGNMENT_PAREN_FRAGMENT = `
+  var hello;
+  hello = (<>
+    <p>Hello</p>
+  </>);
+`;
+
 const ASSIGNMENT_NO_PAREN = `
   var hello;
   hello = <div>
     <p>Hello</p>
   </div>;
+`;
+
+const ASSIGNMENT_NO_PAREN_FRAGMENT = `
+  var hello;
+  hello = <>
+    <p>Hello</p>
+  </>;
 `;
 
 const ASSIGNMENT_PAREN_NEW_LINE = `
@@ -184,10 +346,22 @@ const ARROW_PAREN = `
   </div>);
 `;
 
+const ARROW_PAREN_FRAGMENT = `
+  var hello = () => (<>
+    <p>Hello</p>
+  </>);
+`;
+
 const ARROW_NO_PAREN = `
   var hello = () => <div>
     <p>Hello</p>
   </div>;
+`;
+
+const ARROW_NO_PAREN_FRAGMENT = `
+  var hello = () => <>
+    <p>Hello</p>
+  </>;
 `;
 
 const ARROW_PAREN_NEW_LINE = `
@@ -208,11 +382,27 @@ const CONDITION_PAREN = `
   </div>
 `;
 
+const CONDITION_PAREN_FRAGMENT = `
+  <div>
+    {foo ? (<>
+        <p>Hello</p>
+      </>) : null}
+  </div>
+`;
+
 const CONDITION_NO_PAREN = `
   <div>
     {foo ? <div>
         <p>Hello</p>
       </div> : null}
+  </div>
+`;
+
+const CONDITION_NO_PAREN_FRAGMENT = `
+  <div>
+    {foo ? <>
+        <p>Hello</p>
+      </> : null}
   </div>
 `;
 
@@ -238,6 +428,16 @@ const LOGICAL_PAREN = `
   </div>
 `;
 
+const LOGICAL_PAREN_FRAGMENT = `
+  <div>
+    {foo &&
+      (<>
+        <p>Hello World</p>
+      </>)
+    }
+  </div>
+`;
+
 const LOGICAL_NO_PAREN = `
   <div>
     {foo &&
@@ -248,13 +448,33 @@ const LOGICAL_NO_PAREN = `
   </div>
 `;
 
+const LOGICAL_NO_PAREN_FRAGMENT = `
+  <div>
+    {foo &&
+      <>
+        <p>Hello World</p>
+      </>
+    }
+  </div>
+`;
+
 const LOGICAL_PAREN_NEW_LINE_AUTOFIX = `
   <div>
     {foo && (
-<div>
+      <div>
         <p>Hello World</p>
       </div>
-)}
+    )}
+  </div>
+`;
+
+const LOGICAL_PAREN_NEW_LINE_AUTOFIX_FRAGMENT = `
+  <div>
+    {foo && (
+      <>
+        <p>Hello World</p>
+      </>
+    )}
   </div>
 `;
 
@@ -280,11 +500,31 @@ const ATTR_PAREN = `
   </div>
 `;
 
+const ATTR_PAREN_FRAGMENT = `
+  <div prop={
+    (<>
+      <p>Hello</p>
+    </>)
+  }>
+    <p>Hello</p>
+  </div>
+`;
+
 const ATTR_NO_PAREN = `
   <div prop={
     <div>
       <p>Hello</p>
     </div>
+  }>
+    <p>Hello</p>
+  </div>
+`;
+
+const ATTR_NO_PAREN_FRAGMENT = `
+  <div prop={
+    <>
+      <p>Hello</p>
+    </>
   }>
     <p>Hello</p>
   </div>
@@ -302,12 +542,78 @@ const ATTR_PAREN_NEW_LINE = `
 
 const ATTR_PAREN_NEW_LINE_AUTOFIX = `
   <div prop={(
-<div>
+    <div>
       <p>Hello</p>
     </div>
-)}>
+  )}>
     <p>Hello</p>
   </div>
+`;
+
+const ATTR_PAREN_NEW_LINE_AUTOFIX_FRAGMENT = `
+  <div prop={(
+    <>
+      <p>Hello</p>
+    </>
+  )}>
+    <p>Hello</p>
+  </div>
+`;
+
+const SFC_NO_PARENS_NO_NEWLINE = `
+export default () =>
+    <div>
+        with newline without parentheses eslint crashes
+    </div>`;
+
+const SFC_NO_PARENS_AUTOFIX = `
+export default () => (
+    <div>
+        with newline without parentheses eslint crashes
+    </div>
+  )`;
+
+const ARROW_WITH_EXPORT = `
+  const Component = () =>
+    <div>
+      <p>Some text</p>
+    </div>
+
+  export { Component as default }
+`;
+
+const ARROW_WITH_EXPORT_AUTOFIX = `
+  const Component = () => (
+    <div>
+      <p>Some text</p>
+    </div>
+  )
+
+  export { Component as default }
+`;
+
+const ARROW_WITH_LOGICAL = `
+const Component = props => (
+  <div>
+    {true &&
+      <div>
+        <p>Some text</p>
+      </div>
+    }
+  </div>
+)
+`;
+
+const ARROW_WITH_LOGICAL_AUTOFIX = `
+const Component = props => (
+  <div>
+    {true && (
+      <div>
+        <p>Some text</p>
+      </div>
+    )}
+  </div>
+)
 `;
 
 function addNewLineSymbols(code) {
@@ -325,9 +631,19 @@ ruleTester.run('jsx-wrap-multilines', rule, {
     {
       code: RETURN_SINGLE_LINE
     }, {
+      code: RETURN_SINGLE_LINE_FRAGMENT,
+      parser: parsers.BABEL_ESLINT
+    }, {
       code: RETURN_PAREN
     }, {
+      code: RETURN_PAREN,
+      parser: parsers.BABEL_ESLINT
+    }, {
       code: RETURN_SINGLE_LINE,
+      options: [{return: true}]
+    }, {
+      code: RETURN_SINGLE_LINE_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
       options: [{return: true}]
     }, {
       code: RETURN_PAREN,
@@ -341,9 +657,16 @@ ruleTester.run('jsx-wrap-multilines', rule, {
     }, {
       code: DECLARATION_TERNARY_SINGLE_LINE
     }, {
+      code: DECLARATION_TERNARY_SINGLE_LINE_FRAGMENT,
+      parser: parsers.BABEL_ESLINT
+    }, {
       code: DECLARATION_TERNARY_PAREN
     }, {
       code: DECLARATION_TERNARY_SINGLE_LINE,
+      options: [{declaration: true}]
+    }, {
+      code: DECLARATION_TERNARY_SINGLE_LINE,
+      parser: parsers.BABEL_ESLINT,
       options: [{declaration: true}]
     }, {
       code: DECLARATION_TERNARY_PAREN,
@@ -375,6 +698,9 @@ ruleTester.run('jsx-wrap-multilines', rule, {
     }, {
       code: DECLARATION_PAREN
     }, {
+      code: DECLARATION_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT
+    }, {
       code: DECLARATION_SINGLE_LINE,
       options: [{declaration: true}]
     }, {
@@ -382,6 +708,10 @@ ruleTester.run('jsx-wrap-multilines', rule, {
       options: [{declaration: true}]
     }, {
       code: DECLARATION_NO_PAREN,
+      options: [{declaration: 'ignore'}]
+    }, {
+      code: DECLARATION_NO_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
       options: [{declaration: 'ignore'}]
     }, {
       code: DECLARATION_NO_PAREN,
@@ -395,10 +725,17 @@ ruleTester.run('jsx-wrap-multilines', rule, {
     }, {
       code: ASSIGNMENT_PAREN
     }, {
+      code: ASSIGNMENT_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT
+    }, {
       code: ASSIGNMENT_PAREN,
       options: [{assignment: true}]
     }, {
       code: ASSIGNMENT_NO_PAREN,
+      options: [{assignment: 'ignore'}]
+    }, {
+      code: ASSIGNMENT_NO_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
       options: [{assignment: 'ignore'}]
     }, {
       code: ASSIGNMENT_NO_PAREN,
@@ -406,15 +743,26 @@ ruleTester.run('jsx-wrap-multilines', rule, {
     }, {
       code: ARROW_PAREN
     }, {
+      code: ARROW_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT
+    }, {
       code: ARROW_SINGLE_LINE
     }, {
       code: ARROW_PAREN,
+      options: [{arrow: true}]
+    }, {
+      code: ARROW_PAREN,
+      parser: parsers.BABEL_ESLINT,
       options: [{arrow: true}]
     }, {
       code: ARROW_SINGLE_LINE,
       options: [{arrow: true}]
     }, {
       code: ARROW_NO_PAREN,
+      options: [{arrow: 'ignore'}]
+    }, {
+      code: ARROW_NO_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
       options: [{arrow: 'ignore'}]
     }, {
       code: ARROW_NO_PAREN,
@@ -430,11 +778,19 @@ ruleTester.run('jsx-wrap-multilines', rule, {
       code: CONDITION_PAREN,
       options: [{condition: true}]
     }, {
+      code: CONDITION_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      options: [{condition: true}]
+    }, {
       code: LOGICAL_SINGLE_LINE
     }, {
       code: LOGICAL_NO_PAREN
     }, {
       code: LOGICAL_PAREN,
+      options: [{logical: true}]
+    }, {
+      code: LOGICAL_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
       options: [{logical: true}]
     }, {
       code: ATTR_SINGLE_LINE
@@ -444,7 +800,15 @@ ruleTester.run('jsx-wrap-multilines', rule, {
       code: ATTR_PAREN,
       options: [{prop: true}]
     }, {
+      code: ATTR_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      options: [{prop: true}]
+    }, {
       code: RETURN_PAREN_NEW_LINE,
+      options: [{return: 'parens-new-line'}]
+    }, {
+      code: RETURN_PAREN_NEW_LINE_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
       options: [{return: 'parens-new-line'}]
     }, {
       code: DECLARATION_TERNARY_PAREN_NEW_LINE,
@@ -477,200 +841,431 @@ ruleTester.run('jsx-wrap-multilines', rule, {
     {
       code: RETURN_NO_PAREN,
       output: RETURN_PAREN,
-      errors: [{message: MISSING_PARENS}]
+      errors: [{messageId: 'missingParens'}]
+    }, {
+      code: RETURN_NO_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: RETURN_PAREN_FRAGMENT,
+      errors: [{messageId: 'missingParens'}]
     }, {
       code: RETURN_NO_PAREN,
       output: RETURN_PAREN,
       options: [{return: true}],
-      errors: [{message: MISSING_PARENS}]
+      errors: [{messageId: 'missingParens'}]
+    }, {
+      code: RETURN_NO_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: RETURN_PAREN_FRAGMENT,
+      options: [{return: true}],
+      errors: [{messageId: 'missingParens'}]
     }, {
       code: DECLARATION_TERNARY_NO_PAREN,
       output: DECLARATION_TERNARY_PAREN,
       errors: [
-        {message: MISSING_PARENS},
-        {message: MISSING_PARENS}
+        {messageId: 'missingParens'},
+        {messageId: 'missingParens'}
+      ]
+    }, {
+      code: DECLARATION_TERNARY_NO_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: DECLARATION_TERNARY_PAREN_FRAGMENT,
+      errors: [
+        {messageId: 'missingParens'},
+        {messageId: 'missingParens'}
       ]
     }, {
       code: DECLARATION_TERNARY_NO_PAREN,
       output: DECLARATION_TERNARY_PAREN,
       options: [{declaration: true}],
       errors: [
-        {message: MISSING_PARENS},
-        {message: MISSING_PARENS}
+        {messageId: 'missingParens'},
+        {messageId: 'missingParens'}
+      ]
+    }, {
+      code: DECLARATION_TERNARY_NO_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: DECLARATION_TERNARY_PAREN_FRAGMENT,
+      options: [{declaration: true}],
+      errors: [
+        {messageId: 'missingParens'},
+        {messageId: 'missingParens'}
       ]
     }, {
       code: ASSIGNMENT_TERNARY_NO_PAREN,
       output: ASSIGNMENT_TERNARY_PAREN,
       errors: [
-        {message: MISSING_PARENS},
-        {message: MISSING_PARENS}
+        {messageId: 'missingParens'},
+        {messageId: 'missingParens'}
+      ]
+    }, {
+      code: ASSIGNMENT_TERNARY_NO_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: ASSIGNMENT_TERNARY_PAREN_FRAGMENT,
+      errors: [
+        {messageId: 'missingParens'},
+        {messageId: 'missingParens'}
       ]
     }, {
       code: ASSIGNMENT_TERNARY_NO_PAREN,
       output: ASSIGNMENT_TERNARY_PAREN,
       options: [{assignment: true}],
       errors: [
-        {message: MISSING_PARENS},
-        {message: MISSING_PARENS}
+        {messageId: 'missingParens'},
+        {messageId: 'missingParens'}
+      ]
+    }, {
+      code: ASSIGNMENT_TERNARY_NO_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: ASSIGNMENT_TERNARY_PAREN_FRAGMENT,
+      options: [{assignment: true}],
+      errors: [
+        {messageId: 'missingParens'},
+        {messageId: 'missingParens'}
       ]
     }, {
       code: DECLARATION_NO_PAREN,
       output: DECLARATION_PAREN,
-      errors: [{message: MISSING_PARENS}]
+      errors: [{messageId: 'missingParens'}]
+    }, {
+      code: DECLARATION_NO_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: DECLARATION_PAREN_FRAGMENT,
+      errors: [{messageId: 'missingParens'}]
     }, {
       code: DECLARATION_NO_PAREN,
       output: DECLARATION_PAREN,
       options: [{declaration: true}],
-      errors: [{message: MISSING_PARENS}]
+      errors: [{messageId: 'missingParens'}]
     }, {
       code: ASSIGNMENT_NO_PAREN,
       output: ASSIGNMENT_PAREN,
-      errors: [{message: MISSING_PARENS}]
+      errors: [{messageId: 'missingParens'}]
+    }, {
+      code: ASSIGNMENT_NO_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: ASSIGNMENT_PAREN_FRAGMENT,
+      errors: [{messageId: 'missingParens'}]
     }, {
       code: ASSIGNMENT_NO_PAREN,
       output: ASSIGNMENT_PAREN,
       options: [{assignment: true}],
-      errors: [{message: MISSING_PARENS}]
+      errors: [{messageId: 'missingParens'}]
     }, {
       code: ARROW_NO_PAREN,
       output: ARROW_PAREN,
-      errors: [{message: MISSING_PARENS}]
+      errors: [{messageId: 'missingParens'}]
+    }, {
+      code: ARROW_NO_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: ARROW_PAREN_FRAGMENT,
+      errors: [{messageId: 'missingParens'}]
     }, {
       code: ARROW_NO_PAREN,
       output: ARROW_PAREN,
       options: [{arrow: true}],
-      errors: [{message: MISSING_PARENS}]
+      errors: [{messageId: 'missingParens'}]
     }, {
       code: CONDITION_NO_PAREN,
       output: CONDITION_PAREN,
       options: [{condition: 'parens'}],
-      errors: [{message: MISSING_PARENS}]
+      errors: [{messageId: 'missingParens'}]
+    }, {
+      code: CONDITION_NO_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: CONDITION_PAREN_FRAGMENT,
+      options: [{condition: 'parens'}],
+      errors: [{messageId: 'missingParens'}]
     }, {
       code: CONDITION_NO_PAREN,
       output: CONDITION_PAREN,
       options: [{condition: true}],
-      errors: [{message: MISSING_PARENS}]
+      errors: [{messageId: 'missingParens'}]
     }, {
       code: LOGICAL_NO_PAREN,
       output: LOGICAL_PAREN,
       options: [{logical: 'parens'}],
-      errors: [{message: MISSING_PARENS}]
+      errors: [{messageId: 'missingParens'}]
+    }, {
+      code: LOGICAL_NO_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: LOGICAL_PAREN_FRAGMENT,
+      options: [{logical: 'parens'}],
+      errors: [{messageId: 'missingParens'}]
     }, {
       code: LOGICAL_NO_PAREN,
       output: LOGICAL_PAREN,
       options: [{logical: true}],
-      errors: [{message: MISSING_PARENS}]
+      errors: [{messageId: 'missingParens'}]
     }, {
       code: ATTR_NO_PAREN,
       output: ATTR_PAREN,
       options: [{prop: 'parens'}],
-      errors: [{message: MISSING_PARENS}]
+      errors: [{messageId: 'missingParens'}]
+    }, {
+      code: ATTR_NO_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: ATTR_PAREN_FRAGMENT,
+      options: [{prop: 'parens'}],
+      errors: [{messageId: 'missingParens'}]
     }, {
       code: ATTR_NO_PAREN,
       output: ATTR_PAREN,
       options: [{prop: true}],
-      errors: [{message: MISSING_PARENS}]
+      errors: [{messageId: 'missingParens'}]
     }, {
       code: RETURN_NO_PAREN,
       output: addNewLineSymbols(RETURN_PAREN),
       options: [{return: 'parens-new-line'}],
-      errors: [{message: MISSING_PARENS}]
+      errors: [{messageId: 'missingParens'}]
+    }, {
+      code: RETURN_NO_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: addNewLineSymbols(RETURN_PAREN_FRAGMENT),
+      options: [{return: 'parens-new-line'}],
+      errors: [{messageId: 'missingParens'}]
     }, {
       code: RETURN_PAREN,
       output: addNewLineSymbols(RETURN_PAREN),
       options: [{return: 'parens-new-line'}],
-      errors: [{message: PARENS_NEW_LINES}]
+      errors: [{messageId: 'parensOnNewLines'}]
+    }, {
+      code: RETURN_PAREN_NEW_LINE_OPENING,
+      output: RETURN_PAREN_NEW_LINE_OPENING_FIXED,
+      options: [{return: 'parens-new-line'}],
+      errors: [{messageId: 'parensOnNewLines'}]
+    }, {
+      code: RETURN_PAREN_NEW_LINE_CLOSING,
+      output: RETURN_PAREN_NEW_LINE_CLOSING_FIXED,
+      options: [{return: 'parens-new-line'}],
+      errors: [{messageId: 'parensOnNewLines'}]
+    }, {
+      code: RETURN_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: addNewLineSymbols(RETURN_PAREN_FRAGMENT),
+      options: [{return: 'parens-new-line'}],
+      errors: [{messageId: 'parensOnNewLines'}]
     }, {
       code: DECLARATION_TERNARY_NO_PAREN,
       output: addNewLineSymbols(DECLARATION_TERNARY_PAREN),
       options: [{declaration: 'parens-new-line'}],
       errors: [
-        {message: MISSING_PARENS},
-        {message: MISSING_PARENS}
+        {messageId: 'missingParens'},
+        {messageId: 'missingParens'}
+      ]
+    }, {
+      code: DECLARATION_TERNARY_NO_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: addNewLineSymbols(DECLARATION_TERNARY_PAREN_FRAGMENT),
+      options: [{declaration: 'parens-new-line'}],
+      errors: [
+        {messageId: 'missingParens'},
+        {messageId: 'missingParens'}
+      ]
+    }, {
+      code: DECLARATION_TERNARY_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: addNewLineSymbols(DECLARATION_TERNARY_PAREN_FRAGMENT),
+      options: [{declaration: 'parens-new-line'}],
+      errors: [
+        {messageId: 'parensOnNewLines'},
+        {messageId: 'parensOnNewLines'}
       ]
     }, {
       code: DECLARATION_TERNARY_PAREN,
       output: addNewLineSymbols(DECLARATION_TERNARY_PAREN),
       options: [{declaration: 'parens-new-line'}],
       errors: [
-        {message: PARENS_NEW_LINES},
-        {message: PARENS_NEW_LINES}
+        {messageId: 'parensOnNewLines'},
+        {messageId: 'parensOnNewLines'}
+      ]
+    }, {
+      code: DECLARATION_TERNARY_PAREN_FRAGMENT,
+      parser: parsers.TYPESCRIPT_ESLINT,
+      output: addNewLineSymbols(DECLARATION_TERNARY_PAREN_FRAGMENT),
+      options: [{declaration: 'parens-new-line'}],
+      errors: [
+        {messageId: 'parensOnNewLines'},
+        {messageId: 'parensOnNewLines'}
       ]
     }, {
       code: ASSIGNMENT_TERNARY_NO_PAREN,
       output: addNewLineSymbols(ASSIGNMENT_TERNARY_PAREN),
       options: [{assignment: 'parens-new-line'}],
       errors: [
-        {message: MISSING_PARENS},
-        {message: MISSING_PARENS}
+        {messageId: 'missingParens'},
+        {messageId: 'missingParens'}
+      ]
+    }, {
+      code: ASSIGNMENT_TERNARY_NO_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: addNewLineSymbols(ASSIGNMENT_TERNARY_PAREN_FRAGMENT),
+      options: [{assignment: 'parens-new-line'}],
+      errors: [
+        {messageId: 'missingParens'},
+        {messageId: 'missingParens'}
       ]
     }, {
       code: ASSIGNMENT_TERNARY_PAREN,
       output: addNewLineSymbols(ASSIGNMENT_TERNARY_PAREN),
       options: [{assignment: 'parens-new-line'}],
       errors: [
-        {message: PARENS_NEW_LINES},
-        {message: PARENS_NEW_LINES}
+        {messageId: 'parensOnNewLines'},
+        {messageId: 'parensOnNewLines'}
+      ]
+    }, {
+      code: ASSIGNMENT_TERNARY_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: addNewLineSymbols(ASSIGNMENT_TERNARY_PAREN_FRAGMENT),
+      options: [{assignment: 'parens-new-line'}],
+      errors: [
+        {messageId: 'parensOnNewLines'},
+        {messageId: 'parensOnNewLines'}
       ]
     }, {
       code: DECLARATION_NO_PAREN,
       output: addNewLineSymbols(DECLARATION_PAREN),
       options: [{declaration: 'parens-new-line'}],
-      errors: [{message: MISSING_PARENS}]
+      errors: [{messageId: 'missingParens'}]
     }, {
       code: DECLARATION_PAREN,
       output: addNewLineSymbols(DECLARATION_PAREN),
       options: [{declaration: 'parens-new-line'}],
-      errors: [{message: PARENS_NEW_LINES}]
+      errors: [{messageId: 'parensOnNewLines'}]
     }, {
       code: ASSIGNMENT_NO_PAREN,
       output: addNewLineSymbols(ASSIGNMENT_PAREN),
       options: [{assignment: 'parens-new-line'}],
-      errors: [{message: MISSING_PARENS}]
+      errors: [{messageId: 'missingParens'}]
     }, {
       code: ASSIGNMENT_PAREN,
       output: addNewLineSymbols(ASSIGNMENT_PAREN),
       options: [{assignment: 'parens-new-line'}],
-      errors: [{message: PARENS_NEW_LINES}]
+      errors: [{messageId: 'parensOnNewLines'}]
     }, {
       code: ARROW_PAREN,
       output: addNewLineSymbols(ARROW_PAREN),
       options: [{arrow: 'parens-new-line'}],
-      errors: [{message: PARENS_NEW_LINES}]
+      errors: [{messageId: 'parensOnNewLines'}]
+    }, {
+      code: ARROW_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: addNewLineSymbols(ARROW_PAREN_FRAGMENT),
+      options: [{arrow: 'parens-new-line'}],
+      errors: [{messageId: 'parensOnNewLines'}]
     }, {
       code: ARROW_NO_PAREN,
       output: addNewLineSymbols(ARROW_PAREN),
       options: [{arrow: 'parens-new-line'}],
-      errors: [{message: MISSING_PARENS}]
+      errors: [{messageId: 'missingParens'}]
+    }, {
+      code: ARROW_NO_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: addNewLineSymbols(ARROW_PAREN_FRAGMENT),
+      options: [{arrow: 'parens-new-line'}],
+      errors: [{messageId: 'missingParens'}]
     }, {
       code: CONDITION_PAREN,
       output: addNewLineSymbols(CONDITION_PAREN),
       options: [{condition: 'parens-new-line'}],
-      errors: [{message: PARENS_NEW_LINES}]
+      errors: [{messageId: 'parensOnNewLines'}]
+    }, {
+      code: CONDITION_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: addNewLineSymbols(CONDITION_PAREN_FRAGMENT),
+      options: [{condition: 'parens-new-line'}],
+      errors: [{messageId: 'parensOnNewLines'}]
     }, {
       code: CONDITION_NO_PAREN,
       output: addNewLineSymbols(CONDITION_PAREN),
       options: [{condition: 'parens-new-line'}],
-      errors: [{message: MISSING_PARENS}]
+      errors: [{messageId: 'missingParens'}]
+    }, {
+      code: CONDITION_NO_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: addNewLineSymbols(CONDITION_PAREN_FRAGMENT),
+      options: [{condition: 'parens-new-line'}],
+      errors: [{messageId: 'missingParens'}]
     }, {
       code: LOGICAL_PAREN,
       output: addNewLineSymbols(LOGICAL_PAREN),
       options: [{logical: 'parens-new-line'}],
-      errors: [{message: PARENS_NEW_LINES}]
+      errors: [{messageId: 'parensOnNewLines'}]
     }, {
       code: LOGICAL_NO_PAREN,
       output: LOGICAL_PAREN_NEW_LINE_AUTOFIX,
       options: [{logical: 'parens-new-line'}],
-      errors: [{message: MISSING_PARENS}]
+      errors: [{messageId: 'missingParens'}]
+    }, {
+      code: LOGICAL_NO_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: LOGICAL_PAREN_NEW_LINE_AUTOFIX_FRAGMENT,
+      options: [{logical: 'parens-new-line'}],
+      errors: [{messageId: 'missingParens'}]
     }, {
       code: ATTR_PAREN,
       output: addNewLineSymbols(ATTR_PAREN),
       options: [{prop: 'parens-new-line'}],
-      errors: [{message: PARENS_NEW_LINES}]
+      errors: [{messageId: 'parensOnNewLines'}]
+    }, {
+      code: ATTR_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: addNewLineSymbols(ATTR_PAREN_FRAGMENT),
+      options: [{prop: 'parens-new-line'}],
+      errors: [{messageId: 'parensOnNewLines'}]
     }, {
       code: ATTR_NO_PAREN,
       output: ATTR_PAREN_NEW_LINE_AUTOFIX,
       options: [{prop: 'parens-new-line'}],
-      errors: [{message: MISSING_PARENS}]
+      errors: [{messageId: 'missingParens'}]
+    }, {
+      code: ATTR_NO_PAREN_FRAGMENT,
+      parser: parsers.BABEL_ESLINT,
+      output: ATTR_PAREN_NEW_LINE_AUTOFIX_FRAGMENT,
+      options: [{prop: 'parens-new-line'}],
+      errors: [{messageId: 'missingParens'}]
+    },
+    {
+      code: SFC_NO_PARENS_NO_NEWLINE,
+      output: SFC_NO_PARENS_AUTOFIX,
+      options: [OPTIONS_ALL_NEW_LINES],
+      errors: [{messageId: 'missingParens'}]
+    }, {
+      code: ARROW_WITH_EXPORT,
+      output: ARROW_WITH_EXPORT_AUTOFIX,
+      options: [{
+        declaration: 'parens-new-line',
+        assignment: 'parens-new-line',
+        return: 'parens-new-line',
+        arrow: 'parens-new-line',
+        condition: 'parens-new-line',
+        logical: 'ignore',
+        prop: 'ignore'
+      }],
+      errors: [{messageId: 'missingParens'}]
+    }, {
+      code: ARROW_WITH_LOGICAL,
+      output: ARROW_WITH_LOGICAL_AUTOFIX,
+      options: [{logical: 'parens-new-line'}],
+      errors: [{messageId: 'missingParens'}]
+    }, {
+      code: [
+        'import React from \'react\';',
+        '',
+        'const A =',
+        '<div>',
+        '    B',
+        '</div>;'
+      ].join('\n'),
+      output: [
+        'import React from \'react\';',
+        '',
+        'const A = (',
+        '<div>',
+        '    B',
+        '</div>',
+        ');'
+      ].join('\n'),
+      options: [{declaration: 'parens-new-line'}],
+      errors: [{messageId: 'missingParens'}]
     }]
 });

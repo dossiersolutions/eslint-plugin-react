@@ -2,16 +2,17 @@
  * @fileoverview Prevent missing displayName in a React component definition
  * @author Yannick Croissant
  */
+
 'use strict';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/display-name');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/display-name');
 
-require('babel-eslint');
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -86,14 +87,14 @@ ruleTester.run('display-name', rule, {
         }
       }
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       class Hello {
         method;
       }
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       class Hello extends React.Component {
@@ -120,7 +121,7 @@ ruleTester.run('display-name', rule, {
     options: [{
       ignoreTranspilerName: true
     }],
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       var Hello = createReactClass({
@@ -137,7 +138,7 @@ ruleTester.run('display-name', rule, {
         }
       }
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       export default class Hello {
@@ -146,7 +147,7 @@ ruleTester.run('display-name', rule, {
         }
       }
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       var Hello;
@@ -187,35 +188,42 @@ ruleTester.run('display-name', rule, {
         }
       }
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: `
+      export const Hello = React.memo(function Hello() {
+        return <p />;
+      })
+    `,
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       var Hello = function() {
         return <div>Hello {this.props.name}</div>;
       }
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       function Hello() {
         return <div>Hello {this.props.name}</div>;
       }
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       var Hello = () => {
         return <div>Hello {this.props.name}</div>;
       }
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       module.exports = function Hello() {
         return <div>Hello {this.props.name}</div>;
       }
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       function Hello() {
@@ -226,7 +234,7 @@ ruleTester.run('display-name', rule, {
     options: [{
       ignoreTranspilerName: true
     }],
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       var Hello = () => {
@@ -237,7 +245,7 @@ ruleTester.run('display-name', rule, {
     options: [{
       ignoreTranspilerName: true
     }],
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       var Hello = function() {
@@ -248,7 +256,7 @@ ruleTester.run('display-name', rule, {
     options: [{
       ignoreTranspilerName: true
     }],
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       var Mixins = {
@@ -263,7 +271,7 @@ ruleTester.run('display-name', rule, {
     options: [{
       ignoreTranspilerName: true
     }],
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       var Hello = createReactClass({
@@ -275,7 +283,7 @@ ruleTester.run('display-name', rule, {
         }
       });
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       var Hello = createReactClass({
@@ -291,7 +299,7 @@ ruleTester.run('display-name', rule, {
     options: [{
       ignoreTranspilerName: true
     }],
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       const Mixin = {
@@ -302,7 +310,7 @@ ruleTester.run('display-name', rule, {
         }
       };
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       var obj = {
@@ -314,7 +322,7 @@ ruleTester.run('display-name', rule, {
     options: [{
       ignoreTranspilerName: true
     }],
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       var obj = {
@@ -323,7 +331,7 @@ ruleTester.run('display-name', rule, {
         }
       };
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       export default {
@@ -333,7 +341,7 @@ ruleTester.run('display-name', rule, {
         }
       };
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       import React, { createClass } from 'react';
@@ -352,7 +360,7 @@ ruleTester.run('display-name', rule, {
         createClass: 'createClass'
       }
     },
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       import React, {Component} from "react";
@@ -363,7 +371,49 @@ ruleTester.run('display-name', rule, {
       }
       module.exports = someDecorator;
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: [
+      'import React, {createElement} from "react";',
+      'const SomeComponent = (props) => {',
+      '  const {foo, bar} = props;',
+      '  return someComponentFactory({',
+      '    onClick: () => foo(bar("x"))',
+      '  });',
+      '};'
+    ].join('\n')
+  }, {
+    code: [
+      'import React, {createElement} from "react";',
+      'const SomeComponent = (props) => {',
+      '  const {foo, bar} = props;',
+      '  return someComponentFactory({',
+      '    onClick: () => foo(bar("x"))',
+      '  });',
+      '};'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: [
+      'import React, {Component} from "react";',
+      'function someDecorator(ComposedComponent) {',
+      '  return class MyDecorator extends Component {',
+      '    render() {return <ComposedComponent {...this.props} />;}',
+      '  };',
+      '}',
+      'module.exports = someDecorator;'
+    ].join('\n')
+  }, {
+    code: [
+      'import React, {Component} from "react";',
+      'function someDecorator(ComposedComponent) {',
+      '  return class MyDecorator extends Component {',
+      '    render() {return <ComposedComponent {...this.props} />;}',
+      '  };',
+      '}',
+      'module.exports = someDecorator;'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       const element = (
@@ -373,7 +423,7 @@ ruleTester.run('display-name', rule, {
         }}/>
       )
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       const element = (
@@ -383,20 +433,77 @@ ruleTester.run('display-name', rule, {
         }}/>
       )
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       module.exports = {
         createElement: tagName => document.createElement(tagName)
       };
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       const { createElement } = document;
       createElement("a");
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: `
+      import React from 'react'
+      import { string } from 'prop-types'
+
+      function Component({ world }) {
+        return <div>Hello {world}</div>
+      }
+
+      Component.propTypes = {
+        world: string,
+      }
+
+      export default React.memo(Component)
+    `
+  }, {
+    code: `
+      import React from 'react'
+
+      const ComponentWithMemo = React.memo(function Component({ world }) {
+        return <div>Hello {world}</div>
+      })
+    `
+  }, {
+    code: `
+      import React from 'react';
+
+      const Hello = React.memo(function Hello() {
+        return;
+      });
+    `
+  }, {
+    code: `
+      import React from 'react'
+
+      const ForwardRefComponentLike = React.forwardRef(function ComponentLike({ world }, ref) {
+        return <div ref={ref}>Hello {world}</div>
+      })
+    `
+  }, {
+    code: `
+      function F() {
+        let items = [];
+        let testData = [{a: "test1", displayName: "test2"}, {a: "test1", displayName: "test2"}];
+        for (let item of testData) {
+            items.push({a: item.a, b: item.displayName});
+        }
+        return <div>{items}</div>;
+      }
+    `
+  }, {
+    code: `
+      import {Component} from "react";
+      type LinkProps = {...{}};
+      class Link extends Component<LinkProps> {}
+    `,
+    parser: parsers.BABEL_ESLINT
   }],
 
   invalid: [{
@@ -411,7 +518,7 @@ ruleTester.run('display-name', rule, {
       ignoreTranspilerName: true
     }],
     errors: [{
-      message: 'Component definition is missing display name'
+      messageId: 'noDisplayName'
     }]
   }, {
     code: `
@@ -430,7 +537,7 @@ ruleTester.run('display-name', rule, {
       }
     },
     errors: [{
-      message: 'Component definition is missing display name'
+      messageId: 'noDisplayName'
     }]
   }, {
     code: `
@@ -444,7 +551,7 @@ ruleTester.run('display-name', rule, {
       ignoreTranspilerName: true
     }],
     errors: [{
-      message: 'Component definition is missing display name'
+      messageId: 'noDisplayName'
     }]
   }, {
     code: `
@@ -458,7 +565,7 @@ ruleTester.run('display-name', rule, {
       ignoreTranspilerName: true
     }],
     errors: [{
-      message: 'Component definition is missing display name'
+      messageId: 'noDisplayName'
     }]
   }, {
     code: `
@@ -475,7 +582,7 @@ ruleTester.run('display-name', rule, {
       ignoreTranspilerName: true
     }],
     errors: [{
-      message: 'Component definition is missing display name'
+      messageId: 'noDisplayName'
     }]
   }, {
     code: `
@@ -483,9 +590,9 @@ ruleTester.run('display-name', rule, {
         return <div>Hello {props.name}</div>;
       }
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: [{
-      message: 'Component definition is missing display name'
+      messageId: 'noDisplayName'
     }]
   }, {
     code: `
@@ -493,9 +600,9 @@ ruleTester.run('display-name', rule, {
         return <div>Hello {props.name}</div>;
       }
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: [{
-      message: 'Component definition is missing display name'
+      messageId: 'noDisplayName'
     }]
   }, {
     code: `
@@ -505,9 +612,9 @@ ruleTester.run('display-name', rule, {
         }
       });
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: [{
-      message: 'Component definition is missing display name'
+      messageId: 'noDisplayName'
     }]
   }, {
     code: `
@@ -523,9 +630,9 @@ ruleTester.run('display-name', rule, {
     options: [{
       ignoreTranspilerName: true
     }],
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: [{
-      message: 'Component definition is missing display name'
+      messageId: 'noDisplayName'
     }]
   }, {
     code: `
@@ -541,7 +648,7 @@ ruleTester.run('display-name', rule, {
     options: [{
       ignoreTranspilerName: true
     }],
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     settings: {
       react: {
         pragma: 'Foo',
@@ -549,7 +656,7 @@ ruleTester.run('display-name', rule, {
       }
     },
     errors: [{
-      message: 'Component definition is missing display name'
+      messageId: 'noDisplayName'
     }]
   }, {
     code: `
@@ -571,9 +678,9 @@ ruleTester.run('display-name', rule, {
         createClass: 'createClass'
       }
     },
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: [{
-      message: 'Component definition is missing display name'
+      messageId: 'noDisplayName'
     }]
   }, {
     code: `
@@ -588,9 +695,21 @@ ruleTester.run('display-name', rule, {
     options: [{
       ignoreTranspilerName: true
     }],
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: [{
-      message: 'Component definition is missing display name'
+      messageId: 'noDisplayName'
+    }]
+  }, {
+    code: `
+      function Hof() {
+        return function () {
+          return <div />
+        }
+      }
+    `,
+    parser: parsers.BABEL_ESLINT,
+    errors: [{
+      messageId: 'noDisplayName'
     }]
   }, {
     code: `
@@ -599,9 +718,97 @@ ruleTester.run('display-name', rule, {
         return createElement("div", {}, "hello");
       };
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: [{
-      message: 'Component definition is missing display name'
+      messageId: 'noDisplayName'
+    }]
+  }, {
+    code: `
+      import React from 'react'
+
+      const ComponentWithMemo = React.memo(({ world }) => {
+        return <div>Hello {world}</div>
+      })
+    `,
+    errors: [{
+      messageId: 'noDisplayName'
+    }]
+  }, {
+    code: `
+      import React from 'react'
+
+      const ComponentWithMemo = React.memo(function() {
+        return <div>Hello {world}</div>
+      })
+    `,
+    errors: [{
+      messageId: 'noDisplayName'
+    }]
+  }, {
+    code: `
+      import React from 'react'
+
+      const ForwardRefComponentLike = React.forwardRef(({ world }, ref) => {
+        return <div ref={ref}>Hello {world}</div>
+      })
+    `,
+    errors: [{
+      messageId: 'noDisplayName'
+    }]
+  }, {
+    code: `
+      import React from 'react'
+
+      const ForwardRefComponentLike = React.forwardRef(function({ world }, ref) {
+        return <div ref={ref}>Hello {world}</div>
+      })
+    `,
+    errors: [{
+      messageId: 'noDisplayName'
+    }]
+  }, {
+    // Only trigger an error for the outer React.memo
+    code: `
+      import React from 'react'
+
+      const MemoizedForwardRefComponentLike = React.memo(
+        React.forwardRef(({ world }, ref) => {
+          return <div ref={ref}>Hello {world}</div>
+        })
+      )
+    `,
+    errors: [{
+      messageId: 'noDisplayName'
+    }]
+  }, {
+    // Only trigger an error for the outer React.memo
+    code: `
+      import React from 'react'
+
+      const MemoizedForwardRefComponentLike = React.memo(
+        React.forwardRef(function({ world }, ref) {
+          return <div ref={ref}>Hello {world}</div>
+       })
+      )
+    `,
+    errors: [{
+      messageId: 'noDisplayName'
+    }]
+  }, {
+    // React does not handle the result of forwardRef being passed into memo
+    // ComponentWithMemoAndForwardRef gets shown as Memo(Anonymous)
+    // See https://github.com/facebook/react/issues/16722
+    code: `
+      import React from 'react'
+
+      const MemoizedForwardRefComponentLike = React.memo(
+        React.forwardRef(function ComponentLike({ world }, ref) {
+          return <div ref={ref}>Hello {world}</div>
+        })
+      )
+    `,
+    errors: [{
+      messageId: 'noDisplayName'
     }]
   }, {
     code: `
@@ -611,9 +818,9 @@ ruleTester.run('display-name', rule, {
         return createElement("div", {}, "hello");
       };
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: [{
-      message: 'Component definition is missing display name'
+      messageId: 'noDisplayName'
     }]
   }, {
     code: `
@@ -623,9 +830,96 @@ ruleTester.run('display-name', rule, {
         return createElement("div", {}, "hello");
       };
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: [{
-      message: 'Component definition is missing display name'
+      messageId: 'noDisplayName'
+    }]
+  }, {
+    code: `
+      module.exports = function () {
+        function a () {}
+        const b = function b () {}
+        const c = function () {}
+        const d = () => {}
+        const obj = {
+          a: function a () {},
+          b: function b () {},
+          c () {},
+          d: () => {},
+        }
+        return React.createElement("div", {}, "text content");
+      }
+    `,
+    errors: [{
+      messageId: 'noDisplayName'
+    }]
+  }, {
+    code: `
+      module.exports = () => {
+        function a () {}
+        const b = function b () {}
+        const c = function () {}
+        const d = () => {}
+        const obj = {
+          a: function a () {},
+          b: function b () {},
+          c () {},
+          d: () => {},
+        }
+
+        return React.createElement("div", {}, "text content");
+      }
+    `,
+    errors: [{
+      messageId: 'noDisplayName'
+    }]
+  }, {
+    code: `
+      export default class extends React.Component {
+        render() {
+          function a () {}
+          const b = function b () {}
+          const c = function () {}
+          const d = () => {}
+          const obj = {
+            a: function a () {},
+            b: function b () {},
+            c () {},
+            d: () => {},
+          }
+          return <div>Hello {this.props.name}</div>;
+        }
+      }
+    `,
+    errors: [{
+      messageId: 'noDisplayName'
+    }]
+  }, {
+    code: `
+      export default class extends React.PureComponent {
+        render() {
+          return <Card />;
+        }
+      }
+
+      const Card = (() => {
+        return React.memo(({ }) => (
+          <div />
+        ));
+      })();
+    `,
+    errors: [{
+      messageId: 'noDisplayName',
+      line: 2,
+      column: 22,
+      endLine: 6,
+      endColumn: 8
+    }, {
+      messageId: 'noDisplayName',
+      line: 9,
+      column: 16,
+      endLine: 11,
+      endColumn: 11
     }]
   }]
 });

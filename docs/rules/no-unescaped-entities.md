@@ -41,8 +41,8 @@ when the closing `>` is in the wrong place.
 The preferred way to include one of these characters is to use the HTML escape code.
 
 - `>` can be replaced with `&gt;`
-- `"` can be replaced with `&quot;`, `&ldquo;` or `&rdquo;`
-- `'` can be replaced with `&apos;`, `&lsquo;` or `&rsquo;`
+- `"` can be replaced with `&quot;`, `&ldquo;`, `&#34;` or `&rdquo;`
+- `'` can be replaced with `&apos;`, `&lsquo;`, `&#39;` or `&rsquo;`
 - `}` can be replaced with `&#125;`
 
 Alternatively, you can include the literal character inside a subexpression
@@ -53,13 +53,13 @@ rule because it is a syntax error to include those tokens inside of a tag.
 
 ## Rule Details
 
-The following patterns are considered warnings:
+Examples of **incorrect** code for this rule:
 
 ```jsx
 <div> > </div>
 ```
 
-The following patterns are **not** considered warnings:
+Examples of **correct** code for this rule:
 
 ```jsx
 <div> &gt; </div>
@@ -83,4 +83,14 @@ Overwrite the default forbidden entities array `['>', '"', '\'', '}']` with your
 
 ```js
 "react/no-unescaped-entities": ["error", {"forbid": [">", "}"]}],
+// or
+"react/no-unescaped-entities": ["error", {"forbid": [{
+  char: ">",
+  alternatives: ['&gt;']
+}, {
+  char: "}",
+  alternatives: ['&#125;']
+}]}],
 ```
+
+Where `char` is a special character and `alternatives` is the correct escapes.

@@ -13,8 +13,10 @@ lib-cov
 pids
 logs
 reports
+coverage
 build
 node_modules
+!tests/**/node_modules
 npm-debug.log
 sftp-config.json
 

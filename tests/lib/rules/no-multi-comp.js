@@ -2,14 +2,17 @@
  * @fileoverview Prevent multiple component definition per file
  * @author Yannick Croissant
  */
+
 'use strict';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/no-multi-comp');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/no-multi-comp');
+
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -18,8 +21,6 @@ const parserOptions = {
     jsx: true
   }
 };
-
-require('babel-eslint');
 
 // ------------------------------------------------------------------------------
 // Tests
@@ -68,7 +69,7 @@ ruleTester.run('no-multi-comp', rule, {
       '  return <div>Hello again {props.name}</div>;',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: [{
       ignoreStateless: true
     }]
@@ -101,6 +102,144 @@ ruleTester.run('no-multi-comp', rule, {
       '};'
     ].join('\n'),
     parserOptions: Object.assign({sourceType: 'module'}, parserOptions)
+  }, {
+    code: `
+      const Hello = React.memo(function(props) {
+        return <div>Hello {props.name}</div>;
+      });
+      class HelloJohn extends React.Component {
+        render() {
+          return <Hello name="John" />;
+        }
+      }
+    `,
+    options: [{
+      ignoreStateless: true
+    }]
+  }, {
+    code: `
+  class StoreListItem extends React.PureComponent {
+    // A bunch of stuff here
+  }
+  export default React.forwardRef((props, ref) => <StoreListItem {...props} forwardRef={ref} />);
+  `,
+    options: [{
+      ignoreStateless: false
+    }]
+  }, {
+    code: `
+  class StoreListItem extends React.PureComponent {
+    // A bunch of stuff here
+  }
+  export default React.forwardRef((props, ref) => {
+    return <StoreListItem {...props} forwardRef={ref} />
+  });
+  `,
+    options: [{
+      ignoreStateless: false
+    }]
+  }, {
+    code: `
+  const HelloComponent = (props) => {
+    return <div></div>;
+  }
+  export default React.forwardRef((props, ref) => <HelloComponent {...props} forwardRef={ref} />);
+  `,
+    options: [{
+      ignoreStateless: false
+    }]
+  }, {
+    code: `
+  class StoreListItem extends React.PureComponent {
+    // A bunch of stuff here
+  }
+  export default React.forwardRef(
+    function myFunction(props, ref) {
+      return <StoreListItem {...props} forwardedRef={ref} />;
+    }
+  );
+  `,
+    options: [{
+      ignoreStateless: false
+    }]
+  }, {
+    code: `
+  class StoreListItem extends React.PureComponent {
+    // A bunch of stuff here
+  }
+  export default React.forwardRef((props, ref) => <StoreListItem {...props} forwardRef={ref} />);
+  `,
+    options: [{
+      ignoreStateless: true
+    }]
+  }, {
+    code: `
+  class StoreListItem extends React.PureComponent {
+    // A bunch of stuff here
+  }
+  export default React.forwardRef((props, ref) => {
+    return <StoreListItem {...props} forwardRef={ref} />
+  });
+  `,
+    options: [{
+      ignoreStateless: true
+    }]
+  }, {
+    code: `
+  const HelloComponent = (props) => {
+    return <div></div>;
+  }
+  export default React.forwardRef((props, ref) => <HelloComponent {...props} forwardRef={ref} />);
+  `,
+    options: [{
+      ignoreStateless: true
+    }]
+  }, {
+    code: `
+  const HelloComponent = (props) => {
+    return <div></div>;
+  }
+  class StoreListItem extends React.PureComponent {
+    // A bunch of stuff here
+  }
+  export default React.forwardRef(
+    function myFunction(props, ref) {
+      return <StoreListItem {...props} forwardedRef={ref} />;
+    }
+  );
+  `,
+    options: [{
+      ignoreStateless: true
+    }]
+  }, {
+    code: `
+  const HelloComponent = (props) => {
+    return <div></div>;
+  }
+  export default React.memo((props, ref) => <HelloComponent {...props} />);
+  `,
+    options: [{
+      ignoreStateless: false
+    }]
+  }, {
+    code: `
+      import React from 'react';
+      function memo() {
+        var outOfScope = "hello"
+        return null;
+      }
+      class ComponentY extends React.Component {
+        memoCities = memo((cities) => cities.map((v) => ({ label: v })));
+        render() {
+          return (
+            <div>
+              <div>Counter</div>
+            </div>
+          );
+        }
+      }
+    `,
+    parser: parsers.BABEL_ESLINT
   }],
 
   invalid: [{
@@ -117,7 +256,7 @@ ruleTester.run('no-multi-comp', rule, {
       '});'
     ].join('\r'),
     errors: [{
-      message: 'Declare only one React component per file',
+      messageId: 'onlyOneComponent',
       line: 6
     }]
   }, {
@@ -139,10 +278,10 @@ ruleTester.run('no-multi-comp', rule, {
       '}'
     ].join('\r'),
     errors: [{
-      message: 'Declare only one React component per file',
+      messageId: 'onlyOneComponent',
       line: 6
     }, {
-      message: 'Declare only one React component per file',
+      messageId: 'onlyOneComponent',
       line: 11
     }]
   }, {
@@ -154,9 +293,9 @@ ruleTester.run('no-multi-comp', rule, {
       '  return <div>Hello again {props.name}</div>;',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: [{
-      message: 'Declare only one React component per file',
+      messageId: 'onlyOneComponent',
       line: 4
     }]
   }, {
@@ -171,7 +310,7 @@ ruleTester.run('no-multi-comp', rule, {
       '}'
     ].join('\r'),
     errors: [{
-      message: 'Declare only one React component per file',
+      messageId: 'onlyOneComponent',
       line: 4
     }]
   }, {
@@ -187,10 +326,238 @@ ruleTester.run('no-multi-comp', rule, {
       '  }',
       '};'
     ].join('\n'),
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: [{
-      message: 'Declare only one React component per file',
+      messageId: 'onlyOneComponent',
       line: 6
     }]
+  },
+  {
+    code: `
+      exports.Foo = function Foo() {
+        return <></>
+      }
+
+      exports.createSomeComponent = function createSomeComponent(opts) {
+        return function Foo() {
+          return <>{opts.a}</>
+        }
+      }
+    `,
+    parser: parsers.BABEL_ESLINT,
+    errors: [{
+      messageId: 'onlyOneComponent',
+      line: 7
+    }]
+  },
+  {
+    code: `
+  class StoreListItem extends React.PureComponent {
+    // A bunch of stuff here
+  }
+  export default React.forwardRef((props, ref) => <div><StoreListItem {...props} forwardRef={ref} /></div>);
+  `,
+    options: [{
+      ignoreStateless: false
+    }],
+    parser: parsers.BABEL_ESLINT,
+    errors: [{
+      messageId: 'onlyOneComponent',
+      line: 5
+    }]
+  }, {
+    code: `
+  const HelloComponent = (props) => {
+    return <div></div>;
+  }
+  const HelloComponent2 = React.forwardRef((props, ref) => <div></div>);
+  `,
+    options: [{
+      ignoreStateless: false
+    }],
+    parser: parsers.BABEL_ESLINT,
+    errors: [{
+      messageId: 'onlyOneComponent',
+      line: 5
+    }]
+  }, {
+    code: `
+  const HelloComponent = (0, (props) => {
+    return <div></div>;
+  });
+  const HelloComponent2 = React.forwardRef((props, ref) => <><HelloComponent></HelloComponent></>);
+  `,
+    options: [{
+      ignoreStateless: false
+    }],
+    parser: parsers.BABEL_ESLINT,
+    errors: [{
+      messageId: 'onlyOneComponent',
+      line: 5
+    }]
+  }, {
+    code: `
+      const forwardRef = React.forwardRef;
+      const HelloComponent = (0, (props) => {
+        return <div></div>;
+      });
+      const HelloComponent2 = forwardRef((props, ref) => <HelloComponent></HelloComponent>);
+    `,
+    options: [{
+      ignoreStateless: false
+    }],
+    errors: [{
+      messageId: 'onlyOneComponent',
+      line: 6
+    }]
+  }, {
+    code: `
+      const memo = React.memo;
+      const HelloComponent = (props) => {
+        return <div></div>;
+      };
+      const HelloComponent2 = memo((props) => <HelloComponent></HelloComponent>);
+    `,
+    options: [{
+      ignoreStateless: false
+    }],
+    errors: [{
+      messageId: 'onlyOneComponent',
+      line: 6
+    }]
+  }, {
+    code: `
+      const {forwardRef} = React;
+      const HelloComponent = (0, (props) => {
+        return <div></div>;
+      });
+      const HelloComponent2 = forwardRef((props, ref) => <HelloComponent></HelloComponent>);
+    `,
+    options: [{
+      ignoreStateless: false
+    }],
+    errors: [{
+      messageId: 'onlyOneComponent',
+      line: 6
+    }]
+  }, {
+    code: `
+      const {memo} = React;
+      const HelloComponent = (0, (props) => {
+        return <div></div>;
+      });
+      const HelloComponent2 = memo((props) => <HelloComponent></HelloComponent>);
+    `,
+    options: [{
+      ignoreStateless: false
+    }],
+    errors: [{
+      messageId: 'onlyOneComponent',
+      line: 6
+    }]
+  }, {
+    code: `
+      import React, { memo } from 'react';
+      const HelloComponent = (0, (props) => {
+        return <div></div>;
+      });
+      const HelloComponent2 = memo((props) => <HelloComponent></HelloComponent>);
+    `,
+    options: [{
+      ignoreStateless: false
+    }],
+    errors: [{
+      messageId: 'onlyOneComponent',
+      line: 6
+    }]
+  }, {
+    code: `
+      import {forwardRef} from 'react';
+      const HelloComponent = (0, (props) => {
+        return <div></div>;
+      });
+      const HelloComponent2 = forwardRef((props, ref) => <HelloComponent></HelloComponent>);
+    `,
+    options: [{
+      ignoreStateless: false
+    }],
+    errors: [{
+      messageId: 'onlyOneComponent',
+      line: 6
+    }]
+  }, {
+    code: `
+      const { memo } = require('react');
+      const HelloComponent = (0, (props) => {
+        return <div></div>;
+      });
+      const HelloComponent2 = memo((props) => <HelloComponent></HelloComponent>);
+    `,
+    options: [{
+      ignoreStateless: false
+    }],
+    errors: [{
+      messageId: 'onlyOneComponent',
+      line: 6
+    }]
+  }, {
+    code: `
+      const {forwardRef} = require('react');
+      const HelloComponent = (0, (props) => {
+        return <div></div>;
+      });
+      const HelloComponent2 = forwardRef((props, ref) => <HelloComponent></HelloComponent>);
+    `,
+    options: [{
+      ignoreStateless: false
+    }],
+    errors: [{
+      messageId: 'onlyOneComponent',
+      line: 6
+    }]
+  }, {
+    code: `
+      const forwardRef = require('react').forwardRef;
+      const HelloComponent = (0, (props) => {
+        return <div></div>;
+      });
+      const HelloComponent2 = forwardRef((props, ref) => <HelloComponent></HelloComponent>);
+    `,
+    options: [{
+      ignoreStateless: false
+    }],
+    errors: [{
+      messageId: 'onlyOneComponent',
+      line: 6
+    }]
+  }, {
+    code: `
+      const memo = require('react').memo;
+      const HelloComponent = (0, (props) => {
+        return <div></div>;
+      });
+      const HelloComponent2 = memo((props) => <HelloComponent></HelloComponent>);
+    `,
+    options: [{
+      ignoreStateless: false
+    }],
+    errors: [{
+      messageId: 'onlyOneComponent',
+      line: 6
+    }]
+  }, {
+    code: `
+        import Foo, { memo, forwardRef } from 'foo';
+        const Text = forwardRef(({ text }, ref) => {
+          return <div ref={ref}>{text}</div>;
+        })
+        const Label = memo(() => <Text />);
+      `,
+    settings: {
+      react: {
+        pragma: 'Foo'
+      }
+    },
+    errors: [{messageId: 'onlyOneComponent'}]
   }]
 });

@@ -9,8 +9,10 @@
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/jsx-one-expression-per-line');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/jsx-one-expression-per-line');
+
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -28,6 +30,42 @@ const ruleTester = new RuleTester({parserOptions});
 ruleTester.run('jsx-one-expression-per-line', rule, {
   valid: [{
     code: '<App />'
+  }, {
+    code: `
+\t\t<AllTabs>
+\t\t\tFail
+\t\t</AllTabs>
+    `
+  }, {
+    code: `
+\t\t<TagsWithTabs>
+      Fail
+\t\t</TagsWithTabs>
+    `
+  }, {
+    code: `
+    <ClosedTagWithTabs>
+      Fail
+\t\t</ClosedTagWithTabs>
+    `
+  }, {
+    code: `
+\t\t<OpenTagWithTabs>
+      OK
+    </OpenTagWithTabs>
+    `
+  }, {
+    code: `
+    <TextWithTabs>
+\t\t\tOK
+    </TextWithTabs>
+    `
+  }, {
+    code: `
+    <AllSpaces>
+      OK
+    </AllSpaces>
+    `
   }, {
     code: '<App></App>'
   }, {
@@ -84,6 +122,42 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       'App',
       '>'
     ].join('\n')
+  }, {
+    code: '<App>foo</App>',
+    options: [{allow: 'literal'}]
+  }, {
+    code: '<App>123</App>',
+    options: [{allow: 'literal'}]
+  }, {
+    code: '<App>foo</App>',
+    options: [{allow: 'single-child'}]
+  }, {
+    code: '<App>{"foo"}</App>',
+    options: [{allow: 'single-child'}]
+  }, {
+    code: '<App>{foo && <Bar />}</App>',
+    options: [{allow: 'single-child'}]
+  }, {
+    code: '<App><Foo /></App>',
+    options: [{allow: 'single-child'}]
+  }, {
+    code: '<></>',
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: [
+      '<>',
+      '  <Foo />',
+      '</>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: [
+      '<>',
+      '  <Foo />',
+      '  <Bar />',
+      '</>'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
   }],
 
   invalid: [{
@@ -93,8 +167,11 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '{"foo"}',
       '</App>'
     ].join('\n'),
-    errors: [{message: '`{"foo"}` must be placed on a new line'}],
-    parserOptions: parserOptions
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: '{"foo"}'}
+    }],
+    parserOptions
   }, {
     code: '<App>foo</App>',
     output: [
@@ -102,8 +179,11 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       'foo',
       '</App>'
     ].join('\n'),
-    errors: [{message: '`foo` must be placed on a new line'}],
-    parserOptions: parserOptions
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'foo'}
+    }],
+    parserOptions
   }, {
     code: [
       '<div>',
@@ -118,9 +198,12 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '</div>'
     ].join('\n'),
     errors: [
-      {message: '`{"bar"}` must be placed on a new line'}
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: '{"bar"}'}
+      }
     ],
-    parserOptions: parserOptions
+    parserOptions
   }, {
     code: [
       '<div>',
@@ -135,9 +218,12 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '</div>'
     ].join('\n'),
     errors: [
-      {message: '` bar` must be placed on a new line'}
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: ' bar'}
+      }
     ],
-    parserOptions: parserOptions
+    parserOptions
   }, {
     code: [
       '<App>',
@@ -150,8 +236,11 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '<Bar />',
       '</App>'
     ].join('\n'),
-    errors: [{message: '`Bar` must be placed on a new line'}],
-    parserOptions: parserOptions
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'Bar'}
+    }],
+    parserOptions
   }, {
     code: [
       '<div>',
@@ -164,8 +253,11 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       'foo',
       '</div>'
     ].join('\n'),
-    errors: [{message: '`foo` must be placed on a new line'}],
-    parserOptions: parserOptions
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'foo'}
+    }],
+    parserOptions
   }, {
     code: [
       '<div>',
@@ -178,8 +270,11 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '{"foo"}',
       '</div>'
     ].join('\n'),
-    errors: [{message: '`{"foo"}` must be placed on a new line'}],
-    parserOptions: parserOptions
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: '{"foo"}'}
+    }],
+    parserOptions
   }, {
     code: [
       '<div>',
@@ -194,9 +289,12 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '</div>'
     ].join('\n'),
     errors: [
-      {message: '`{ I18n.t(\'baz\') }` must be placed on a new line'}
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: '{ I18n.t(\'baz\') }'}
+      }
     ],
-    parserOptions: parserOptions
+    parserOptions
   }, {
     code: [
       '<Text style={styles.foo}>{ bar } <Text/> { I18n.t(\'baz\') }</Text>'
@@ -211,11 +309,20 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '</Text>'
     ].join('\n'),
     errors: [
-      {message: '`{ bar }` must be placed on a new line'},
-      {message: '`Text` must be placed on a new line'},
-      {message: '`{ I18n.t(\'baz\') }` must be placed on a new line'}
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: '{ bar }'}
+      },
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: 'Text'}
+      },
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: '{ I18n.t(\'baz\') }'}
+      }
     ],
-    parserOptions: parserOptions
+    parserOptions
 
   }, {
     code: [
@@ -230,10 +337,16 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '</Text>'
     ].join('\n'),
     errors: [
-      {message: '`Bar` must be placed on a new line'},
-      {message: '`Baz` must be placed on a new line'}
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: 'Bar'}
+      },
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: 'Baz'}
+      }
     ],
-    parserOptions: parserOptions
+    parserOptions
   }, {
     code: [
       '<Text style={styles.foo}> <Bar/> <Baz/> <Bunk/> <Bruno/> </Text>'
@@ -252,12 +365,24 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       ' </Text>'
     ].join('\n'),
     errors: [
-      {message: '`Bar` must be placed on a new line'},
-      {message: '`Baz` must be placed on a new line'},
-      {message: '`Bunk` must be placed on a new line'},
-      {message: '`Bruno` must be placed on a new line'}
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: 'Bar'}
+      },
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: 'Baz'}
+      },
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: 'Bunk'}
+      },
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: 'Bruno'}
+      }
     ],
-    parserOptions: parserOptions
+    parserOptions
   }, {
     code: [
       '<Text style={styles.foo}> <Bar /></Text>'
@@ -269,9 +394,12 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '</Text>'
     ].join('\n'),
     errors: [
-      {message: '`Bar` must be placed on a new line'}
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: 'Bar'}
+      }
     ],
-    parserOptions: parserOptions
+    parserOptions
   }, {
     code: [
       '<Text style={styles.foo}> <Bar />',
@@ -284,9 +412,12 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '</Text>'
     ].join('\n'),
     errors: [
-      {message: '`Bar` must be placed on a new line'}
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: 'Bar'}
+      }
     ],
-    parserOptions: parserOptions
+    parserOptions
   }, {
     code: [
       '<Text style={styles.foo}>',
@@ -301,9 +432,12 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '</Text>'
     ].join('\n'),
     errors: [
-      {message: '`Baz` must be placed on a new line'}
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: 'Baz'}
+      }
     ],
-    parserOptions: parserOptions
+    parserOptions
   }, {
     code: [
       '<Text style={styles.foo}>',
@@ -318,9 +452,12 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '</Text>'
     ].join('\n'),
     errors: [
-      {message: '`{ I18n.t(\'baz\') }` must be placed on a new line'}
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: '{ I18n.t(\'baz\') }'}
+      }
     ],
-    parserOptions: parserOptions
+    parserOptions
   }, {
     code: [
       '<div>',
@@ -334,9 +471,12 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '</div>'
     ].join('\n'),
     errors: [
-      {message: '`input` must be placed on a new line'}
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: 'input'}
+      }
     ],
-    parserOptions: parserOptions
+    parserOptions
   }, {
     code: [
       '<div>',
@@ -349,8 +489,11 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '<span />',
       '</div>'
     ].join('\n'),
-    errors: [{message: '`span` must be placed on a new line'}],
-    parserOptions: parserOptions
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'span'}
+    }],
+    parserOptions
   }, {
     code: [
       '<div>',
@@ -364,8 +507,11 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '<input />',
       '</div>'
     ].join('\n'),
-    errors: [{message: '`input` must be placed on a new line'}],
-    parserOptions: parserOptions
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'input'}
+    }],
+    parserOptions
   }, {
     code: [
       '<div>',
@@ -379,8 +525,11 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       'foo',
       '</div>'
     ].join('\n'),
-    errors: [{message: '` foo` must be placed on a new line'}],
-    parserOptions: parserOptions
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: ' foo'}
+    }],
+    parserOptions
   }, {
     code: [
       '<div>',
@@ -395,9 +544,12 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '</div>'
     ].join('\n'),
     errors: [
-      {message: '`input` must be placed on a new line'}
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: 'input'}
+      }
     ],
-    parserOptions: parserOptions
+    parserOptions
   }, {
     code: [
       '<div>',
@@ -413,9 +565,12 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '</div>'
     ].join('\n'),
     errors: [
-      {message: '`input` must be placed on a new line'}
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: 'input'}
+      }
     ],
-    parserOptions: parserOptions
+    parserOptions
   }, {
     code: [
       '<div>',
@@ -430,9 +585,12 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '</div>'
     ].join('\n'),
     errors: [
-      {message: '`input` must be placed on a new line'}
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: 'input'}
+      }
     ],
-    parserOptions: parserOptions
+    parserOptions
   }, {
     code: [
       '<div>',
@@ -446,25 +604,11 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       'bar',
       '</div>'
     ].join('\n'),
-    errors: [{message: '` bar` must be placed on a new line'}],
-    parserOptions: parserOptions
-  }, {
-    code: [
-      '<div>',
-      '  foo {"bar"}',
-      '</div>'
-    ].join('\n'),
-    output: [
-      '<div>',
-      '  foo ',
-      '{\' \'}',
-      '{"bar"}',
-      '</div>'
-    ].join('\n'),
-    errors: [
-      {message: '`{"bar"}` must be placed on a new line'}
-    ],
-    parserOptions: parserOptions
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: ' bar'}
+    }],
+    parserOptions
   }, {
     code: [
       '<div>',
@@ -479,9 +623,12 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '</div>'
     ].join('\n'),
     errors: [
-      {message: '`{"foo"}` must be placed on a new line'}
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: '{"foo"}'}
+      }
     ],
-    parserOptions: parserOptions
+    parserOptions
   }, {
     code: [
       '<App>',
@@ -494,8 +641,11 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '<Bar></Bar>',
       '</App>'
     ].join('\n'),
-    errors: [{message: '`Bar` must be placed on a new line'}],
-    parserOptions: parserOptions
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'Bar'}
+    }],
+    parserOptions
   }, {
     code: [
       '<App>',
@@ -506,8 +656,11 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '<Foo></Foo>',
       '</App>'
     ].join('\n'),
-    errors: [{message: '`Foo` must be placed on a new line'}],
-    parserOptions: parserOptions
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'Foo'}
+    }],
+    parserOptions
   }, {
     code: [
       '<App><Foo />',
@@ -518,8 +671,11 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '<Foo />',
       '</App>'
     ].join('\n'),
-    errors: [{message: '`Foo` must be placed on a new line'}],
-    parserOptions: parserOptions
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'Foo'}
+    }],
+    parserOptions
   }, {
     code: [
       '<App>',
@@ -530,8 +686,11 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '<Foo/>',
       '</App>'
     ].join('\n'),
-    errors: [{message: '`Foo` must be placed on a new line'}],
-    parserOptions: parserOptions
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'Foo'}
+    }],
+    parserOptions
   }, {
     code: [
       '<App><Foo',
@@ -544,8 +703,11 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '/>',
       '</App>'
     ].join('\n'),
-    errors: [{message: '`Foo` must be placed on a new line'}],
-    parserOptions: parserOptions
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'Foo'}
+    }],
+    parserOptions
   }, {
     code: [
       '<App',
@@ -558,8 +720,11 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '<Foo />',
       '</App>'
     ].join('\n'),
-    errors: [{message: '`Foo` must be placed on a new line'}],
-    parserOptions: parserOptions
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'Foo'}
+    }],
+    parserOptions
   }, {
     code: [
       '<App',
@@ -574,8 +739,11 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '/>',
       '</App>'
     ].join('\n'),
-    errors: [{message: '`Foo` must be placed on a new line'}],
-    parserOptions: parserOptions
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'Foo'}
+    }],
+    parserOptions
   }, {
     code: [
       '<App',
@@ -588,8 +756,11 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '<Foo />',
       '</App>'
     ].join('\n'),
-    errors: [{message: '`Foo` must be placed on a new line'}],
-    parserOptions: parserOptions
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'Foo'}
+    }],
+    parserOptions
   }, {
     code: [
       '<App>',
@@ -602,8 +773,11 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '>',
       '</App>'
     ].join('\n'),
-    errors: [{message: '`Foo` must be placed on a new line'}],
-    parserOptions: parserOptions
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'Foo'}
+    }],
+    parserOptions
   }, {
     code: [
       '<App>',
@@ -616,8 +790,11 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       'Foo>',
       '</App>'
     ].join('\n'),
-    errors: [{message: '`Foo` must be placed on a new line'}],
-    parserOptions: parserOptions
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'Foo'}
+    }],
+    parserOptions
   }, {
     code: [
       '<App>',
@@ -630,8 +807,12 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       'Foo>',
       '</App>'
     ].join('\n'),
-    errors: [{message: '`Foo` must be placed on a new line'}],
-    parserOptions: parserOptions
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'Foo'}
+    }],
+    parserOptions,
+    parser: parsers.BABEL_ESLINT
   }, {
     code: [
       '<App>',
@@ -646,8 +827,11 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '<Bar />',
       '</App>'
     ].join('\n'),
-    errors: [{message: '`Bar` must be placed on a new line'}],
-    parserOptions: parserOptions
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'Bar'}
+    }],
+    parserOptions
   }, {
     code: [
       '<App>',
@@ -662,8 +846,11 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '</Foo>',
       '</App>'
     ].join('\n'),
-    errors: [{message: '`Bar` must be placed on a new line'}],
-    parserOptions: parserOptions
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'Bar'}
+    }],
+    parserOptions
   }, {
     code: [
       '<App>',
@@ -684,9 +871,12 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '</App>'
     ].join('\n'),
     errors: [
-      {message: '` baz ` must be placed on a new line'}
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: ' baz '}
+      }
     ],
-    parserOptions: parserOptions
+    parserOptions
   }, {
     // Would be nice to handle in one pass, but multipass works fine.
     code: [
@@ -702,10 +892,16 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '</App>'
     ].join('\n'),
     errors: [
-      {message: '`{"bar"}` must be placed on a new line'},
-      {message: '` baz` must be placed on a new line'}
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: '{"bar"}'}
+      },
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: ' baz'}
+      }
     ],
-    parserOptions: parserOptions
+    parserOptions
   }, {
     // Would be nice to handle in one pass, but multipass works fine.
     code: [
@@ -721,9 +917,12 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '</App>'
     ].join('\n'),
     errors: [
-      {message: '`{"bar"}` must be placed on a new line'}
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: '{"bar"}'}
+      }
     ],
-    parserOptions: parserOptions
+    parserOptions
   }, {
     // Would be nice to handle in one pass, but multipass works fine.
     code: [
@@ -743,9 +942,12 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '</App>'
     ].join('\n'),
     errors: [
-      {message: '` baz` must be placed on a new line'}
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: ' baz'}
+      }
     ],
-    parserOptions: parserOptions
+    parserOptions
   }, {
     // Would be nice to handle in one pass, but multipass works fine.
     code: [
@@ -765,10 +967,16 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '</App>'
     ].join('\n'),
     errors: [
-      {message: '`{"bar"}` must be placed on a new line'},
-      {message: '` baz` must be placed on a new line'}
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: '{"bar"}'}
+      },
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: ' baz'}
+      }
     ],
-    parserOptions: parserOptions
+    parserOptions
   }, {
     // Would be nice to handle in one pass, but multipass works fine.
     code: [
@@ -792,9 +1000,12 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '</App>'
     ].join('\n'),
     errors: [
-      {message: '` baz` must be placed on a new line'}
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: ' baz'}
+      }
     ],
-    parserOptions: parserOptions
+    parserOptions
   }, {
     code: [
       '<App>{',
@@ -809,9 +1020,12 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       '</App>'
     ].join('\n'),
     errors: [
-      {message: '`{  foo}` must be placed on a new line'}
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: '{  foo}'}
+      }
     ],
-    parserOptions: parserOptions
+    parserOptions
   }, {
     code: [
       '<App> {',
@@ -828,9 +1042,12 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       ' </App>'
     ].join('\n'),
     errors: [
-      {message: '`{  foo}` must be placed on a new line'}
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: '{  foo}'}
+      }
     ],
-    parserOptions: parserOptions
+    parserOptions
   }, {
     code: [
       '<App> ',
@@ -849,8 +1066,189 @@ ruleTester.run('jsx-one-expression-per-line', rule, {
       ' </App>'
     ].join('\n'),
     errors: [
-      {message: '`{  foo}` must be placed on a new line'}
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: '{  foo}'}
+      }
     ],
-    parserOptions: parserOptions
+    parserOptions
+  }, {
+    code: '<App><Foo /></App>',
+    options: [{allow: 'none'}],
+    output: [
+      '<App>',
+      '<Foo />',
+      '</App>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'Foo'}
+    }]
+  }, {
+    code: '<App>foo</App>',
+    options: [{allow: 'none'}],
+    output: [
+      '<App>',
+      'foo',
+      '</App>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'foo'}
+    }]
+  }, {
+    code: '<App>{"foo"}</App>',
+    options: [{allow: 'none'}],
+    output: [
+      '<App>',
+      '{"foo"}',
+      '</App>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: '{"foo"}'}
+    }]
+  }, {
+    code: [
+      '<App>foo',
+      '</App>'
+    ].join('\n'),
+    options: [{allow: 'literal'}],
+    output: [
+      '<App>',
+      'foo',
+      '</App>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'foo'}
+    }]
+  }, {
+    code: '<App><Foo /></App>',
+    options: [{allow: 'literal'}],
+    output: [
+      '<App>',
+      '<Foo />',
+      '</App>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'Foo'}
+    }]
+  }, {
+    code: [
+      '<App',
+      '  foo="1"',
+      '  bar="2"',
+      '>baz</App>'
+    ].join('\n'),
+    options: [{allow: 'literal'}],
+    output: [
+      '<App',
+      '  foo="1"',
+      '  bar="2"',
+      '>',
+      'baz',
+      '</App>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'baz'}
+    }]
+  }, {
+    code: [
+      '<App>foo',
+      'bar',
+      '</App>'
+    ].join('\n'),
+    options: [{allow: 'literal'}],
+    output: [
+      '<App>',
+      'foo',
+      'bar',
+      '</App>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'foobar'}
+    }]
+  }, {
+    code: '<>{"foo"}</>',
+    output: [
+      '<>',
+      '{"foo"}',
+      '</>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: '{"foo"}'}
+    }],
+    parser: parsers.BABEL_ESLINT,
+    parserOptions
+  }, {
+    code: [
+      '<App>',
+      '  <Foo /><></>',
+      '</App>'
+    ].join('\n'),
+    output: [
+      '<App>',
+      '  <Foo />',
+      '<></>',
+      '</App>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: '<></>'}
+    }],
+    parser: parsers.BABEL_ESLINT,
+    parserOptions
+  }, {
+    code: [
+      '<',
+      '><Foo />',
+      '</>'
+    ].join('\n'),
+    output: [
+      '<',
+      '>',
+      '<Foo />',
+      '</>'
+    ].join('\n'),
+    errors: [{
+      messageId: 'moveToNewLine',
+      data: {descriptor: 'Foo'}
+    }],
+    parser: parsers.BABEL_ESLINT,
+    parserOptions
+  }, {
+    code: [
+      '<div>',
+      '<MyComponent>a</MyComponent>',
+      '<MyOther>{a}</MyOther>',
+      '</div>'
+    ].join('\n'),
+    output: [
+      '<div>',
+      '<MyComponent>',
+      'a',
+      '</MyComponent>',
+      '<MyOther>',
+      '{a}',
+      '</MyOther>',
+      '</div>'
+    ].join('\n'),
+    errors: [
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: 'a'}
+      },
+      {
+        messageId: 'moveToNewLine',
+        data: {descriptor: '{a}'}
+      }
+    ],
+    parser: parsers.BABEL_ESLINT,
+    parserOptions
   }]
 });

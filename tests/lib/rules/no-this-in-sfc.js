@@ -1,20 +1,17 @@
 /**
  * @fileoverview Report "this" being used in stateless functional components.
  */
+
 'use strict';
-
-// ------------------------------------------------------------------------------
-// Constants
-// ------------------------------------------------------------------------------
-
-const ERROR_MESSAGE = 'Stateless functional components should not use this';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/no-this-in-sfc');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/no-this-in-sfc');
+
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -99,6 +96,51 @@ ruleTester.run('no-this-in-sfc', rule, {
     code: 'const Foo = (props) => props.foo ? <span>{props.bar}</span> : null;'
   }, {
     code: 'const Foo = ({ foo, bar }) => foo ? <span>{bar}</span> : null;'
+  }, {
+    code: `
+    class Foo {
+      bar() {
+        () => {
+          this.something();
+          return null;
+        };
+      }
+    }`
+  }, {
+    code: `
+    class Foo {
+      bar = () => {
+        this.something();
+        return null;
+      };
+    }`,
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: `
+    export const Example = ({ prop }) => {
+      return {
+        handleClick: () => {},
+        renderNode() {
+          return <div onClick={this.handleClick} />;
+        },
+      };
+    };`,
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: `
+      export const prepareLogin = new ValidatedMethod({
+        name: "user.prepare",
+        validate: new SimpleSchema({
+        }).validator(),
+        run({ remember }) {
+            if (Meteor.isServer) {
+                const connectionId = this.connection.id; // react/no-this-in-sfc
+                return Methods.prepareLogin(connectionId, remember);
+            }
+            return null;
+        },
+      });
+    `
   }],
   invalid: [{
     code: `
@@ -106,32 +148,32 @@ ruleTester.run('no-this-in-sfc', rule, {
       const { foo } = this.props;
       return <div>{foo}</div>;
     }`,
-    errors: [{message: ERROR_MESSAGE}]
+    errors: [{messageId: 'noThisInSFC'}]
   }, {
     code: `
     function Foo(props) {
       return <div>{this.props.foo}</div>;
     }`,
-    errors: [{message: ERROR_MESSAGE}]
+    errors: [{messageId: 'noThisInSFC'}]
   }, {
     code: `
     function Foo(props) {
       return <div>{this.state.foo}</div>;
     }`,
-    errors: [{message: ERROR_MESSAGE}]
+    errors: [{messageId: 'noThisInSFC'}]
   }, {
     code: `
     function Foo(props) {
       const { foo } = this.state;
       return <div>{foo}</div>;
     }`,
-    errors: [{message: ERROR_MESSAGE}]
+    errors: [{messageId: 'noThisInSFC'}]
   }, {
     code: `
     function Foo(props) {
       return props.foo ? <div>{this.props.bar}</div> : null;
     }`,
-    errors: [{message: ERROR_MESSAGE}]
+    errors: [{messageId: 'noThisInSFC'}]
   }, {
     code: `
     function Foo(props) {
@@ -140,7 +182,7 @@ ruleTester.run('no-this-in-sfc', rule, {
       }
       return null;
     }`,
-    errors: [{message: ERROR_MESSAGE}]
+    errors: [{messageId: 'noThisInSFC'}]
   }, {
     code: `
     function Foo(props) {
@@ -149,13 +191,13 @@ ruleTester.run('no-this-in-sfc', rule, {
       }
       return null;
     }`,
-    errors: [{message: ERROR_MESSAGE}]
+    errors: [{messageId: 'noThisInSFC'}]
   }, {
     code: 'const Foo = (props) => <span>{this.props.foo}</span>',
-    errors: [{message: ERROR_MESSAGE}]
+    errors: [{messageId: 'noThisInSFC'}]
   }, {
     code: 'const Foo = (props) => this.props.foo ? <span>{props.bar}</span> : null;',
-    errors: [{message: ERROR_MESSAGE}]
+    errors: [{messageId: 'noThisInSFC'}]
   }, {
     code: `
     function Foo(props) {
@@ -164,6 +206,51 @@ ruleTester.run('no-this-in-sfc', rule, {
       }
       return <div onClick={onClick}>{this.props.foo}</div>;
     }`,
-    errors: [{message: ERROR_MESSAGE}, {message: ERROR_MESSAGE}]
+    errors: [{messageId: 'noThisInSFC'}, {messageId: 'noThisInSFC'}]
+  }, {
+    code: `
+    class Foo {
+      bar() {
+        return () => {
+          this.something();
+          return null;
+        }
+      }
+    }`,
+    errors: [{messageId: 'noThisInSFC'}]
+  }, {
+    code: `
+    class Foo {
+      bar = () => () => {
+        this.something();
+        return null;
+      };
+    }`,
+    parser: parsers.BABEL_ESLINT,
+    errors: [{messageId: 'noThisInSFC'}]
+  }, {
+    code: `
+    class Foo {
+      bar() {
+        function Bar(){
+          return () => {
+            this.something();
+            return null;
+          }
+        }
+      }
+    }`,
+    errors: [{messageId: 'noThisInSFC'}]
+  }, {
+    code: `
+    class Foo {
+      bar() {
+        () => () => {
+          this.something();
+          return null;
+        };
+      }
+    }`,
+    errors: [{messageId: 'noThisInSFC'}]
   }]
 });

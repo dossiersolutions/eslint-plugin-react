@@ -2,14 +2,27 @@
  * @fileoverview Tests for no-unescaped-entities
  * @author Patrick Hayes
  */
+
 'use strict';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/no-unescaped-entities');
+const semver = require('semver');
+const path = require('path');
+const resolve = require('resolve');
+
+let allowsInvalidJSX = false;
+try {
+  // eslint-disable-next-line import/no-extraneous-dependencies, global-require, import/no-dynamic-require
+  allowsInvalidJSX = semver.satisfies(require(resolve.sync('acorn-jsx/package.json', {basedir: path.dirname(require.resolve('eslint'))})).version, '< 5.2');
+} catch (e) { /**/ }
+
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/no-unescaped-entities');
+
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -71,20 +84,65 @@ ruleTester.run('no-unescaped-entities', rule, {
           },
         });
       `
-    }
-  ],
-
-  invalid: [
+    },
     {
       code: `
         var Hello = createReactClass({
           render: function() {
-            return <div>></div>;
+            return <>Here is some text!</>;
           }
         });
       `,
-      errors: [{message: 'HTML entities must be escaped.'}]
+      parser: parsers.BABEL_ESLINT
     }, {
+      code: `
+        var Hello = createReactClass({
+          render: function() {
+            return <>I&rsquo;ve escaped some entities: &gt; &lt; &amp;</>;
+          }
+        });
+      `,
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: `
+        var Hello = createReactClass({
+          render: function() {
+            return <>{">" + "<" + "&" + '"'}</>;
+          },
+        });
+      `,
+      parser: parsers.BABEL_ESLINT
+    }
+  ],
+
+  invalid: [
+    (allowsInvalidJSX && {
+      code: `
+        var Hello = createReactClass({
+          render: function() {
+            return <div>> default parser</div>;
+          }
+        });
+      `,
+      errors: [{
+        messageId: 'unescapedEntityAlts',
+        data: {entity: '>', alts: '`&gt;`'}
+      }]
+    }), {
+      code: `
+        var Hello = createReactClass({
+          render: function() {
+            return <>> babel-eslint</>;
+          }
+        });
+      `,
+      parser: parsers.BABEL_ESLINT,
+      errors: [{
+        messageId: 'unescapedEntityAlts',
+        data: {entity: '>', alts: '`&gt;`'}
+      }]
+    }, (allowsInvalidJSX && {
       code: `
         var Hello = createReactClass({
           render: function() {
@@ -94,7 +152,25 @@ ruleTester.run('no-unescaped-entities', rule, {
           }
         });
       `,
-      errors: [{message: 'HTML entities must be escaped.'}]
+      errors: [{
+        messageId: 'unescapedEntityAlts',
+        data: {entity: '>', alts: '`&gt;`'}
+      }]
+    }), {
+      code: `
+        var Hello = createReactClass({
+          render: function() {
+            return <>first line is ok
+            so is second
+            and here are some bad entities: ></>
+          }
+        });
+      `,
+      parser: parsers.BABEL_ESLINT,
+      errors: [{
+        messageId: 'unescapedEntityAlts',
+        data: {entity: '>', alts: '`&gt;`'}
+      }]
     }, {
       code: `
         var Hello = createReactClass({
@@ -103,29 +179,106 @@ ruleTester.run('no-unescaped-entities', rule, {
           }
         });
       `,
-      errors: [{message: 'HTML entities must be escaped.'}]
-    }, {
+      errors: [{
+        messageId: 'unescapedEntityAlts',
+        data: {entity: '\'', alts: '`&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`'}
+      }]
+    }, (allowsInvalidJSX && {
       code: `
         var Hello = createReactClass({
           render: function() {
-            return <div>Multiple errors: '>></div>;
+            return <div>Multiple errors: '>> default parser</div>;
           }
         });
       `,
       errors: [
-        {message: 'HTML entities must be escaped.'},
-        {message: 'HTML entities must be escaped.'},
-        {message: 'HTML entities must be escaped.'}
+        {
+          messageId: 'unescapedEntityAlts',
+          data: {entity: '\'', alts: '`&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`'}
+        },
+        {
+          messageId: 'unescapedEntityAlts',
+          data: {entity: '>', alts: '`&gt;`'}
+        },
+        {
+          messageId: 'unescapedEntityAlts',
+          data: {entity: '>', alts: '`&gt;`'}
+        }
       ]
+    }), (allowsInvalidJSX && {
+      code: `
+        var Hello = createReactClass({
+          render: function() {
+            return <div>{"Unbalanced braces - default parser"}}</div>;
+          }
+        });
+      `,
+      errors: [{
+        messageId: 'unescapedEntityAlts',
+        data: {entity: '}', alts: '`&#125;`'}
+      }]
+    }), {
+      code: `
+        var Hello = createReactClass({
+          render: function() {
+            return <>{"Unbalanced braces - babel-eslint"}}</>;
+          }
+        });
+      `,
+      parser: parsers.BABEL_ESLINT,
+      errors: [{
+        messageId: 'unescapedEntityAlts',
+        data: {entity: '}', alts: '`&#125;`'}
+      }]
     }, {
       code: `
         var Hello = createReactClass({
           render: function() {
-            return <div>{"Unbalanced braces"}}</div>;
+            return <>foo & bar</>;
           }
         });
       `,
-      errors: [{message: 'HTML entities must be escaped.'}]
+      parser: parsers.BABEL_ESLINT,
+      errors: [{
+        messageId: 'unescapedEntity',
+        data: {entity: '&'}
+      }],
+      options: [{
+        forbid: ['&']
+      }]
+    }, {
+      code: `
+        var Hello = createReactClass({
+          render: function() {
+            return <span>foo & bar</span>;
+          }
+        });
+      `,
+      errors: [{
+        messageId: 'unescapedEntity',
+        data: {entity: '&'}
+      }],
+      options: [{
+        forbid: ['&']
+      }]
+    }, {
+      code: `
+        var Hello = createReactClass({
+          render: function() {
+            return <span>foo & bar</span>;
+          }
+        });
+      `,
+      errors: [{
+        messageId: 'unescapedEntityAlts',
+        data: {entity: '&', alts: '`&amp;`'}
+      }],
+      options: [{
+        forbid: [{
+          char: '&',
+          alternatives: ['&amp;']
+        }]
+      }]
     }
-  ]
+  ].filter(Boolean)
 });

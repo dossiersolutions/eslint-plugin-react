@@ -9,8 +9,9 @@
 // Requirements
 // -----------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/no-array-index-key');
 const RuleTester = require('eslint').RuleTester;
+const parsers = require('../../helpers/parsers');
+const rule = require('../../../lib/rules/no-array-index-key');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -26,7 +27,7 @@ const parserOptions = {
 
 const ruleTester = new RuleTester({parserOptions});
 ruleTester.run('no-array-index-key', rule, {
-  valid: [
+  valid: [].concat(
     {code: '<Foo key="foo" />;'},
     {code: '<Foo key={i} />;'},
     {code: '<Foo key />;'},
@@ -89,43 +90,75 @@ ruleTester.run('no-array-index-key', rule, {
 
     {
       code: 'foo.reduceRight((a, b, i) => a.concat(<Foo key={b.id} />), [])'
-    }
-  ],
+    },
 
-  invalid: [
+    {
+      code: `
+      React.Children.map(this.props.children, (child, index, arr) => {
+        return React.cloneElement(child, { key: child.id });
+      })
+      `
+    },
+
+    {
+      code: `
+      Children.forEach(this.props.children, (child, index, arr) => {
+        return React.cloneElement(child, { key: child.id });
+      })
+      `
+    },
+
+    parsers.ES2020({
+      code: 'foo?.map(child => <Foo key={child.i} />)',
+      parserOptions: {
+        ecmaVersion: 2020
+      }
+    }, {
+      code: 'foo?.map(child => <Foo key={child.i} />)',
+      parser: parsers.BABEL_ESLINT
+    }, {
+      code: 'foo?.map(child => <Foo key={child.i} />)',
+      parser: parsers.TYPESCRIPT_ESLINT
+    }, {
+      code: 'foo?.map(child => <Foo key={child.i} />)',
+      parser: parsers['@TYPESCRIPT_ESLINT']
+    })
+  ),
+
+  invalid: [].concat(
     {
       code: 'foo.map((bar, i) => <Foo key={i} />)',
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
       code: '[{}, {}].map((bar, i) => <Foo key={i} />)',
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
       code: 'foo.map((bar, anything) => <Foo key={anything} />)',
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
       code: 'foo.map((bar, i) => <Foo key={`foo-${i}`} />)',
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
       code: 'foo.map((bar, i) => <Foo key={\'foo-\' + i} />)',
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
       code: 'foo.map((bar, i) => <Foo key={\'foo-\' + i + \'-bar\'} />)',
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
       code: 'foo.map((baz, i) => React.cloneElement(someChild, { ...someChild.props, key: i }))',
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
@@ -136,97 +169,153 @@ ruleTester.run('no-array-index-key', rule, {
           })
         })
       `,
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
       code: 'foo.forEach((bar, i) => { baz.push(<Foo key={i} />); })',
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
       code: 'foo.filter((bar, i) => { baz.push(<Foo key={i} />); })',
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
       code: 'foo.some((bar, i) => { baz.push(<Foo key={i} />); })',
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
       code: 'foo.every((bar, i) => { baz.push(<Foo key={i} />); })',
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
       code: 'foo.find((bar, i) => { baz.push(<Foo key={i} />); })',
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
       code: 'foo.findIndex((bar, i) => { baz.push(<Foo key={i} />); })',
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
       code: 'foo.reduce((a, b, i) => a.concat(<Foo key={i} />), [])',
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
       code: 'foo.reduceRight((a, b, i) => a.concat(<Foo key={i} />), [])',
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
       code: 'foo.map((bar, i) => React.createElement(\'Foo\', { key: i }))',
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
       code: 'foo.map((bar, i) => React.createElement(\'Foo\', { key: `foo-${i}` }))',
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
       code: 'foo.map((bar, i) => React.createElement(\'Foo\', { key: \'foo-\' + i }))',
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
       code: 'foo.map((bar, i) => React.createElement(\'Foo\', { key: \'foo-\' + i + \'-bar\' }))',
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
       code: 'foo.forEach((bar, i) => { baz.push(React.createElement(\'Foo\', { key: i })); })',
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
       code: 'foo.filter((bar, i) => { baz.push(React.createElement(\'Foo\', { key: i })); })',
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
       code: 'foo.some((bar, i) => { baz.push(React.createElement(\'Foo\', { key: i })); })',
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
       code: 'foo.every((bar, i) => { baz.push(React.createElement(\'Foo\', { key: i })); })',
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
       code: 'foo.find((bar, i) => { baz.push(React.createElement(\'Foo\', { key: i })); })',
-      errors: [{message: 'Do not use Array index in keys'}]
+      errors: [{messageId: 'noArrayIndex'}]
     },
 
     {
       code: 'foo.findIndex((bar, i) => { baz.push(React.createElement(\'Foo\', { key: i })); })',
-      errors: [{message: 'Do not use Array index in keys'}]
-    }
-  ]
+      errors: [{messageId: 'noArrayIndex'}]
+    },
+
+    {
+      code: `
+      Children.map(this.props.children, (child, index) => {
+        return React.cloneElement(child, { key: index });
+      })
+      `,
+      errors: [{messageId: 'noArrayIndex'}]
+    },
+
+    {
+      code: `
+      React.Children.map(this.props.children, (child, index) => {
+        return React.cloneElement(child, { key: index });
+      })
+      `,
+      errors: [{messageId: 'noArrayIndex'}]
+    },
+
+    {
+      code: `
+      Children.forEach(this.props.children, (child, index) => {
+        return React.cloneElement(child, { key: index });
+      })
+      `,
+      errors: [{messageId: 'noArrayIndex'}]
+    },
+
+    {
+      code: `
+      React.Children.forEach(this.props.children, (child, index) => {
+        return React.cloneElement(child, { key: index });
+      })
+      `,
+      errors: [{messageId: 'noArrayIndex'}]
+    },
+
+    parsers.ES2020({
+      code: 'foo?.map((child, i) => <Foo key={i} />)',
+      errors: [{messageId: 'noArrayIndex'}],
+      parserOptions: {
+        ecmaVersion: 2020
+      }
+    }, {
+      code: 'foo?.map((child, i) => <Foo key={i} />)',
+      errors: [{messageId: 'noArrayIndex'}],
+      parser: parsers.BABEL_ESLINT
+    }, {
+      code: 'foo?.map((child, i) => <Foo key={i} />)',
+      errors: [{messageId: 'noArrayIndex'}],
+      parser: parsers.TYPESCRIPT_ESLINT
+    }, {
+      code: 'foo?.map((child, i) => <Foo key={i} />)',
+      errors: [{messageId: 'noArrayIndex'}],
+      parser: parsers['@TYPESCRIPT_ESLINT']
+    })
+  )
 });

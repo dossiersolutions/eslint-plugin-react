@@ -2,14 +2,17 @@
  * @fileoverview Prevent string definitions for references and prevent referencing this.refs
  * @author Tom Hastjarjanto
  */
+
 'use strict';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/no-string-refs');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/no-string-refs');
+
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -18,8 +21,6 @@ const parserOptions = {
     jsx: true
   }
 };
-
-require('babel-eslint');
 
 // ------------------------------------------------------------------------------
 // Tests
@@ -39,7 +40,27 @@ ruleTester.run('no-refs', rule, {
         }
       });
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
+  },
+  {
+    code: [
+      'var Hello = createReactClass({',
+      '  render: function() {',
+      '    return <div ref={`hello`}>Hello {this.props.name}</div>;',
+      '  }',
+      '});'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
+  },
+  {
+    code: [
+      'var Hello = createReactClass({',
+      '  render: function() {',
+      '    return <div ref={`hello${index}`}>Hello {this.props.name}</div>;',
+      '  }',
+      '});'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
   }
   ],
 
@@ -54,10 +75,8 @@ ruleTester.run('no-refs', rule, {
         }
       });
     `,
-    parser: 'babel-eslint',
-    errors: [{
-      message: 'Using this.refs is deprecated.'
-    }]
+    parser: parsers.BABEL_ESLINT,
+    errors: [{messageId: 'thisRefsDeprecated'}]
   }, {
     code: `
       var Hello = createReactClass({
@@ -66,10 +85,8 @@ ruleTester.run('no-refs', rule, {
         }
       });
     `,
-    parser: 'babel-eslint',
-    errors: [{
-      message: 'Using string literals in ref attributes is deprecated.'
-    }]
+    parser: parsers.BABEL_ESLINT,
+    errors: [{messageId: 'stringInRefDeprecated'}]
   }, {
     code: `
       var Hello = createReactClass({
@@ -78,10 +95,8 @@ ruleTester.run('no-refs', rule, {
         }
       });
     `,
-    parser: 'babel-eslint',
-    errors: [{
-      message: 'Using string literals in ref attributes is deprecated.'
-    }]
+    parser: parsers.BABEL_ESLINT,
+    errors: [{messageId: 'stringInRefDeprecated'}]
   }, {
     code: `
       var Hello = createReactClass({
@@ -93,11 +108,49 @@ ruleTester.run('no-refs', rule, {
         }
       });
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: [{
-      message: 'Using this.refs is deprecated.'
+      messageId: 'thisRefsDeprecated'
     }, {
-      message: 'Using string literals in ref attributes is deprecated.'
+      messageId: 'stringInRefDeprecated'
+    }]
+  },
+  {
+    code: [
+      'var Hello = createReactClass({',
+      '  componentDidMount: function() {',
+      '  var component = this.refs.hello;',
+      '  },',
+      '  render: function() {',
+      '    return <div ref={`hello`}>Hello {this.props.name}</div>;',
+      '  }',
+      '});'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    options: [{noTemplateLiterals: true}],
+    errors: [{
+      messageId: 'thisRefsDeprecated'
+    }, {
+      messageId: 'stringInRefDeprecated'
+    }]
+  },
+  {
+    code: [
+      'var Hello = createReactClass({',
+      '  componentDidMount: function() {',
+      '  var component = this.refs.hello;',
+      '  },',
+      '  render: function() {',
+      '    return <div ref={`hello${index}`}>Hello {this.props.name}</div>;',
+      '  }',
+      '});'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT,
+    options: [{noTemplateLiterals: true}],
+    errors: [{
+      messageId: 'thisRefsDeprecated'
+    }, {
+      messageId: 'stringInRefDeprecated'
     }]
   }]
 });

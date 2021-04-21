@@ -2,14 +2,17 @@
  * @fileoverview Prevent usage of setState
  * @author Mark Dalgleish
  */
+
 'use strict';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/no-set-state');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/no-set-state');
+
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -67,9 +70,7 @@ ruleTester.run('no-set-state', rule, {
         }
       });
     `,
-    errors: [{
-      message: 'Do not use setState'
-    }]
+    errors: [{messageId: 'noSetState'}]
   }, {
     code: `
       var Hello = createReactClass({
@@ -83,9 +84,7 @@ ruleTester.run('no-set-state', rule, {
         }
       });
     `,
-    errors: [{
-      message: 'Do not use setState'
-    }]
+    errors: [{messageId: 'noSetState'}]
   }, {
     code: `
       class Hello extends React.Component {
@@ -99,9 +98,7 @@ ruleTester.run('no-set-state', rule, {
         }
       };
     `,
-    errors: [{
-      message: 'Do not use setState'
-    }]
+    errors: [{messageId: 'noSetState'}]
   }, {
     code: `
       class Hello extends React.Component {
@@ -115,10 +112,8 @@ ruleTester.run('no-set-state', rule, {
         }
       };
     `,
-    parser: 'babel-eslint',
-    errors: [{
-      message: 'Do not use setState'
-    }]
+    parser: parsers.BABEL_ESLINT,
+    errors: [{messageId: 'noSetState'}]
   }, {
     code: `
       class Hello extends React.Component {
@@ -127,9 +122,7 @@ ruleTester.run('no-set-state', rule, {
         }
       };
     `,
-    parser: 'babel-eslint',
-    errors: [{
-      message: 'Do not use setState'
-    }]
+    parser: parsers.BABEL_ESLINT,
+    errors: [{messageId: 'noSetState'}]
   }]
 });

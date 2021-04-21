@@ -1,14 +1,15 @@
 /**
  * @fileoverview Tests for forbid-dom-props
  */
+
 'use strict';
 
 // -----------------------------------------------------------------------------
 // Requirements
 // -----------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/forbid-dom-props');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/forbid-dom-props');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -18,13 +19,9 @@ const parserOptions = {
   }
 };
 
-require('babel-eslint');
-
 // -----------------------------------------------------------------------------
 // Tests
 // -----------------------------------------------------------------------------
-
-const ID_ERROR_MESSAGE = 'Prop `id` is forbidden on DOM Nodes';
 
 const ruleTester = new RuleTester({parserOptions});
 ruleTester.run('forbid-element-props', rule, {
@@ -77,6 +74,13 @@ ruleTester.run('forbid-element-props', rule, {
   }, {
     code: [
       'const First = (props) => (',
+      '  <fbt:param name="name">{props.name}</fbt:param>',
+      ');'
+    ].join('\n'),
+    options: [{forbid: ['id']}]
+  }, {
+    code: [
+      'const First = (props) => (',
       '  <div name="foo" />',
       ');'
     ].join('\n'),
@@ -94,7 +98,8 @@ ruleTester.run('forbid-element-props', rule, {
     ].join('\n'),
     options: [{forbid: ['id']}],
     errors: [{
-      message: ID_ERROR_MESSAGE,
+      messageId: 'propIsForbidden',
+      data: {prop: 'id'},
       line: 4,
       column: 17,
       type: 'JSXAttribute'
@@ -109,7 +114,8 @@ ruleTester.run('forbid-element-props', rule, {
     ].join('\n'),
     options: [{forbid: ['id']}],
     errors: [{
-      message: ID_ERROR_MESSAGE,
+      messageId: 'propIsForbidden',
+      data: {prop: 'id'},
       line: 3,
       column: 17,
       type: 'JSXAttribute'
@@ -122,9 +128,76 @@ ruleTester.run('forbid-element-props', rule, {
     ].join('\n'),
     options: [{forbid: ['id']}],
     errors: [{
-      message: ID_ERROR_MESSAGE,
+      messageId: 'propIsForbidden',
+      data: {prop: 'id'},
       line: 2,
       column: 8,
+      type: 'JSXAttribute'
+    }]
+  }, {
+    code: [
+      'const First = (props) => (',
+      '  <div className="foo" />',
+      ');'
+    ].join('\n'),
+    options: [{
+      forbid: [{propName: 'className', message: 'Please use class instead of ClassName'}]
+    }],
+    errors: [{
+      message: 'Please use class instead of ClassName',
+      line: 2,
+      column: 8,
+      type: 'JSXAttribute'
+    }]
+  }, {
+    code: [
+      'const First = (props) => (',
+      '  <div className="foo">',
+      '    <div otherProp="bar" />',
+      '  </div>',
+      ');'
+    ].join('\n'),
+    options: [{
+      forbid: [
+        {propName: 'className', message: 'Please use class instead of ClassName'},
+        {propName: 'otherProp', message: 'Avoid using otherProp'}
+      ]
+    }],
+    errors: [{
+      message: 'Please use class instead of ClassName',
+      line: 2,
+      column: 8,
+      type: 'JSXAttribute'
+    }, {
+      message: 'Avoid using otherProp',
+      line: 3,
+      column: 10,
+      type: 'JSXAttribute'
+    }]
+  }, {
+    code: [
+      'const First = (props) => (',
+      '  <div className="foo">',
+      '    <div otherProp="bar" />',
+      '  </div>',
+      ');'
+    ].join('\n'),
+    options: [{
+      forbid: [
+        {propName: 'className'},
+        {propName: 'otherProp', message: 'Avoid using otherProp'}
+      ]
+    }],
+    errors: [{
+      messageId: 'propIsForbidden',
+      data: {prop: 'className'},
+      line: 2,
+      column: 8,
+      type: 'JSXAttribute'
+    }, {
+      message: 'Avoid using otherProp',
+      line: 3,
+      column: 10,
       type: 'JSXAttribute'
     }]
   }]

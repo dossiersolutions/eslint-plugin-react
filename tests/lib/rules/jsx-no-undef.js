@@ -11,7 +11,10 @@
 
 const eslint = require('eslint');
 const rule = require('../../../lib/rules/jsx-no-undef');
+
 const RuleTester = eslint.RuleTester;
+
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -27,11 +30,13 @@ const parserOptions = {
 const ruleTester = new RuleTester({parserOptions});
 const linter = ruleTester.linter || eslint.linter;
 linter.defineRule('no-undef', require('eslint/lib/rules/no-undef'));
+
 ruleTester.run('jsx-no-undef', rule, {
   valid: [{
     code: '/*eslint no-undef:1*/ var React, App; React.render(<App />);'
   }, {
-    code: '/*eslint no-undef:1*/ var React, App; React.render(<App />);'
+    code: '/*eslint no-undef:1*/ var React, App; React.render(<App />);',
+    parser: parsers.BABEL_ESLINT
   }, {
     code: '/*eslint no-undef:1*/ var React; React.render(<img />);'
   }, {
@@ -68,32 +73,37 @@ ruleTester.run('jsx-no-undef', rule, {
     options: [{
       allowGlobals: false
     }],
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }],
   invalid: [{
     code: '/*eslint no-undef:1*/ var React; React.render(<App />);',
     errors: [{
-      message: '\'App\' is not defined.'
+      messageId: 'undefined',
+      data: {identifier: 'App'}
     }]
   }, {
     code: '/*eslint no-undef:1*/ var React; React.render(<Appp.Foo />);',
     errors: [{
-      message: '\'Appp\' is not defined.'
+      messageId: 'undefined',
+      data: {identifier: 'Appp'}
     }]
   }, {
     code: '/*eslint no-undef:1*/ var React; React.render(<Apppp:Foo />);',
     errors: [{
-      message: '\'Apppp\' is not defined.'
+      messageId: 'undefined',
+      data: {identifier: 'Apppp'}
     }]
   }, {
     code: '/*eslint no-undef:1*/ var React; React.render(<appp.Foo />);',
     errors: [{
-      message: '\'appp\' is not defined.'
+      messageId: 'undefined',
+      data: {identifier: 'appp'}
     }]
   }, {
     code: '/*eslint no-undef:1*/ var React; React.render(<appp.foo.Bar />);',
     errors: [{
-      message: '\'appp\' is not defined.'
+      messageId: 'undefined',
+      data: {identifier: 'appp'}
     }]
   }, {
     code: `
@@ -106,19 +116,21 @@ ruleTester.run('jsx-no-undef', rule, {
     `,
     parserOptions: Object.assign({sourceType: 'module'}, parserOptions),
     errors: [{
-      message: '\'Text\' is not defined.'
+      messageId: 'undefined',
+      data: {identifier: 'Text'}
     }],
     options: [{
       allowGlobals: false
     }],
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     globals: {
       Text: true
     }
   }, {
     code: '/*eslint no-undef:1*/ var React; React.render(<Foo />);',
     errors: [{
-      message: '\'Foo\' is not defined.'
+      messageId: 'undefined',
+      data: {identifier: 'Foo'}
     }]
   }]
 });

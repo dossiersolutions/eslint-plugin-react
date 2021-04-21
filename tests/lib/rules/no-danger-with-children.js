@@ -2,14 +2,15 @@
  * @fileoverview Report when a DOM element is using both children and dangerouslySetInnerHTML
  * @author David Petersen
  */
+
 'use strict';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/no-danger-with-children');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/no-danger-with-children');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -105,25 +106,25 @@ ruleTester.run('no-danger-with-children', rule, {
           Children
         </div>
       `,
-      errors: [{message: 'Only set one of `children` or `props.dangerouslySetInnerHTML`'}]
+      errors: [{messageId: 'dangerWithChildren'}]
     },
     {
       code: '<div dangerouslySetInnerHTML={{ __html: "HTML" }} children="Children" />',
-      errors: [{message: 'Only set one of `children` or `props.dangerouslySetInnerHTML`'}]
+      errors: [{messageId: 'dangerWithChildren'}]
     },
     {
       code: `
         const props = { dangerouslySetInnerHTML: { __html: "HTML" } };
         <div {...props}>Children</div>
       `,
-      errors: [{message: 'Only set one of `children` or `props.dangerouslySetInnerHTML`'}]
+      errors: [{messageId: 'dangerWithChildren'}]
     },
     {
       code: `
         const props = { children: "Children", dangerouslySetInnerHTML: { __html: "HTML" } };
         <div {...props} />
       `,
-      errors: [{message: 'Only set one of `children` or `props.dangerouslySetInnerHTML`'}]
+      errors: [{messageId: 'dangerWithChildren'}]
     },
     {
       code: `
@@ -131,15 +132,15 @@ ruleTester.run('no-danger-with-children', rule, {
           Children
         </Hello>
       `,
-      errors: [{message: 'Only set one of `children` or `props.dangerouslySetInnerHTML`'}]
+      errors: [{messageId: 'dangerWithChildren'}]
     },
     {
       code: '<Hello dangerouslySetInnerHTML={{ __html: "HTML" }} children="Children" />',
-      errors: [{message: 'Only set one of `children` or `props.dangerouslySetInnerHTML`'}]
+      errors: [{messageId: 'dangerWithChildren'}]
     },
     {
       code: '<Hello dangerouslySetInnerHTML={{ __html: "HTML" }}> </Hello>',
-      errors: [{message: 'Only set one of `children` or `props.dangerouslySetInnerHTML`'}]
+      errors: [{messageId: 'dangerWithChildren'}]
     },
     {
       code: `
@@ -149,7 +150,7 @@ ruleTester.run('no-danger-with-children', rule, {
           "Children"
         );
       `,
-      errors: [{message: 'Only set one of `children` or `props.dangerouslySetInnerHTML`'}]
+      errors: [{messageId: 'dangerWithChildren'}]
     },
     {
       code: `
@@ -161,7 +162,7 @@ ruleTester.run('no-danger-with-children', rule, {
           }
         );
       `,
-      errors: [{message: 'Only set one of `children` or `props.dangerouslySetInnerHTML`'}]
+      errors: [{messageId: 'dangerWithChildren'}]
     },
     {
       code: `
@@ -171,7 +172,7 @@ ruleTester.run('no-danger-with-children', rule, {
           "Children"
         );
       `,
-      errors: [{message: 'Only set one of `children` or `props.dangerouslySetInnerHTML`'}]
+      errors: [{messageId: 'dangerWithChildren'}]
     },
     {
       code: `
@@ -183,21 +184,21 @@ ruleTester.run('no-danger-with-children', rule, {
           }
         );
       `,
-      errors: [{message: 'Only set one of `children` or `props.dangerouslySetInnerHTML`'}]
+      errors: [{messageId: 'dangerWithChildren'}]
     },
     {
       code: `
         const props = { dangerouslySetInnerHTML: { __html: "HTML" } };
         React.createElement("div", props, "Children");
       `,
-      errors: [{message: 'Only set one of `children` or `props.dangerouslySetInnerHTML`'}]
+      errors: [{messageId: 'dangerWithChildren'}]
     },
     {
       code: `
         const props = { children: "Children", dangerouslySetInnerHTML: { __html: "HTML" } };
         React.createElement("div", props);
       `,
-      errors: [{message: 'Only set one of `children` or `props.dangerouslySetInnerHTML`'}]
+      errors: [{messageId: 'dangerWithChildren'}]
     },
     {
       code: `
@@ -206,7 +207,7 @@ ruleTester.run('no-danger-with-children', rule, {
         const props = { ...otherProps, dangerouslySetInnerHTML: { __html: "HTML" } };
         React.createElement("div", props);
       `,
-      errors: [{message: 'Only set one of `children` or `props.dangerouslySetInnerHTML`'}]
+      errors: [{messageId: 'dangerWithChildren'}]
     }
   ]
 });

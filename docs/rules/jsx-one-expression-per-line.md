@@ -7,7 +7,7 @@ Fixer will insert line breaks between any expression that are on the same line.
 
 ## Rule Details
 
-The following patterns are considered warnings:
+Examples of **incorrect** code for this rule:
 
 ```jsx
 <App><Hello /></App>
@@ -51,7 +51,7 @@ The following patterns are considered warnings:
 </App>
 ```
 
-The following patterns are **not** warnings:
+Examples of **correct** code for this rule:
 
 ```jsx
 <App>
@@ -101,4 +101,32 @@ The following patterns are **not** warnings:
   <Hello2 />
   <Hello3 />
 </App>
+```
+
+## Rule Options
+
+```js
+...
+"react/jsx-one-expression-per-line": [<enabled>, { "allow": "none"|"literal"|"single-child" }]
+...
+```
+
+### `allow`
+
+Defaults to `none`.
+
+Examples of **correct** code for this rule, when configured as `"literal"`:
+
+```jsx
+<App>Hello</App>
+```
+
+Examples of **correct** code for this rule, when configured as `"single-child"`:
+
+```jsx
+<App>Hello</App>
+
+<App>{"Hello"}</App>
+
+<App><Hello /></App>
 ```

@@ -9,8 +9,8 @@
 // Requirements
 // -----------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/jsx-sort-props');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/jsx-sort-props');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -27,30 +27,31 @@ const parserOptions = {
 const ruleTester = new RuleTester({parserOptions});
 
 const expectedError = {
-  message: 'Props should be sorted alphabetically',
-  type: 'JSXAttribute'
+  messageId: 'sortPropsByAlpha',
+  type: 'JSXIdentifier'
 };
 const expectedCallbackError = {
-  message: 'Callbacks must be listed after all other props',
-  type: 'JSXAttribute'
+  messageId: 'listCallbacksLast',
+  type: 'JSXIdentifier'
 };
 const expectedShorthandFirstError = {
-  message: 'Shorthand props must be listed before all other props',
-  type: 'JSXAttribute'
+  messageId: 'listShorthandFirst',
+  type: 'JSXIdentifier'
 };
 const expectedShorthandLastError = {
-  message: 'Shorthand props must be listed after all other props',
-  type: 'JSXAttribute'
+  messageId: 'listShorthandLast',
+  type: 'JSXIdentifier'
 };
 const expectedReservedFirstError = {
-  message: 'Reserved props must be listed before all other props',
-  type: 'JSXAttribute'
+  messageId: 'listReservedPropsFirst',
+  type: 'JSXIdentifier'
 };
 const expectedEmptyReservedFirstError = {
-  message: 'A customized reserved first list must not be empty'
+  messageId: 'listIsEmpty'
 };
 const expectedInvalidReservedFirstError = {
-  message: 'A customized reserved first list must only contain a subset of React reserved props. Remove: notReserved'
+  messageId: 'noUnreservedProps',
+  data: {unreservedWords: 'notReserved'}
 };
 const callbacksLastArgs = [{
   callbacksLast: true
@@ -110,10 +111,17 @@ ruleTester.run('jsx-sort-props', rule, {
     {code: '<App {...this.props} a="c" b="b" c="a" />;'},
     {code: '<App c="a" {...this.props} a="c" b="b" />;'},
     {code: '<App A a />;'},
+    {code: '<App aB aa/>;'},
+    {code: '<App aA aB />;'},
+    {code: '<App aB aaa />;'},
+    {code: '<App a aB aa />;'},
+    {code: '<App Number="2" name="John" />;'},
     // Ignoring case
     {code: '<App a A />;', options: ignoreCaseArgs},
+    {code: '<App aa aB />;', options: ignoreCaseArgs},
     {code: '<App a B c />;', options: ignoreCaseArgs},
     {code: '<App A b C />;', options: ignoreCaseArgs},
+    {code: '<App name="John" Number="2" />;', options: ignoreCaseArgs},
     // Sorting callbacks below all other props
     {code: '<App a z onBar onFoo />;', options: callbacksLastArgs},
     {code: '<App z onBar onFoo />;', options: ignoreCaseAndCallbackLastArgs},
@@ -166,6 +174,36 @@ ruleTester.run('jsx-sort-props', rule, {
       output: '<App a b />;'
     },
     {
+      code: '<App aB a />;',
+      errors: [expectedError],
+      output: '<App a aB />;'
+    },
+    {
+      code: '<App fistName="John" tel={5555555} name="John Smith" lastName="Smith" Number="2" />;',
+      errors: [expectedError, expectedError, expectedError],
+      output: '<App Number="2" fistName="John" lastName="Smith" name="John Smith" tel={5555555} />;'
+    },
+    {
+      code: '<App aa aB />;',
+      errors: [expectedError],
+      output: '<App aB aa />;'
+    },
+    {
+      code: '<App aB aA />;',
+      errors: [expectedError],
+      output: '<App aA aB />;'
+    },
+    {
+      code: '<App aaB aA />;',
+      errors: [expectedError],
+      output: '<App aA aaB />;'
+    },
+    {
+      code: '<App aaB aaa aA a />;',
+      errors: [expectedError, expectedError],
+      output: '<App a aA aaB aaa />;'
+    },
+    {
       code: '<App {...this.props} b a />;',
       errors: [expectedError],
       output: '<App {...this.props} a b />;'
@@ -176,9 +214,10 @@ ruleTester.run('jsx-sort-props', rule, {
       output: '<App c {...this.props} a b />;'
     },
     {
-      code: '<App a A />;',
-      errors: [expectedError],
-      output: '<App a A />;'
+      code: '<App fistName="John" tel={5555555} name="John Smith" lastName="Smith" Number="2" />;',
+      options: ignoreCaseArgs,
+      errors: [expectedError, expectedError, expectedError],
+      output: '<App fistName="John" lastName="Smith" name="John Smith" Number="2" tel={5555555} />;'
     },
     {
       code: '<App B a />;',
@@ -239,61 +278,172 @@ ruleTester.run('jsx-sort-props', rule, {
       errors: 3
     },
     {
+      code: '<App b={2} c={3} d={4} e={5} f={6} g={7} h={8} i={9} j={10} k={11} a={1} />',
+      output: '<App a={1} b={2} c={3} d={4} e={5} f={6} g={7} h={8} i={9} j={10} k={11} />',
+      errors: 1
+    },
+    {
+      code: `<List
+        className={className}
+        onStageAnswer={onStageAnswer}
+        onCommitAnswer={onCommitAnswer}
+        isFocused={isFocused}
+        direction={direction}
+        allowMultipleSelection={allowMultipleSelection}
+        measureLongestChildNode={measureLongestChildNode}
+        layoutItemsSize={layoutItemsSize}
+        handleAppScroll={handleAppScroll}
+        isActive={isActive}
+        resetSelection={resetSelection}
+        onKeyboardChoiceHovered={onKeyboardChoiceHovered}
+        keyboardShortcutType
+      />`,
+      output: `<List
+        allowMultipleSelection={allowMultipleSelection}
+        className={className}
+        direction={direction}
+        handleAppScroll={handleAppScroll}
+        isActive={isActive}
+        isFocused={isFocused}
+        keyboardShortcutType
+        layoutItemsSize={layoutItemsSize}
+        measureLongestChildNode={measureLongestChildNode}
+        onCommitAnswer={onCommitAnswer}
+        onKeyboardChoiceHovered={onKeyboardChoiceHovered}
+        onStageAnswer={onStageAnswer}
+        resetSelection={resetSelection}
+      />`,
+      errors: 10
+    },
+    {
+      code: `<CreateNewJob
+        closed={false}
+        flagOptions={flagOptions}
+        jobHeight={300}
+        jobWidth={200}
+        campaign='Some Campaign name'
+        campaignStart={moment('2018-07-28 00:00:00')}
+        campaignFinish={moment('2018-09-01 00:00:00')}
+        jobNumber={'Job Number can be a String'}
+        jobTemplateOptions={jobTemplateOptions}
+        numberOfPages={30}
+        onChange={onChange}
+        onClose={onClose}
+        spreadSheetTemplateOptions={spreadSheetTemplateOptions}
+        stateMachineOptions={stateMachineOptions}
+        workflowTemplateOptions={workflowTemplateOptions}
+        workflowTemplateSteps={workflowTemplateSteps}
+        description='Some description for this job'
+
+        jobTemplate='1'
+        stateMachine='1'
+        flag='1'
+        spreadSheetTemplate='1'
+        workflowTemplate='1'
+        validation={validation}
+        onSubmit={onSubmit}
+      />`,
+      output: `<CreateNewJob
+        campaign='Some Campaign name'
+        campaignFinish={moment('2018-09-01 00:00:00')}
+        campaignStart={moment('2018-07-28 00:00:00')}
+        closed={false}
+        description='Some description for this job'
+        flag='1'
+        flagOptions={flagOptions}
+        jobHeight={300}
+        jobNumber={'Job Number can be a String'}
+        jobTemplate='1'
+        jobTemplateOptions={jobTemplateOptions}
+        jobWidth={200}
+        numberOfPages={30}
+        onChange={onChange}
+        onClose={onClose}
+        onSubmit={onSubmit}
+        spreadSheetTemplate='1'
+
+        spreadSheetTemplateOptions={spreadSheetTemplateOptions}
+        stateMachine='1'
+        stateMachineOptions={stateMachineOptions}
+        validation={validation}
+        workflowTemplate='1'
+        workflowTemplateOptions={workflowTemplateOptions}
+        workflowTemplateSteps={workflowTemplateSteps}
+      />`,
+      errors: 13
+    },
+    {
       code: '<App key="key" b c="c" />',
       errors: [expectedShorthandLastError],
-      options: reservedFirstWithShorthandLast
+      options: reservedFirstWithShorthandLast,
+      output: '<App key="key" c="c" b />'
     },
     {
       code: '<App ref="ref" key="key" isShorthand veryLastAttribute="yes" />',
       errors: [expectedError, expectedShorthandLastError],
-      options: reservedFirstWithShorthandLast
+      options: reservedFirstWithShorthandLast,
+      output: '<App key="key" ref="ref" veryLastAttribute="yes" isShorthand />'
     },
     {
       code: '<App a z onFoo onBar />;',
       errors: [expectedError],
-      options: callbacksLastArgs
+      options: callbacksLastArgs,
+      output: '<App a z onBar onFoo />;'
     },
     {
       code: '<App a onBar onFoo z />;',
       errors: [expectedCallbackError],
-      options: callbacksLastArgs
+      options: callbacksLastArgs,
+      output: '<App a z onBar onFoo />;'
     },
     {
       code: '<App a="a" b />;',
       errors: [expectedShorthandFirstError],
-      options: shorthandFirstArgs
+      options: shorthandFirstArgs,
+      output: '<App b a="a" />;'
     },
     {
       code: '<App z x a="a" />;',
       errors: [expectedError],
-      options: shorthandFirstArgs
+      options: shorthandFirstArgs,
+      output: '<App x z a="a" />;'
     },
     {
       code: '<App b a="a" />;',
       errors: [expectedShorthandLastError],
-      options: shorthandLastArgs
+      options: shorthandLastArgs,
+      output: '<App a="a" b />;'
     },
     {
       code: '<App a="a" onBar onFoo z x />;',
-      errors: [shorthandAndCallbackLastArgs],
-      options: shorthandLastArgs
+      errors: [expectedError],
+      options: shorthandLastArgs,
+      output: '<App a="a" onBar onFoo x z />;'
     },
-    {code: '<App b a />;', errors: [expectedError], options: sortAlphabeticallyArgs},
+    {
+      code: '<App b a />;',
+      errors: [expectedError],
+      options: sortAlphabeticallyArgs,
+      output: '<App a b />;'
+    },
     // reservedFirst
     {
       code: '<App a key={1} />',
       options: reservedFirstAsBooleanArgs,
-      errors: [expectedReservedFirstError]
+      errors: [expectedReservedFirstError],
+      output: '<App key={1} a />'
     },
     {
       code: '<div a dangerouslySetInnerHTML={{__html: "EPR"}} />',
       options: reservedFirstAsBooleanArgs,
-      errors: [expectedReservedFirstError]
+      errors: [expectedReservedFirstError],
+      output: '<div dangerouslySetInnerHTML={{__html: "EPR"}} a />'
     },
     {
       code: '<App ref="r" key={2} b />',
       options: reservedFirstAsBooleanArgs,
-      errors: [expectedError]
+      errors: [expectedError],
+      output: '<App key={2} ref="r" b />'
     },
     {
       code: '<App key={2} b a />',
@@ -316,12 +466,14 @@ ruleTester.run('jsx-sort-props', rule, {
     {
       code: '<App key={3} children={<App />} />',
       options: reservedFirstAsArrayArgs,
-      errors: [expectedError]
+      errors: [expectedError],
+      output: '<App children={<App />} key={3} />'
     },
     {
       code: '<App z ref="r" />',
       options: reservedFirstWithNoSortAlphabeticallyArgs,
-      errors: [expectedReservedFirstError]
+      errors: [expectedReservedFirstError],
+      output: '<App ref="r" z />'
     },
     {
       code: '<App key={4} />',

@@ -2,14 +2,17 @@
  * @fileoverview Prevent usage of setState in componentWillUpdate
  * @author Yannick Croissant
  */
+
 'use strict';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/no-will-update-set-state');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/no-will-update-set-state');
+
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -18,8 +21,6 @@ const parserOptions = {
     jsx: true
   }
 };
-
-require('babel-eslint');
 
 // ------------------------------------------------------------------------------
 // Tests
@@ -76,7 +77,7 @@ ruleTester.run('no-will-update-set-state', rule, {
         }
       });
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: `
       class Hello extends React.Component {
@@ -101,7 +102,8 @@ ruleTester.run('no-will-update-set-state', rule, {
       });
     `,
     errors: [{
-      message: 'Do not use setState in componentWillUpdate'
+      messageId: 'noSetState',
+      data: {name: 'componentWillUpdate'}
     }]
   }, {
     code: `
@@ -113,9 +115,10 @@ ruleTester.run('no-will-update-set-state', rule, {
         }
       }
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: [{
-      message: 'Do not use setState in componentWillUpdate'
+      messageId: 'noSetState',
+      data: {name: 'componentWillUpdate'}
     }]
   }, {
     code: `
@@ -129,7 +132,8 @@ ruleTester.run('no-will-update-set-state', rule, {
     `,
     options: ['disallow-in-func'],
     errors: [{
-      message: 'Do not use setState in componentWillUpdate'
+      messageId: 'noSetState',
+      data: {name: 'componentWillUpdate'}
     }]
   }, {
     code: `
@@ -141,10 +145,11 @@ ruleTester.run('no-will-update-set-state', rule, {
         }
       }
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: ['disallow-in-func'],
     errors: [{
-      message: 'Do not use setState in componentWillUpdate'
+      messageId: 'noSetState',
+      data: {name: 'componentWillUpdate'}
     }]
   }, {
     code: `
@@ -160,7 +165,8 @@ ruleTester.run('no-will-update-set-state', rule, {
     `,
     options: ['disallow-in-func'],
     errors: [{
-      message: 'Do not use setState in componentWillUpdate'
+      messageId: 'noSetState',
+      data: {name: 'componentWillUpdate'}
     }]
   }, {
     code: `
@@ -174,10 +180,11 @@ ruleTester.run('no-will-update-set-state', rule, {
         }
       }
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: ['disallow-in-func'],
     errors: [{
-      message: 'Do not use setState in componentWillUpdate'
+      messageId: 'noSetState',
+      data: {name: 'componentWillUpdate'}
     }]
   }, {
     code: `
@@ -192,7 +199,8 @@ ruleTester.run('no-will-update-set-state', rule, {
       });
     `,
     errors: [{
-      message: 'Do not use setState in componentWillUpdate'
+      messageId: 'noSetState',
+      data: {name: 'componentWillUpdate'}
     }]
   }, {
     code: `
@@ -206,9 +214,10 @@ ruleTester.run('no-will-update-set-state', rule, {
         }
       }
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: [{
-      message: 'Do not use setState in componentWillUpdate'
+      messageId: 'noSetState',
+      data: {name: 'componentWillUpdate'}
     }]
   }, {
     code: `
@@ -218,10 +227,11 @@ ruleTester.run('no-will-update-set-state', rule, {
         }
       });
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: ['disallow-in-func'],
     errors: [{
-      message: 'Do not use setState in componentWillUpdate'
+      messageId: 'noSetState',
+      data: {name: 'componentWillUpdate'}
     }]
   }, {
     code: `
@@ -231,10 +241,11 @@ ruleTester.run('no-will-update-set-state', rule, {
         }
       }
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: ['disallow-in-func'],
     errors: [{
-      message: 'Do not use setState in componentWillUpdate'
+      messageId: 'noSetState',
+      data: {name: 'componentWillUpdate'}
     }]
   }, {
     code: `
@@ -248,7 +259,8 @@ ruleTester.run('no-will-update-set-state', rule, {
     `,
     settings: {react: {version: '16.3.0'}},
     errors: [{
-      message: 'Do not use setState in UNSAFE_componentWillUpdate'
+      messageId: 'noSetState',
+      data: {name: 'UNSAFE_componentWillUpdate'}
     }]
   }, {
     code: `
@@ -262,7 +274,8 @@ ruleTester.run('no-will-update-set-state', rule, {
     `,
     settings: {react: {version: '16.3.0'}},
     errors: [{
-      message: 'Do not use setState in UNSAFE_componentWillUpdate'
+      messageId: 'noSetState',
+      data: {name: 'UNSAFE_componentWillUpdate'}
     }]
   }]
 });

@@ -2,14 +2,15 @@
  * @fileoverview Prefer es6 class instead of createClass for React Component
  * @author Dan Hamilton
  */
+
 'use strict';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/prefer-es6-class');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/prefer-es6-class');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -18,8 +19,6 @@ const parserOptions = {
     jsx: true
   }
 };
-
-require('babel-eslint');
 
 // ------------------------------------------------------------------------------
 // Tests
@@ -81,7 +80,7 @@ ruleTester.run('prefer-es6-class', rule, {
       });
     `,
     errors: [{
-      message: 'Component should use es6 class instead of createClass'
+      messageId: 'shouldUseES6Class'
     }]
   }, {
     code: `
@@ -93,7 +92,7 @@ ruleTester.run('prefer-es6-class', rule, {
     `,
     options: ['always'],
     errors: [{
-      message: 'Component should use es6 class instead of createClass'
+      messageId: 'shouldUseES6Class'
     }]
   }, {
     code: `
@@ -105,7 +104,7 @@ ruleTester.run('prefer-es6-class', rule, {
     `,
     options: ['never'],
     errors: [{
-      message: 'Component should use createClass instead of es6 class'
+      messageId: 'shouldUseCreateClass'
     }]
   }]
 });

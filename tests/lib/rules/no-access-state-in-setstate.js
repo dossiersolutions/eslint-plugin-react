@@ -2,14 +2,16 @@
  * @fileoverview Prevent usage of this.state within setState
  * @author Rolf Erik Lekang, Jørgen Aaberg
  */
+
 'use strict';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/no-access-state-in-setstate');
 const RuleTester = require('eslint').RuleTester;
+const parsers = require('../../helpers/parsers');
+const rule = require('../../../lib/rules/no-access-state-in-setstate');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -18,11 +20,17 @@ const parserOptions = {
   }
 };
 
+const settings = {
+  react: {
+    createClass: 'createClass'
+  }
+};
+
 // ------------------------------------------------------------------------------
 // Tests
 // ------------------------------------------------------------------------------
 
-const ruleTester = new RuleTester();
+const ruleTester = new RuleTester({settings});
 ruleTester.run('no-access-state-in-setstate', rule, {
   valid: [{
     code: [
@@ -32,7 +40,7 @@ ruleTester.run('no-access-state-in-setstate', rule, {
       '  }',
       '});'
     ].join('\n'),
-    parserOptions: parserOptions
+    parserOptions
   }, {
     code: [
       'var Hello = React.createClass({',
@@ -45,7 +53,7 @@ ruleTester.run('no-access-state-in-setstate', rule, {
       '  }',
       '});'
     ].join('\n'),
-    parserOptions: parserOptions
+    parserOptions
   }, {
     // issue 1559: don't crash
     code: `
@@ -63,7 +71,7 @@ ruleTester.run('no-access-state-in-setstate', rule, {
         }
       });
     `,
-    parserOptions: parserOptions
+    parserOptions
   }, {
     // issue 1604: allow this.state in callback
     code: `
@@ -73,7 +81,7 @@ ruleTester.run('no-access-state-in-setstate', rule, {
         }
       });
     `,
-    parserOptions: parserOptions
+    parserOptions
   }, {
     code: `
       var Hello = React.createClass({
@@ -82,7 +90,7 @@ ruleTester.run('no-access-state-in-setstate', rule, {
         }
       });
     `,
-    parserOptions: parserOptions
+    parserOptions
   }, {
     code: [
       'var Hello = React.createClass({',
@@ -93,14 +101,42 @@ ruleTester.run('no-access-state-in-setstate', rule, {
       '  }',
       '});'
     ].join('\n'),
-    parserOptions: parserOptions
+    parserOptions
   }, {
     // https://github.com/yannickcr/eslint-plugin-react/pull/1611
     code: `
       function testFunction({a, b}) {
       };
     `,
-    parserOptions: parserOptions
+    parserOptions
+  }, {
+    code: `
+      class ComponentA extends React.Component {
+        state = {
+          greeting: 'hello',
+        };
+
+        myFunc = () => {
+          this.setState({ greeting: 'hi' }, () => this.doStuff());
+        };
+
+        doStuff = () => {
+          console.log(this.state.greeting);
+        };
+      }
+    `,
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: `
+      class Foo extends Abstract {
+        update = () => {
+          const result = this.getResult ( this.state.foo );
+          return this.setState ({ result });
+        };
+      }
+    `,
+    parser: parsers.BABEL_ESLINT,
+    parserOptions
   }],
 
   invalid: [{
@@ -111,10 +147,8 @@ ruleTester.run('no-access-state-in-setstate', rule, {
       '  }',
       '});'
     ].join('\n'),
-    parserOptions: parserOptions,
-    errors: [{
-      message: 'Use callback in setState when referencing the previous state.'
-    }]
+    parserOptions,
+    errors: [{messageId: 'useCallback'}]
   }, {
     code: [
       'var Hello = React.createClass({',
@@ -123,10 +157,8 @@ ruleTester.run('no-access-state-in-setstate', rule, {
       '  }',
       '});'
     ].join('\n'),
-    parserOptions: parserOptions,
-    errors: [{
-      message: 'Use callback in setState when referencing the previous state.'
-    }]
+    parserOptions,
+    errors: [{messageId: 'useCallback'}]
   }, {
     code: [
       'var Hello = React.createClass({',
@@ -136,10 +168,8 @@ ruleTester.run('no-access-state-in-setstate', rule, {
       '  }',
       '});'
     ].join('\n'),
-    parserOptions: parserOptions,
-    errors: [{
-      message: 'Use callback in setState when referencing the previous state.'
-    }]
+    parserOptions,
+    errors: [{messageId: 'useCallback'}]
   }, {
     code: [
       'var Hello = React.createClass({',
@@ -149,10 +179,8 @@ ruleTester.run('no-access-state-in-setstate', rule, {
       '  }',
       '});'
     ].join('\n'),
-    parserOptions: parserOptions,
-    errors: [{
-      message: 'Use callback in setState when referencing the previous state.'
-    }]
+    parserOptions,
+    errors: [{messageId: 'useCallback'}]
   }, {
     code: [
       'function nextState(state) {',
@@ -164,10 +192,8 @@ ruleTester.run('no-access-state-in-setstate', rule, {
       '  }',
       '});'
     ].join('\n'),
-    parserOptions: parserOptions,
-    errors: [{
-      message: 'Use callback in setState when referencing the previous state.'
-    }]
+    parserOptions,
+    errors: [{messageId: 'useCallback'}]
   }, {
     code: `
       var Hello = React.createClass({
@@ -176,10 +202,8 @@ ruleTester.run('no-access-state-in-setstate', rule, {
         }
       });
     `,
-    parserOptions: parserOptions,
-    errors: [{
-      message: 'Use callback in setState when referencing the previous state.'
-    }]
+    parserOptions,
+    errors: [{messageId: 'useCallback'}]
   }, {
     code: `
       var Hello = React.createClass({
@@ -188,10 +212,8 @@ ruleTester.run('no-access-state-in-setstate', rule, {
         }
       });
     `,
-    parserOptions: parserOptions,
-    errors: [{
-      message: 'Use callback in setState when referencing the previous state.'
-    }]
+    parserOptions,
+    errors: [{messageId: 'useCallback'}]
   }, {
     code: [
       'var Hello = React.createClass({',
@@ -203,9 +225,17 @@ ruleTester.run('no-access-state-in-setstate', rule, {
       '  }',
       '});'
     ].join('\n'),
-    parserOptions: parserOptions,
-    errors: [{
-      message: 'Use callback in setState when referencing the previous state.'
-    }]
+    parserOptions,
+    errors: [{messageId: 'useCallback'}]
+  }, {
+    code: `
+      class Hello extends React.Component {
+        onClick() {
+          this.setState(this.state, () => console.log(this.state));
+        }
+      }
+    `,
+    parserOptions,
+    errors: [{messageId: 'useCallback'}]
   }]
 });

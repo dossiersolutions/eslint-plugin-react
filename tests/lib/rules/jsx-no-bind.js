@@ -3,14 +3,17 @@
  *               in React component definition.
  * @author Daniel Lo Nigro <dan.cx>
  */
+
 'use strict';
 
 // -----------------------------------------------------------------------------
 // Requirements
 // -----------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/jsx-no-bind');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/jsx-no-bind');
+
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -189,7 +192,7 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -201,7 +204,7 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -223,7 +226,7 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '});'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -244,7 +247,7 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -256,7 +259,7 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       // issue #1543: don't crash on uninitialized variables
@@ -286,7 +289,7 @@ ruleTester.run('jsx-no-bind', rule, {
     {
       code: '<div foo={::this.onChange} />',
       options: [{ignoreDOMComponents: true}],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }
   ],
 
@@ -294,19 +297,19 @@ ruleTester.run('jsx-no-bind', rule, {
     // .bind()
     {
       code: '<div onClick={this._handleClick.bind(this)}></div>',
-      errors: [{message: 'JSX props should not use .bind()'}]
+      errors: [{messageId: 'bindCall'}]
     },
     {
       code: '<div onClick={someGlobalFunction.bind(this)}></div>',
-      errors: [{message: 'JSX props should not use .bind()'}]
+      errors: [{messageId: 'bindCall'}]
     },
     {
       code: '<div onClick={window.lol.bind(this)}></div>',
-      errors: [{message: 'JSX props should not use .bind()'}]
+      errors: [{messageId: 'bindCall'}]
     },
     {
       code: '<div ref={this._refCallback.bind(this)}></div>',
-      errors: [{message: 'JSX props should not use .bind()'}]
+      errors: [{messageId: 'bindCall'}]
     },
     {
       code: `
@@ -317,7 +320,7 @@ ruleTester.run('jsx-no-bind', rule, {
           }
         });
       `,
-      errors: [{message: 'JSX props should not use .bind()'}]
+      errors: [{messageId: 'bindCall'}]
     },
     {
       code: `
@@ -328,7 +331,7 @@ ruleTester.run('jsx-no-bind', rule, {
           }
         };
       `,
-      errors: [{message: 'JSX props should not use .bind()'}]
+      errors: [{messageId: 'bindCall'}]
     },
     {
       code: [
@@ -339,7 +342,7 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '};'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use .bind()'}]
+      errors: [{messageId: 'bindCall'}]
     },
     {
       code: [
@@ -350,8 +353,8 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '};'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use .bind()'}],
-      parser: 'babel-eslint'
+      errors: [{messageId: 'bindCall'}],
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -362,8 +365,8 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '};'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use .bind()'}],
-      parser: 'babel-eslint'
+      errors: [{messageId: 'bindCall'}],
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: `
@@ -373,7 +376,7 @@ ruleTester.run('jsx-no-bind', rule, {
           )
         };
       `,
-      errors: [{message: 'JSX props should not use .bind()'}]
+      errors: [{messageId: 'bindCall'}]
     },
     {
       code: [
@@ -383,7 +386,7 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '});'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use .bind()'}]
+      errors: [{messageId: 'bindCall'}]
     },
     {
       code: [
@@ -394,7 +397,7 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '});'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use .bind()'}]
+      errors: [{messageId: 'bindCall'}]
     },
     {
       code: [
@@ -410,10 +413,10 @@ ruleTester.run('jsx-no-bind', rule, {
         '};'
       ].join('\n'),
       errors: [
-        {message: 'JSX props should not use .bind()'},
-        {message: 'JSX props should not use arrow functions'}
+        {messageId: 'bindCall'},
+        {messageId: 'arrowFunc'}
       ],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: `
@@ -423,7 +426,7 @@ ruleTester.run('jsx-no-bind', rule, {
           )
         };
       `,
-      errors: [{message: 'JSX props should not use .bind()'}]
+      errors: [{messageId: 'bindCall'}]
     },
     {
       code: `
@@ -433,7 +436,7 @@ ruleTester.run('jsx-no-bind', rule, {
           )
         };
       `,
-      errors: [{message: 'JSX props should not use .bind()'}]
+      errors: [{messageId: 'bindCall'}]
     },
     {
       code: `
@@ -443,7 +446,7 @@ ruleTester.run('jsx-no-bind', rule, {
           )
         };
       `,
-      errors: [{message: 'JSX props should not use .bind()'}]
+      errors: [{messageId: 'bindCall'}]
     },
     {
       code: `
@@ -453,30 +456,29 @@ ruleTester.run('jsx-no-bind', rule, {
           )
         };
       `,
-      errors: [{message: 'JSX props should not use .bind()'}]
+      errors: [{messageId: 'bindCall'}]
     },
-
 
     // Arrow functions
     {
       code: '<div onClick={() => alert("1337")}></div>',
-      errors: [{message: 'JSX props should not use arrow functions'}]
+      errors: [{messageId: 'arrowFunc'}]
     },
     {
       code: '<div onClick={async () => alert("1337")}></div>',
-      errors: [{message: 'JSX props should not use arrow functions'}]
+      errors: [{messageId: 'arrowFunc'}]
     },
     {
       code: '<div onClick={() => 42}></div>',
-      errors: [{message: 'JSX props should not use arrow functions'}]
+      errors: [{messageId: 'arrowFunc'}]
     },
     {
       code: '<div onClick={param => { first(); second(); }}></div>',
-      errors: [{message: 'JSX props should not use arrow functions'}]
+      errors: [{messageId: 'arrowFunc'}]
     },
     {
       code: '<div ref={c => this._input = c}></div>',
-      errors: [{message: 'JSX props should not use arrow functions'}]
+      errors: [{messageId: 'arrowFunc'}]
     },
     {
       code: [
@@ -487,8 +489,8 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '};'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use arrow functions'}],
-      parser: 'babel-eslint'
+      errors: [{messageId: 'arrowFunc'}],
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -499,8 +501,8 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '};'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use arrow functions'}],
-      parser: 'babel-eslint'
+      errors: [{messageId: 'arrowFunc'}],
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -511,8 +513,8 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '};'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use arrow functions'}],
-      parser: 'babel-eslint'
+      errors: [{messageId: 'arrowFunc'}],
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -522,7 +524,7 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '});'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use arrow functions'}]
+      errors: [{messageId: 'arrowFunc'}]
     },
     {
       code: [
@@ -532,7 +534,7 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '});'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use arrow functions'}]
+      errors: [{messageId: 'arrowFunc'}]
     },
     {
       code: [
@@ -543,7 +545,7 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '});'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use arrow functions'}]
+      errors: [{messageId: 'arrowFunc'}]
     },
     {
       code: [
@@ -554,7 +556,7 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '});'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use arrow functions'}]
+      errors: [{messageId: 'arrowFunc'}]
     },
     {
       code: [
@@ -570,28 +572,28 @@ ruleTester.run('jsx-no-bind', rule, {
         '};'
       ].join('\n'),
       errors: [
-        {message: 'JSX props should not use arrow functions'},
-        {message: 'JSX props should not use ::'}
+        {messageId: 'arrowFunc'},
+        {messageId: 'bindExpression'}
       ],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
 
     // Functions
     {
       code: '<div onClick={function () { alert("1337") }}></div>',
-      errors: [{message: 'JSX props should not use functions'}]
+      errors: [{messageId: 'func'}]
     },
     {
       code: '<div onClick={function * () { alert("1337") }}></div>',
-      errors: [{message: 'JSX props should not use functions'}]
+      errors: [{messageId: 'func'}]
     },
     {
       code: '<div onClick={async function () { alert("1337") }}></div>',
-      errors: [{message: 'JSX props should not use functions'}]
+      errors: [{messageId: 'func'}]
     },
     {
       code: '<div ref={function (c) { this._input = c }}></div>',
-      errors: [{message: 'JSX props should not use functions'}]
+      errors: [{messageId: 'func'}]
     },
     {
       code: [
@@ -602,8 +604,8 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '};'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use functions'}],
-      parser: 'babel-eslint'
+      errors: [{messageId: 'func'}],
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -614,8 +616,8 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '};'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use functions'}],
-      parser: 'babel-eslint'
+      errors: [{messageId: 'func'}],
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -626,8 +628,8 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '};'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use functions'}],
-      parser: 'babel-eslint'
+      errors: [{messageId: 'func'}],
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -638,8 +640,8 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '};'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use functions'}],
-      parser: 'babel-eslint'
+      errors: [{messageId: 'func'}],
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -649,7 +651,7 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '});'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use functions'}]
+      errors: [{messageId: 'func'}]
     },
     {
       code: [
@@ -659,7 +661,7 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '});'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use functions'}]
+      errors: [{messageId: 'func'}]
     },
     {
       code: [
@@ -669,7 +671,7 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '});'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use functions'}]
+      errors: [{messageId: 'func'}]
     },
     {
       code: [
@@ -680,7 +682,7 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '});'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use functions'}]
+      errors: [{messageId: 'func'}]
     },
     {
       code: [
@@ -691,7 +693,7 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '});'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use functions'}]
+      errors: [{messageId: 'func'}]
     },
     {
       code: [
@@ -702,7 +704,7 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '});'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use functions'}]
+      errors: [{messageId: 'func'}]
     },
     {
       code: [
@@ -718,27 +720,27 @@ ruleTester.run('jsx-no-bind', rule, {
         '};'
       ].join('\n'),
       errors: [
-        {message: 'JSX props should not use functions'},
-        {message: 'JSX props should not use ::'}
+        {messageId: 'func'},
+        {messageId: 'bindExpression'}
       ],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
 
     // Bind expression
     {
       code: '<div foo={::this.onChange} />',
-      errors: [{message: 'JSX props should not use ::'}],
-      parser: 'babel-eslint'
+      errors: [{messageId: 'bindExpression'}],
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: '<div foo={foo.bar::baz} />',
-      errors: [{message: 'JSX props should not use ::'}],
-      parser: 'babel-eslint'
+      errors: [{messageId: 'bindExpression'}],
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: '<div foo={foo::bar} />',
-      errors: [{message: 'JSX props should not use ::'}],
-      parser: 'babel-eslint'
+      errors: [{messageId: 'bindExpression'}],
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -749,8 +751,8 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '};'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use ::'}],
-      parser: 'babel-eslint'
+      errors: [{messageId: 'bindExpression'}],
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -761,8 +763,8 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '};'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use ::'}],
-      parser: 'babel-eslint'
+      errors: [{messageId: 'bindExpression'}],
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -773,8 +775,8 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '};'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use ::'}],
-      parser: 'babel-eslint'
+      errors: [{messageId: 'bindExpression'}],
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -789,15 +791,15 @@ ruleTester.run('jsx-no-bind', rule, {
         '  }',
         '};'
       ].join('\n'),
-      errors: [{message: 'JSX props should not use ::'}],
-      parser: 'babel-eslint'
+      errors: [{messageId: 'bindExpression'}],
+      parser: parsers.BABEL_ESLINT
     },
 
     // ignore DOM components
     {
       code: '<Foo onClick={this._handleClick.bind(this)} />',
       options: [{ignoreDOMComponents: true}],
-      errors: [{message: 'JSX props should not use .bind()'}]
+      errors: [{messageId: 'bindCall'}]
     }
   ]
 });

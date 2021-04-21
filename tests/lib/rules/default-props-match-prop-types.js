@@ -3,16 +3,17 @@
  * @author Vitor Balocco
  * @author Roy Sutton
  */
+
 'use strict';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/default-props-match-prop-types');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/default-props-match-prop-types');
 
-require('babel-eslint');
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -267,7 +268,8 @@ ruleTester.run('default-props-match-prop-types', rule, {
         'Greeting.defaultProps = {',
         '  foo: "foo"',
         '};'
-      ].join('\n')
+      ].join('\n'),
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -529,7 +531,8 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '  ...defaults,',
         '  bar: "bar"',
         '};'
-      ].join('\n')
+      ].join('\n'),
+      parser: parsers.BABEL_ESLINT
     },
 
     //
@@ -548,7 +551,7 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -569,7 +572,7 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '  bar: "bar"',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -588,7 +591,7 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '  bar: "bar"',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -602,7 +605,7 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -612,7 +615,7 @@ ruleTester.run('default-props-match-prop-types', rule, {
 
         'Hello.defaultProps = { foo: "foo" };'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -620,7 +623,7 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '  return <div>Hello {foo}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -630,7 +633,7 @@ ruleTester.run('default-props-match-prop-types', rule, {
 
         'Hello.defaultProps = { foo: "foo" };'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -638,7 +641,7 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '  return <div>Hello {foo}</div>;',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -648,7 +651,7 @@ ruleTester.run('default-props-match-prop-types', rule, {
 
         'Hello.defaultProps = { foo: "foo" };'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -656,7 +659,7 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '  return <div>Hello {foo}</div>;',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -679,7 +682,7 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '  baz: "baz"',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: `
@@ -698,7 +701,7 @@ ruleTester.run('default-props-match-prop-types', rule, {
           }
         }
       `,
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -710,7 +713,7 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -720,7 +723,7 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '  return <div>Hello {foo}</div>;',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -730,7 +733,59 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '  return <div>Hello {props.name.firstname}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: [
+        'type DefaultProps1 = {|',
+        '  bar1?: string',
+        '|};',
+        'type DefaultProps2 = {|',
+        '  ...DefaultProps1,',
+        '  bar2?: string',
+        '|};',
+        'type Props = {',
+        '  foo: string,',
+        '  ...DefaultProps2',
+        '};',
+
+        'function Hello(props: Props) {',
+        '  return <div>Hello {props.foo}</div>;',
+        '}',
+
+        'Hello.defaultProps = {',
+        '  bar1: "bar1",',
+        '  bar2: "bar2",',
+        '};'
+      ].join('\n'),
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: [
+        'type DefaultProps1 = {|',
+        '  bar1?: string',
+        '|};',
+        'type DefaultProps2 = {|',
+        '  ...DefaultProps1,',
+        '  bar2?: string',
+        '|};',
+        'type Props = {',
+        '  foo: string,',
+        '  ...DefaultProps2',
+        '};',
+
+        'class Hello extends React.Component<Props> {',
+        '  render() {',
+        '    return <div>Hello {props.foo}</div>;',
+        '  }',
+        '}',
+
+        'Hello.defaultProps = {',
+        '  bar1: "bar1",',
+        '  bar2: "bar2",',
+        '};'
+      ].join('\n'),
+      parser: parsers.BABEL_ESLINT
     },
     // don't error when variable is not in scope
     {
@@ -741,7 +796,7 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '  return <div>Hello {props.name.firstname}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     // make sure error is not thrown with multiple assignments
     {
@@ -753,7 +808,7 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '  return <div>Hello {props.name.firstname}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     // don't error when variable is not in scope with intersection
     {
@@ -766,7 +821,7 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '  return <div>Hello {props.name.firstname}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }
   ],
 
@@ -787,10 +842,32 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '};'
       ].join('\n'),
       errors: [{
-        message: 'defaultProp "baz" has no corresponding propTypes declaration.',
+        messageId: 'defaultHasNoType',
+        data: {name: 'baz'},
         line: 9,
         column: 3
       }]
+    },
+    {
+      code: [
+        'function MyStatelessComponent({ foo, bar }) {',
+        '  return <div>{foo}{bar}</div>;',
+        '}',
+        'MyStatelessComponent.propTypes = {',
+        '  foo: React.PropTypes.string,',
+        '  bar: React.PropTypes.string.isRequired',
+        '};',
+        'MyStatelessComponent.defaultProps = {',
+        '  baz: "baz"',
+        '};'
+      ].join('\n'),
+      errors: [{
+        messageId: 'defaultHasNoType',
+        data: {name: 'baz'},
+        line: 9,
+        column: 3
+      }],
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: [
@@ -809,7 +886,8 @@ ruleTester.run('default-props-match-prop-types', rule, {
         propWrapperFunctions: ['forbidExtraProps']
       },
       errors: [{
-        message: 'defaultProp "baz" has no corresponding propTypes declaration.',
+        messageId: 'defaultHasNoType',
+        data: {name: 'baz'},
         line: 9,
         column: 3
       }]
@@ -832,7 +910,8 @@ ruleTester.run('default-props-match-prop-types', rule, {
         propWrapperFunctions: ['forbidExtraProps']
       },
       errors: [{
-        message: 'defaultProp "baz" has no corresponding propTypes declaration.',
+        messageId: 'defaultHasNoType',
+        data: {name: 'baz'},
         line: 10,
         column: 3
       }]
@@ -851,7 +930,8 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '};'
       ].join('\n'),
       errors: [{
-        message: 'defaultProp "baz" has no corresponding propTypes declaration.',
+        messageId: 'defaultHasNoType',
+        data: {name: 'baz'},
         line: 9,
         column: 3
       }],
@@ -875,12 +955,14 @@ ruleTester.run('default-props-match-prop-types', rule, {
       ].join('\n'),
       errors: [
         {
-          message: 'defaultProp "bar" defined for isRequired propType.',
+          messageId: 'requiredHasDefault',
+          data: {name: 'bar'},
           line: 9,
           column: 3
         },
         {
-          message: 'defaultProp "baz" has no corresponding propTypes declaration.',
+          messageId: 'defaultHasNoType',
+          data: {name: 'baz'},
           line: 11,
           column: 1
         }
@@ -902,7 +984,8 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '};'
       ].join('\n'),
       errors: [{
-        message: 'defaultProp "bar" defined for isRequired propType.',
+        messageId: 'requiredHasDefault',
+        data: {name: 'bar'},
         line: 10,
         column: 3
       }]
@@ -923,7 +1006,8 @@ ruleTester.run('default-props-match-prop-types', rule, {
         'MyStatelessComponent.defaultProps = defaults;'
       ].join('\n'),
       errors: [{
-        message: 'defaultProp "foo" defined for isRequired propType.',
+        messageId: 'requiredHasDefault',
+        data: {name: 'foo'},
         line: 2,
         column: 3
       }]
@@ -945,7 +1029,8 @@ ruleTester.run('default-props-match-prop-types', rule, {
         'MyStatelessComponent.defaultProps = defaults;'
       ].join('\n'),
       errors: [{
-        message: 'defaultProp "foo" defined for isRequired propType.',
+        messageId: 'requiredHasDefault',
+        data: {name: 'foo'},
         line: 2,
         column: 3
       }]
@@ -971,7 +1056,8 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '});'
       ].join('\n'),
       errors: [{
-        message: 'defaultProp "baz" has no corresponding propTypes declaration.',
+        messageId: 'defaultHasNoType',
+        data: {name: 'baz'},
         line: 11,
         column: 7
       }]
@@ -994,7 +1080,8 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '});'
       ].join('\n'),
       errors: [{
-        message: 'defaultProp "foo" defined for isRequired propType.',
+        messageId: 'requiredHasDefault',
+        data: {name: 'foo'},
         line: 11,
         column: 7
       }]
@@ -1020,7 +1107,8 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '};'
       ].join('\n'),
       errors: [{
-        message: 'defaultProp "baz" has no corresponding propTypes declaration.',
+        messageId: 'defaultHasNoType',
+        data: {name: 'baz'},
         line: 13,
         column: 3
       }]
@@ -1043,7 +1131,8 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '};'
       ].join('\n'),
       errors: [{
-        message: 'defaultProp "foo" defined for isRequired propType.',
+        messageId: 'requiredHasDefault',
+        data: {name: 'foo'},
         line: 13,
         column: 3
       }]
@@ -1065,7 +1154,8 @@ ruleTester.run('default-props-match-prop-types', rule, {
         'Greeting.defaultProps.foo = "foo";'
       ].join('\n'),
       errors: [{
-        message: 'defaultProp "foo" defined for isRequired propType.',
+        messageId: 'requiredHasDefault',
+        data: {name: 'foo'},
         line: 13,
         column: 1
       }]
@@ -1087,7 +1177,8 @@ ruleTester.run('default-props-match-prop-types', rule, {
         'Greeting.defaultProps.baz = "baz";'
       ].join('\n'),
       errors: [{
-        message: 'defaultProp "baz" has no corresponding propTypes declaration.',
+        messageId: 'defaultHasNoType',
+        data: {name: 'baz'},
         line: 13,
         column: 1
       }]
@@ -1107,7 +1198,8 @@ ruleTester.run('default-props-match-prop-types', rule, {
         'Greeting.defaultProps.foo = "foo";'
       ].join('\n'),
       errors: [{
-        message: 'defaultProp "foo" defined for isRequired propType.',
+        messageId: 'requiredHasDefault',
+        data: {name: 'foo'},
         line: 11,
         column: 1
       }]
@@ -1132,7 +1224,8 @@ ruleTester.run('default-props-match-prop-types', rule, {
         'Greeting.defaultProps = defaults;'
       ].join('\n'),
       errors: [{
-        message: 'defaultProp "bar" defined for isRequired propType.',
+        messageId: 'requiredHasDefault',
+        data: {name: 'bar'},
         line: 14,
         column: 3
       }]
@@ -1157,7 +1250,8 @@ ruleTester.run('default-props-match-prop-types', rule, {
         'Greeting.defaultProps = defaults;'
       ].join('\n'),
       errors: [{
-        message: 'defaultProp "baz" has no corresponding propTypes declaration.',
+        messageId: 'defaultHasNoType',
+        data: {name: 'baz'},
         line: 13,
         column: 3
       }]
@@ -1184,7 +1278,8 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '}'
       ].join('\n'),
       errors: [{
-        message: 'defaultProp "name" defined for isRequired propType.',
+        messageId: 'requiredHasDefault',
+        data: {name: 'name'},
         line: 9,
         column: 7
       }]
@@ -1209,7 +1304,8 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '}'
       ].join('\n'),
       errors: [{
-        message: 'defaultProp "baz" has no corresponding propTypes declaration.',
+        messageId: 'defaultHasNoType',
+        data: {name: 'baz'},
         line: 10,
         column: 7
       }]
@@ -1236,7 +1332,8 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '}'
       ].join('\n'),
       errors: [{
-        message: 'defaultProp "baz" has no corresponding propTypes declaration.',
+        messageId: 'defaultHasNoType',
+        data: {name: 'baz'},
         line: 5,
         column: 3
       }]
@@ -1263,7 +1360,8 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '}'
       ].join('\n'),
       errors: [{
-        message: 'defaultProp "bar" defined for isRequired propType.',
+        messageId: 'requiredHasDefault',
+        data: {name: 'bar'},
         line: 2,
         column: 3
       }]
@@ -1288,30 +1386,12 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '  };',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'defaultProp "bar" defined for isRequired propType.',
+        messageId: 'requiredHasDefault',
+        data: {name: 'bar'},
         line: 12,
         column: 5
-      }]
-    },
-    {
-      code: [
-        'function MyStatelessComponent({ foo, bar }) {',
-        '  return <div>{foo}{bar}</div>;',
-        '}',
-        'MyStatelessComponent.propTypes = {',
-        '  foo: React.PropTypes.string,',
-        '  bar: React.PropTypes.string.isRequired',
-        '};',
-        'MyStatelessComponent.defaultProps = {',
-        '  baz: "baz"',
-        '};'
-      ].join('\n'),
-      errors: [{
-        message: 'defaultProp "baz" has no corresponding propTypes declaration.',
-        line: 9,
-        column: 3
       }]
     },
     {
@@ -1331,9 +1411,10 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '  };',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'defaultProp "baz" has no corresponding propTypes declaration.',
+        messageId: 'defaultHasNoType',
+        data: {name: 'baz'},
         line: 12,
         column: 5
       }]
@@ -1357,9 +1438,10 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '  static defaultProps = defaults;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'defaultProp "bar" defined for isRequired propType.',
+        messageId: 'requiredHasDefault',
+        data: {name: 'bar'},
         line: 6,
         column: 3
       }]
@@ -1383,9 +1465,10 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '  static defaultProps = defaults;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'defaultProp "baz" has no corresponding propTypes declaration.',
+        messageId: 'defaultHasNoType',
+        data: {name: 'baz'},
         line: 6,
         column: 3
       }]
@@ -1409,7 +1492,8 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '};'
       ].join('\n'),
       errors: [{
-        message: 'defaultProp "foo" defined for isRequired propType.',
+        messageId: 'requiredHasDefault',
+        data: {name: 'foo'},
         line: 11,
         column: 3
       }]
@@ -1427,7 +1511,8 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '};'
       ].join('\n'),
       errors: [{
-        message: 'defaultProp "foo" defined for isRequired propType.',
+        messageId: 'requiredHasDefault',
+        data: {name: 'foo'},
         line: 8,
         column: 3
       }]
@@ -1452,14 +1537,14 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '  foo: "foo"',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'defaultProp "foo" defined for isRequired propType.',
+        messageId: 'requiredHasDefault',
+        data: {name: 'foo'},
         line: 11,
         column: 3
       }]
     },
-    // Investigate why this test fails. Flow type not finding foo?
     {
       code: [
         'function Hello(props: { foo: string }) {',
@@ -1469,9 +1554,10 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '  foo: "foo"',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'defaultProp "foo" defined for isRequired propType.',
+        messageId: 'requiredHasDefault',
+        data: {name: 'foo'},
         line: 5,
         column: 3
       }]
@@ -1489,9 +1575,10 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '  foo: "foo"',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'defaultProp "foo" defined for isRequired propType.',
+        messageId: 'requiredHasDefault',
+        data: {name: 'foo'},
         line: 8,
         column: 3
       }]
@@ -1503,9 +1590,10 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '};',
         'Hello.defaultProps = { foo: "foo", bar: "bar" };'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'defaultProp "foo" defined for isRequired propType.',
+        messageId: 'requiredHasDefault',
+        data: {name: 'foo'},
         line: 4,
         column: 24
       }]
@@ -1527,15 +1615,17 @@ ruleTester.run('default-props-match-prop-types', rule, {
         '}',
         'Hello.defaultProps = { foo: "foo", frob: "frob" };'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
         {
-          message: 'defaultProp "foo" defined for isRequired propType.',
+          messageId: 'requiredHasDefault',
+          data: {name: 'foo'},
           line: 12,
           column: 24
         },
         {
-          message: 'defaultProp "frob" has no corresponding propTypes declaration.',
+          messageId: 'defaultHasNoType',
+          data: {name: 'frob'},
           line: 12,
           column: 36
         }
@@ -1559,13 +1649,105 @@ ruleTester.run('default-props-match-prop-types', rule, {
           }
         }
       `,
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
         {
-          message: 'defaultProp "fooBar" has no corresponding propTypes declaration.'
+          messageId: 'defaultHasNoType',
+          data: {name: 'fooBar'}
         },
         {
-          message: 'defaultProp "foo" defined for isRequired propType.'
+          messageId: 'requiredHasDefault',
+          data: {name: 'foo'}
+        }
+      ]
+    },
+    {
+      code: `
+        class SomeComponent extends React.Component {
+          render() {
+            return <div />;
+          }
+        }
+        SomeComponent.propTypes = {
+          "firstProperty": PropTypes.string.isRequired,
+        };
+
+        SomeComponent.defaultProps = {
+          "firstProperty": () => undefined
+        };
+      `,
+      errors: [
+        {
+          messageId: 'requiredHasDefault',
+          data: {name: 'firstProperty'}
+        }
+      ]
+    },
+    {
+      code: [
+        'type DefaultProps = {',
+        '  baz?: string,',
+        '  bar?: string',
+        '};',
+
+        'type Props = {',
+        '  foo: string,',
+        '  ...DefaultProps',
+        '}',
+
+        'function Hello(props: Props) {',
+        '  return <div>Hello {props.foo}</div>;',
+        '}',
+        'Hello.defaultProps = { foo: "foo", frob: "frob", baz: "bar" };'
+      ].join('\n'),
+      parser: parsers.BABEL_ESLINT,
+      errors: [
+        {
+          messageId: 'requiredHasDefault',
+          data: {name: 'foo'},
+          line: 12,
+          column: 24
+        },
+        {
+          messageId: 'defaultHasNoType',
+          data: {name: 'frob'},
+          line: 12,
+          column: 36
+        }
+      ]
+    },
+    {
+      code: [
+        'type DefaultProps = {',
+        '  baz?: string,',
+        '  bar?: string',
+        '};',
+
+        'type Props = {',
+        '  foo: string,',
+        '  ...DefaultProps',
+        '}',
+
+        'class Hello extends React.Component<Props> {',
+        '  render() {',
+        '    return <div>Hello {props.foo}</div>;',
+        '  }',
+        '}',
+        'Hello.defaultProps = { foo: "foo", frob: "frob", baz: "bar" };'
+      ].join('\n'),
+      parser: parsers.BABEL_ESLINT,
+      errors: [
+        {
+          messageId: 'requiredHasDefault',
+          data: {name: 'foo'},
+          line: 14,
+          column: 24
+        },
+        {
+          messageId: 'defaultHasNoType',
+          data: {name: 'frob'},
+          line: 14,
+          column: 36
         }
       ]
     }

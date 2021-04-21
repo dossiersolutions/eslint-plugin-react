@@ -2,14 +2,16 @@
  * @fileoverview Validate closing bracket location in JSX
  * @author Yannick Croissant
  */
+
 'use strict';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/jsx-closing-bracket-location');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/jsx-closing-bracket-location');
+
 const parserOptions = {
   ecmaVersion: 2018,
   sourceType: 'module',
@@ -17,17 +19,17 @@ const parserOptions = {
     jsx: true
   }
 };
-const MESSAGE_AFTER_PROPS = [{message: 'The closing bracket must be placed after the last prop'}];
-const MESSAGE_AFTER_TAG = [{message: 'The closing bracket must be placed after the opening tag'}];
 
-const MESSAGE_PROPS_ALIGNED = 'The closing bracket must be aligned with the last prop';
-const MESSAGE_TAG_ALIGNED = 'The closing bracket must be aligned with the opening tag';
-const MESSAGE_LINE_ALIGNED = 'The closing bracket must be aligned with the line containing the opening tag';
+const MESSAGE_AFTER_PROPS = 'placed after the last prop';
+const MESSAGE_AFTER_TAG = 'placed after the opening tag';
 
-const messageWithDetails = function(message, expectedColumn, expectedNextLine) {
-  const details = ` (expected column ${expectedColumn}${expectedNextLine ? ' on the next line)' : ')'}`;
-  return message + details;
-};
+const MESSAGE_PROPS_ALIGNED = 'aligned with the last prop';
+const MESSAGE_TAG_ALIGNED = 'aligned with the opening tag';
+const MESSAGE_LINE_ALIGNED = 'aligned with the line containing the opening tag';
+
+function details(expectedColumn, expectedNextLine) {
+  return ` (expected column ${expectedColumn}${expectedNextLine ? ' on the next line)' : ')'}`;
+}
 
 // ------------------------------------------------------------------------------
 // Tests
@@ -662,7 +664,10 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     output: [
       '<App />'
     ].join('\n'),
-    errors: MESSAGE_AFTER_TAG
+    errors: [{
+      messageId: 'bracketLocation',
+      data: {location: MESSAGE_AFTER_TAG}
+    }]
   }, {
     code: [
       '<App foo ',
@@ -671,7 +676,10 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     output: [
       '<App foo/>'
     ].join('\n'),
-    errors: MESSAGE_AFTER_PROPS
+    errors: [{
+      messageId: 'bracketLocation',
+      data: {location: MESSAGE_AFTER_PROPS}
+    }]
   }, {
     code: [
       '<App foo',
@@ -680,7 +688,10 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     output: [
       '<App foo></App>'
     ].join('\n'),
-    errors: MESSAGE_AFTER_PROPS
+    errors: [{
+      messageId: 'bracketLocation',
+      data: {location: MESSAGE_AFTER_PROPS}
+    }]
   }, {
     code: [
       '<App ',
@@ -693,7 +704,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'props-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_PROPS_ALIGNED, 3, true),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_PROPS_ALIGNED,
+        details: details(3, true)
+      },
       line: 2,
       column: 7
     }]
@@ -709,7 +724,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'tag-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_TAG_ALIGNED, 1, true),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_TAG_ALIGNED,
+        details: details(1, true)
+      },
       line: 2,
       column: 7
     }]
@@ -725,7 +744,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'line-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_LINE_ALIGNED, 1, true),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_LINE_ALIGNED,
+        details: details(1, true)
+      },
       line: 2,
       column: 7
     }]
@@ -740,7 +763,10 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
       '  foo/>'
     ].join('\n'),
     options: [{location: 'after-props'}],
-    errors: MESSAGE_AFTER_PROPS
+    errors: [{
+      messageId: 'bracketLocation',
+      data: {location: MESSAGE_AFTER_PROPS}
+    }]
   }, {
     code: [
       '<App ',
@@ -754,7 +780,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'props-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_PROPS_ALIGNED, 3, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_PROPS_ALIGNED,
+        details: details(3, false)
+      },
       line: 3,
       column: 1
     }]
@@ -769,7 +799,10 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
       '  foo/>'
     ].join('\n'),
     options: [{location: 'after-props'}],
-    errors: MESSAGE_AFTER_PROPS
+    errors: [{
+      messageId: 'bracketLocation',
+      data: {location: MESSAGE_AFTER_PROPS}
+    }]
   }, {
     code: [
       '<App ',
@@ -783,7 +816,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'tag-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_TAG_ALIGNED, 1, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_TAG_ALIGNED,
+        details: details(1, false)
+      },
       line: 3,
       column: 3
     }]
@@ -800,7 +837,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'line-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_LINE_ALIGNED, 1, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_LINE_ALIGNED,
+        details: details(1, false)
+      },
       line: 3,
       column: 3
     }]
@@ -815,7 +856,10 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
       '  foo></App>'
     ].join('\n'),
     options: [{location: 'after-props'}],
-    errors: MESSAGE_AFTER_PROPS
+    errors: [{
+      messageId: 'bracketLocation',
+      data: {location: MESSAGE_AFTER_PROPS}
+    }]
   }, {
     code: [
       '<App',
@@ -829,7 +873,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'props-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_PROPS_ALIGNED, 3, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_PROPS_ALIGNED,
+        details: details(3, false)
+      },
       line: 3,
       column: 1
     }]
@@ -844,7 +892,10 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
       '  foo></App>'
     ].join('\n'),
     options: [{location: 'after-props'}],
-    errors: MESSAGE_AFTER_PROPS
+    errors: [{
+      messageId: 'bracketLocation',
+      data: {location: MESSAGE_AFTER_PROPS}
+    }]
   }, {
     code: [
       '<App',
@@ -858,7 +909,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'tag-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_TAG_ALIGNED, 1, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_TAG_ALIGNED,
+        details: details(1, false)
+      },
       line: 3,
       column: 3
     }]
@@ -875,7 +930,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'line-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_LINE_ALIGNED, 1, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_LINE_ALIGNED,
+        details: details(1, false)
+      },
       line: 3,
       column: 3
     }]
@@ -899,7 +958,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{selfClosing: 'props-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_TAG_ALIGNED, 1, true),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_TAG_ALIGNED,
+        details: details(1, true)
+      },
       line: 2,
       column: 8
     }]
@@ -930,7 +993,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: ['props-aligned'],
     errors: [{
-      message: messageWithDetails(MESSAGE_PROPS_ALIGNED, 7, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_PROPS_ALIGNED,
+        details: details(7, false)
+      },
       line: 6,
       column: 37
     }]
@@ -961,7 +1028,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: ['tag-aligned'],
     errors: [{
-      message: messageWithDetails(MESSAGE_TAG_ALIGNED, 5, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_TAG_ALIGNED,
+        details: details(5, false)
+      },
       line: 6,
       column: 37
     }]
@@ -992,7 +1063,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: ['line-aligned'],
     errors: [{
-      message: messageWithDetails(MESSAGE_LINE_ALIGNED, 5, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_LINE_ALIGNED,
+        details: details(5, false)
+      },
       line: 6,
       column: 37
     }]
@@ -1017,7 +1092,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{nonEmpty: 'props-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_TAG_ALIGNED, 3, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_TAG_ALIGNED,
+        details: details(3, false)
+      },
       line: 6,
       column: 5
     }]
@@ -1039,7 +1118,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{selfClosing: 'after-props'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_TAG_ALIGNED, 1, true),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_TAG_ALIGNED,
+        details: details(1, true)
+      },
       line: 2,
       column: 8
     }]
@@ -1062,7 +1145,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{nonEmpty: 'after-props'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_TAG_ALIGNED, 3, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_TAG_ALIGNED,
+        details: details(3, false)
+      },
       line: 5,
       column: 5
     }]
@@ -1083,7 +1170,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'line-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_LINE_ALIGNED, 3, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_LINE_ALIGNED,
+        details: details(3, false)
+      },
       line: 4,
       column: 10
     }]
@@ -1100,7 +1191,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'line-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_LINE_ALIGNED, 1, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_LINE_ALIGNED,
+        details: details(1, false)
+      },
       line: 3,
       column: 9
     }]
@@ -1122,7 +1217,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'line-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_LINE_ALIGNED, 3, true),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_LINE_ALIGNED,
+        details: details(3, true)
+      },
       line: 4,
       column: 16
     }]
@@ -1142,7 +1241,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'line-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_LINE_ALIGNED, 3, true),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_LINE_ALIGNED,
+        details: details(3, true)
+      },
       line: 3,
       column: 23
     }]
@@ -1159,7 +1262,10 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
       ')'
     ].join('\n'),
     options: [{location: 'line-aligned'}],
-    errors: [MESSAGE_AFTER_TAG]
+    errors: [{
+      messageId: 'bracketLocation',
+      data: {location: MESSAGE_AFTER_TAG}
+    }]
   }, {
     code: [
       '<div className={[',
@@ -1180,7 +1286,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'tag-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_TAG_ALIGNED, 1, true),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_TAG_ALIGNED,
+        details: details(1, true)
+      },
       line: 4,
       column: 7
     }]
@@ -1196,7 +1306,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'props-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_PROPS_ALIGNED, 2, true),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_PROPS_ALIGNED,
+        details: details(2, true)
+      },
       line: 2,
       column: 6
     }]
@@ -1212,7 +1326,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'tag-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_TAG_ALIGNED, 1, true),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_TAG_ALIGNED,
+        details: details(1, true)
+      },
       line: 2,
       column: 6
     }]
@@ -1228,7 +1346,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'line-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_LINE_ALIGNED, 1, true),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_LINE_ALIGNED,
+        details: details(1, true)
+      },
       line: 2,
       column: 6
     }]
@@ -1243,7 +1365,10 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
       '\tfoo/>'
     ].join('\n'),
     options: [{location: 'after-props'}],
-    errors: MESSAGE_AFTER_PROPS
+    errors: [{
+      messageId: 'bracketLocation',
+      data: {location: MESSAGE_AFTER_PROPS}
+    }]
   }, {
     code: [
       '<App ',
@@ -1257,7 +1382,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'props-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_PROPS_ALIGNED, 2, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_PROPS_ALIGNED,
+        details: details(2, false)
+      },
       line: 3,
       column: 1
     }]
@@ -1272,7 +1401,10 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
       '\tfoo/>'
     ].join('\n'),
     options: [{location: 'after-props'}],
-    errors: MESSAGE_AFTER_PROPS
+    errors: [{
+      messageId: 'bracketLocation',
+      data: {location: MESSAGE_AFTER_PROPS}
+    }]
   }, {
     code: [
       '<App ',
@@ -1286,7 +1418,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'tag-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_TAG_ALIGNED, 1, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_TAG_ALIGNED,
+        details: details(1, false)
+      },
       line: 3,
       column: 2
     }]
@@ -1303,7 +1439,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'line-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_LINE_ALIGNED, 1, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_LINE_ALIGNED,
+        details: details(1, false)
+      },
       line: 3,
       column: 2
     }]
@@ -1318,7 +1458,10 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
       '\tfoo></App>'
     ].join('\n'),
     options: [{location: 'after-props'}],
-    errors: MESSAGE_AFTER_PROPS
+    errors: [{
+      messageId: 'bracketLocation',
+      data: {location: MESSAGE_AFTER_PROPS}
+    }]
   }, {
     code: [
       '<App',
@@ -1332,7 +1475,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'props-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_PROPS_ALIGNED, 2, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_PROPS_ALIGNED,
+        details: details(2, false)
+      },
       line: 3,
       column: 1
     }]
@@ -1347,7 +1494,10 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
       '\tfoo></App>'
     ].join('\n'),
     options: [{location: 'after-props'}],
-    errors: MESSAGE_AFTER_PROPS
+    errors: [{
+      messageId: 'bracketLocation',
+      data: {location: MESSAGE_AFTER_PROPS}
+    }]
   }, {
     code: [
       '<App',
@@ -1361,7 +1511,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'tag-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_TAG_ALIGNED, 1, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_TAG_ALIGNED,
+        details: details(1, false)
+      },
       line: 3,
       column: 2
     }]
@@ -1378,7 +1532,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'line-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_LINE_ALIGNED, 1, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_LINE_ALIGNED,
+        details: details(1, false)
+      },
       line: 3,
       column: 2
     }]
@@ -1402,7 +1560,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{selfClosing: 'props-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_TAG_ALIGNED, 1, true),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_TAG_ALIGNED,
+        details: details(1, true)
+      },
       line: 2,
       column: 7
     }]
@@ -1433,7 +1595,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: ['props-aligned'],
     errors: [{
-      message: messageWithDetails(MESSAGE_PROPS_ALIGNED, 4, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_PROPS_ALIGNED,
+        details: details(4, false)
+      },
       line: 6,
       column: 19
     }]
@@ -1464,7 +1630,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: ['tag-aligned'],
     errors: [{
-      message: messageWithDetails(MESSAGE_TAG_ALIGNED, 3, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_TAG_ALIGNED,
+        details: details(3, false)
+      },
       line: 6,
       column: 19
     }]
@@ -1495,7 +1665,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: ['line-aligned'],
     errors: [{
-      message: messageWithDetails(MESSAGE_LINE_ALIGNED, 3, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_LINE_ALIGNED,
+        details: details(3, false)
+      },
       line: 6,
       column: 19
     }]
@@ -1520,7 +1694,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{nonEmpty: 'props-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_TAG_ALIGNED, 2, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_TAG_ALIGNED,
+        details: details(2, false)
+      },
       line: 6,
       column: 3
     }]
@@ -1542,7 +1720,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{selfClosing: 'after-props'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_TAG_ALIGNED, 1, true),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_TAG_ALIGNED,
+        details: details(1, true)
+      },
       line: 2,
       column: 7
     }]
@@ -1565,7 +1747,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{nonEmpty: 'after-props'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_TAG_ALIGNED, 2, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_TAG_ALIGNED,
+        details: details(2, false)
+      },
       line: 5,
       column: 3
     }]
@@ -1586,7 +1772,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'line-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_LINE_ALIGNED, 2, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_LINE_ALIGNED,
+        details: details(2, false)
+      },
       line: 4,
       column: 6
     }]
@@ -1603,7 +1793,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'line-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_LINE_ALIGNED, 1, false),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_LINE_ALIGNED,
+        details: details(1, false)
+      },
       line: 3,
       column: 9
     }]
@@ -1625,7 +1819,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'line-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_LINE_ALIGNED, 2, true),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_LINE_ALIGNED,
+        details: details(2, true)
+      },
       line: 4,
       column: 14
     }]
@@ -1645,7 +1843,11 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'line-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_LINE_ALIGNED, 2, true),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_LINE_ALIGNED,
+        details: details(2, true)
+      },
       line: 3,
       column: 21
     }]
@@ -1662,7 +1864,10 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
       ')'
     ].join('\n'),
     options: [{location: 'line-aligned'}],
-    errors: [MESSAGE_AFTER_TAG]
+    errors: [{
+      messageId: 'bracketLocation',
+      data: {location: MESSAGE_AFTER_TAG}
+    }]
   }, {
     code: [
       '<div className={[',
@@ -1683,9 +1888,105 @@ ruleTester.run('jsx-closing-bracket-location', rule, {
     ].join('\n'),
     options: [{location: 'tag-aligned'}],
     errors: [{
-      message: messageWithDetails(MESSAGE_TAG_ALIGNED, 1, true),
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_TAG_ALIGNED,
+        details: details(1, true)
+      },
       line: 4,
       column: 6
+    }]
+  }, {
+    code: [
+      '\t\t<div',
+      '\t\t\tclassName={styles}',
+      '  >',
+      '\t\t\t{props}',
+      '\t\t</div>'
+    ].join('\n'),
+    output: [
+      '\t\t<div',
+      '\t\t\tclassName={styles}',
+      '\t\t>',
+      '\t\t\t{props}',
+      '\t\t</div>'
+    ].join('\n'),
+    options: [{location: 'tag-aligned'}],
+    errors: [{
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_TAG_ALIGNED,
+        details: details(3, false)
+      },
+      line: 3,
+      column: 3
+    }]
+  }, {
+    code: [
+      '  <div',
+      '    className={styles}',
+      '\t\t>',
+      '    {props}',
+      '  </div>'
+    ].join('\n'),
+    output: [
+      '  <div',
+      '    className={styles}',
+      '  >',
+      '    {props}',
+      '  </div>'
+    ].join('\n'),
+    options: [{location: 'tag-aligned'}],
+    errors: [{
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_TAG_ALIGNED,
+        details: details(3, false)
+      },
+      line: 3,
+      column: 3
+    }]
+  }, {
+    code: [
+      '  <App',
+      '    foo',
+      '\t\t/>'
+    ].join('\n'),
+    output: [
+      '  <App',
+      '    foo',
+      '  />'
+    ].join('\n'),
+    options: [{location: 'tag-aligned'}],
+    errors: [{
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_TAG_ALIGNED,
+        details: details(3, false)
+      },
+      line: 3,
+      column: 3
+    }]
+  }, {
+    code: [
+      '\t\t<App',
+      '\t\t\tfoo',
+      '  />'
+    ].join('\n'),
+    output: [
+      '\t\t<App',
+      '\t\t\tfoo',
+      '\t\t/>'
+    ].join('\n'),
+    options: [{location: 'tag-aligned'}],
+    errors: [{
+      messageId: 'bracketLocation',
+      data: {
+        location: MESSAGE_TAG_ALIGNED,
+        details: details(3, false)
+      },
+      line: 3,
+      column: 3
     }]
   }]
 });

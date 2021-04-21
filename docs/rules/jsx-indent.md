@@ -9,7 +9,7 @@ Fixer will fix whitespace and tabs indentation.
 
 This rule is aimed to enforce consistent indentation style. The default style is `4 spaces`.
 
-The following patterns are considered warnings:
+Examples of **incorrect** code for this rule:
 
 ```jsx
 // 2 spaces indentation
@@ -31,14 +31,15 @@ The following patterns are considered warnings:
 ## Rule Options
 
 It takes an option as the second parameter which can be `"tab"` for tab-based indentation or a positive number for space indentations.
+To enable checking the indentation of attributes or add indentation to logical expressions, use the third parameter to turn on the `checkAttributes` (default is false) and `indentLogicalExpressions` (default is false) respectively.
 
 ```js
 ...
-"react/jsx-indent": [<enabled>, 'tab'|<number>]
+"react/jsx-indent": [<enabled>, 'tab'|<number>, {checkAttributes: <boolean>, indentLogicalExpressions: <boolean>}]
 ...
 ```
 
-The following patterns are considered warnings:
+Examples of **incorrect** code for this rule:
 
 ```jsx
 // 2 spaces indentation
@@ -52,9 +53,25 @@ The following patterns are considered warnings:
 <App>
   <Hello />
 </App>
+
+// [2, 2, {checkAttributes: true}]
+<App render={
+  <Hello render={
+    (bar) => <div>hi</div>
+}
+  />
+  }>
+</App>
+
+// [2, 2, {indentLogicalExpressions: true}]
+<App>
+  {condition && (
+  <Hello />
+  )}
+</App>
 ```
 
-The following patterns are **not** warnings:
+Examples of **correct** code for this rule:
 
 ```jsx
 
@@ -74,6 +91,22 @@ The following patterns are **not** warnings:
 // [2, 0]
 <App>
 <Hello />
+</App>
+
+// [2, 2, {checkAttributes: false}]
+<App render={
+  <Hello render={
+    (bar) => <div>hi</div>
+}
+  />
+  }>
+</App>
+
+// [2, 2, {indentLogicalExpressions: true}]
+<App>
+  {condition && (
+    <Hello />
+  )}
 </App>
 ```
 

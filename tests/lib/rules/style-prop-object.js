@@ -2,14 +2,15 @@
  * @fileoverview Enforce style prop value is an object
  * @author David Petersen
  */
+
 'use strict';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/style-prop-object');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/style-prop-object');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -191,13 +192,29 @@ ruleTester.run('style-prop-object', rule, {
         '  });',
         '};'
       ].join('\n')
+    },
+    {
+      code: '<MyComponent style="myStyle" />',
+      options: [
+        {
+          allow: ['MyComponent']
+        }
+      ]
+    },
+    {
+      code: 'React.createElement(MyComponent, { style: "mySpecialStyle" })',
+      options: [
+        {
+          allow: ['MyComponent']
+        }
+      ]
     }
   ],
   invalid: [
     {
       code: '<div style="color: \'red\'" />',
       errors: [{
-        message: 'Style prop value must be an object',
+        messageId: 'stylePropNotObject',
         line: 1,
         column: 6,
         type: 'JSXAttribute'
@@ -206,7 +223,7 @@ ruleTester.run('style-prop-object', rule, {
     {
       code: '<Hello style="color: \'red\'" />',
       errors: [{
-        message: 'Style prop value must be an object',
+        messageId: 'stylePropNotObject',
         line: 1,
         column: 8,
         type: 'JSXAttribute'
@@ -215,7 +232,7 @@ ruleTester.run('style-prop-object', rule, {
     {
       code: '<div style={true} />',
       errors: [{
-        message: 'Style prop value must be an object',
+        messageId: 'stylePropNotObject',
         line: 1,
         column: 6,
         type: 'JSXAttribute'
@@ -229,7 +246,7 @@ ruleTester.run('style-prop-object', rule, {
         '}'
       ].join('\n'),
       errors: [{
-        message: 'Style prop value must be an object',
+        messageId: 'stylePropNotObject',
         line: 3,
         column: 22,
         type: 'Identifier'
@@ -243,7 +260,7 @@ ruleTester.run('style-prop-object', rule, {
         '}'
       ].join('\n'),
       errors: [{
-        message: 'Style prop value must be an object',
+        messageId: 'stylePropNotObject',
         line: 3,
         column: 24,
         type: 'Identifier'
@@ -257,10 +274,38 @@ ruleTester.run('style-prop-object', rule, {
         '}'
       ].join('\n'),
       errors: [{
-        message: 'Style prop value must be an object',
+        messageId: 'stylePropNotObject',
         line: 3,
         column: 22,
         type: 'Identifier'
+      }]
+    },
+    {
+      code: '<MyComponent style="myStyle" />',
+      options: [
+        {
+          allow: ['MyOtherComponent']
+        }
+      ],
+      errors: [{
+        messageId: 'stylePropNotObject',
+        line: 1,
+        column: 14,
+        type: 'JSXAttribute'
+      }]
+    },
+    {
+      code: 'React.createElement(MyComponent, { style: "mySpecialStyle" })',
+      options: [
+        {
+          allow: ['MyOtherComponent']
+        }
+      ],
+      errors: [{
+        messageId: 'stylePropNotObject',
+        line: 1,
+        column: 43,
+        type: 'Literal'
       }]
     }
   ]

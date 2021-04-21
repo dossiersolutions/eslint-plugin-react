@@ -6,13 +6,15 @@ Components without children can be self-closed to avoid unnecessary extra closin
 
 ## Rule Details
 
-The following patterns are considered warnings:
+Examples of **incorrect** code for this rule:
 
 ```jsx
 var HelloJohn = <Hello name="John"></Hello>;
+
+var HelloJohnCompound = <Hello.Compound name="John"></Hello.Compound>;
 ```
 
-The following patterns are **not** considered warnings:
+Examples of **correct** code for this rule:
 
 ```jsx
 var contentContainer = <div className="content"></div>;
@@ -21,7 +23,11 @@ var intentionalSpace = <div>{' '}</div>;
 
 var HelloJohn = <Hello name="John" />;
 
+var HelloJohnCompound = <Hello.Compound name="John" />;
+
 var Profile = <Hello name="John"><img src="picture.png" /></Hello>;
+
+var ProfileCompound = <Hello.Compound name="John"><img src="picture.png" /></Hello.Compound>;
 
 var HelloSpace = <Hello>{' '}</Hello>;
 ```
@@ -43,13 +49,13 @@ The rule can take one argument to select types of tags, which should be self-clo
 
 When `true`, custom components tags should be self-closed.
 
-The following patterns are considered warnings:
+Examples of **incorrect** code for this rule:
 
 ```jsx
 var HelloJohn = <Hello name="John"></Hello>;
 ```
 
-The following patterns are **not** considered warnings:
+Examples of **correct** code for this rule:
 
 ```jsx
 var contentContainer = <div className="content"></div>;
@@ -58,20 +64,24 @@ var intentionalSpace = <div>{' '}</div>;
 
 var HelloJohn = <Hello name="John" />;
 
+var HelloJohnCompound = <Hello.Compound name="John" />;
+
 var Profile = <Hello name="John"><img src="picture.png" /></Hello>;
+
+var ProfileCompound = <Hello.Compound name="John"><img src="picture.png" /></Hello.Compound>;
 ```
 
 ### `html`
 
 When `true`, html components tags should be self-closed.
 
-The following patterns are considered warnings:
+Examples of **incorrect** code for this rule:
 
 ```jsx
 var contentContainer = <div className="content"></div>;
 ```
 
-The following patterns are **not** considered warnings:
+Examples of **correct** code for this rule:
 
 ```jsx
 var contentContainer = <div className="content" />;

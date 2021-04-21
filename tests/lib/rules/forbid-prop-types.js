@@ -1,14 +1,17 @@
 /**
  * @fileoverview Tests for forbid-prop-types
  */
+
 'use strict';
 
 // -----------------------------------------------------------------------------
 // Requirements
 // -----------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/forbid-prop-types');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/forbid-prop-types');
+
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -21,11 +24,6 @@ const parserOptions = {
 // -----------------------------------------------------------------------------
 // Tests
 // -----------------------------------------------------------------------------
-
-const ANY_ERROR_MESSAGE = 'Prop type `any` is forbidden';
-const ARRAY_ERROR_MESSAGE = 'Prop type `array` is forbidden';
-const NUMBER_ERROR_MESSAGE = 'Prop type `number` is forbidden';
-const OBJECT_ERROR_MESSAGE = 'Prop type `object` is forbidden';
 
 const ruleTester = new RuleTester({parserOptions});
 ruleTester.run('forbid-prop-types', rule, {
@@ -138,7 +136,7 @@ ruleTester.run('forbid-prop-types', rule, {
       '  "aria-controls": PropTypes.string',
       '};'
     ].join('\n'),
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     // Invalid code, should not be validated
     code: [
@@ -153,7 +151,7 @@ ruleTester.run('forbid-prop-types', rule, {
       '  }',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: [
       'var Hello = createReactClass({',
@@ -179,18 +177,18 @@ ruleTester.run('forbid-prop-types', rule, {
   }, {
     // Proptypes declared with a spread property
     code: [
-      'class Test extends react.component {',
+      'class Test extends React.component {',
       '  static propTypes = {',
       '    intl: React.propTypes.number,',
       '    ...propTypes',
       '  };',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     // Proptypes declared with a spread property
     code: [
-      'class Test extends react.component {',
+      'class Test extends React.component {',
       '  static get propTypes() {',
       '    return {',
       '      intl: React.propTypes.number,',
@@ -306,7 +304,7 @@ ruleTester.run('forbid-prop-types', rule, {
       '  "aria-controls": PropTypes.string',
       '};'
     ].join('\n'),
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: [{checkContextTypes: true}]
   }, {
     // Invalid code, should not be validated
@@ -322,7 +320,7 @@ ruleTester.run('forbid-prop-types', rule, {
       '  }',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: [{checkContextTypes: true}]
   }, {
     code: [
@@ -351,19 +349,19 @@ ruleTester.run('forbid-prop-types', rule, {
   }, {
     // Proptypes declared with a spread property
     code: [
-      'class Test extends react.component {',
+      'class Test extends React.component {',
       '  static childContextTypes = {',
       '    intl: React.childContextTypes.number,',
       '    ...childContextTypes',
       '  };',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: [{checkContextTypes: true}]
   }, {
     // Proptypes declared with a spread property
     code: [
-      'class Test extends react.component {',
+      'class Test extends React.component {',
       '  static get childContextTypes() {',
       '    return {',
       '      intl: React.childContextTypes.number,',
@@ -480,7 +478,7 @@ ruleTester.run('forbid-prop-types', rule, {
       '  "aria-controls": PropTypes.string',
       '};'
     ].join('\n'),
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: [{checkChildContextTypes: true}]
   }, {
     // Invalid code, should not be validated
@@ -496,7 +494,7 @@ ruleTester.run('forbid-prop-types', rule, {
       '  }',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: [{checkChildContextTypes: true}]
   }, {
     code: [
@@ -525,19 +523,19 @@ ruleTester.run('forbid-prop-types', rule, {
   }, {
     // Proptypes declared with a spread property
     code: [
-      'class Test extends react.component {',
+      'class Test extends React.component {',
       '  static childContextTypes = {',
       '    intl: React.childContextTypes.number,',
       '    ...childContextTypes',
       '  };',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: [{checkChildContextTypes: true}]
   }, {
     // Proptypes declared with a spread property
     code: [
-      'class Test extends react.component {',
+      'class Test extends React.component {',
       '  static get childContextTypes() {',
       '    return {',
       '      intl: React.childContextTypes.number,',
@@ -547,6 +545,38 @@ ruleTester.run('forbid-prop-types', rule, {
       '}'
     ].join('\n'),
     options: [{checkChildContextTypes: true}]
+  }, {
+    code: [
+      'class TestComponent extends React.Component {',
+      '  static defaultProps = function () {',
+      '    const date = new Date();',
+      '    return {',
+      '      date',
+      '    };',
+      '  }();',
+      '}'
+    ].join('\n'),
+    parser: parsers.BABEL_ESLINT
+  }, {
+    code: [
+      'class HeroTeaserList extends React.Component {',
+      '  render() { return null; }',
+      '}',
+      'HeroTeaserList.propTypes = Object.assign({',
+      '  heroIndex: PropTypes.number,',
+      '  preview: PropTypes.bool,',
+      '}, componentApi, teaserListProps);'
+    ].join('\n')
+  }, {
+    code: [
+      'import PropTypes from "prop-types";',
+      'const Foo = {',
+      '  foo: PropTypes.string,',
+      '};',
+      'const Bar = {',
+      '  bar: PropTypes.shape(Foo),',
+      '};'
+    ].join('\n')
   }],
 
   invalid: [{
@@ -561,7 +591,8 @@ ruleTester.run('forbid-prop-types', rule, {
       '});'
     ].join('\n'),
     errors: [{
-      message: ANY_ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
+      data: {target: 'any'},
       line: 3,
       column: 5,
       type: 'Property'
@@ -578,7 +609,8 @@ ruleTester.run('forbid-prop-types', rule, {
       '});'
     ].join('\n'),
     errors: [{
-      message: NUMBER_ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
+      data: {target: 'number'},
       line: 3,
       column: 5,
       type: 'Property'
@@ -598,7 +630,8 @@ ruleTester.run('forbid-prop-types', rule, {
       '});'
     ].join('\n'),
     errors: [{
-      message: ANY_ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
+      data: {target: 'any'},
       line: 3,
       column: 5,
       type: 'Property'
@@ -615,7 +648,8 @@ ruleTester.run('forbid-prop-types', rule, {
       '});'
     ].join('\n'),
     errors: [{
-      message: ARRAY_ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
+      data: {target: 'array'},
       line: 3,
       column: 5,
       type: 'Property'
@@ -632,7 +666,8 @@ ruleTester.run('forbid-prop-types', rule, {
       '});'
     ].join('\n'),
     errors: [{
-      message: ARRAY_ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
+      data: {target: 'array'},
       line: 3,
       column: 5,
       type: 'Property'
@@ -649,7 +684,8 @@ ruleTester.run('forbid-prop-types', rule, {
       '});'
     ].join('\n'),
     errors: [{
-      message: OBJECT_ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
+      data: {target: 'object'},
       line: 3,
       column: 5,
       type: 'Property'
@@ -666,7 +702,8 @@ ruleTester.run('forbid-prop-types', rule, {
       '});'
     ].join('\n'),
     errors: [{
-      message: OBJECT_ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
+      data: {target: 'object'},
       line: 3,
       column: 5,
       type: 'Property'
@@ -684,20 +721,6 @@ ruleTester.run('forbid-prop-types', rule, {
       '});'
     ].join('\n'),
     errors: 2
-  }, {
-    code: [
-      'var First = createReactClass({',
-      '  propTypes: {',
-      '    s: PropTypes.shape({,',
-      '      o: PropTypes.object',
-      '    })',
-      '  },',
-      '  render: function() {',
-      '    return <div />;',
-      '  }',
-      '});'
-    ].join('\n'),
-    errors: 1
   }, {
     code: [
       'var First = createReactClass({',
@@ -762,7 +785,10 @@ ruleTester.run('forbid-prop-types', rule, {
       'export default function Component() {}',
       'Component.propTypes = propTypes;'
     ].join('\n'),
-    errors: [{message: ANY_ERROR_MESSAGE}]
+    errors: [{
+      messageId: 'forbiddenPropType',
+      data: {target: 'any'}
+    }]
   }, {
     code: [
       'import { forbidExtraProps } from "airbnb-prop-types";',
@@ -770,7 +796,10 @@ ruleTester.run('forbid-prop-types', rule, {
       'export default function Component() {}',
       'Component.propTypes = forbidExtraProps(propTypes);'
     ].join('\n'),
-    errors: [{message: ANY_ERROR_MESSAGE}],
+    errors: [{
+      messageId: 'forbiddenPropType',
+      data: {target: 'any'}
+    }],
     settings: {
       propWrapperFunctions: ['forbidExtraProps']
     }
@@ -786,7 +815,7 @@ ruleTester.run('forbid-prop-types', rule, {
       '  }',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: 2
   }, {
     code: [
@@ -815,7 +844,7 @@ ruleTester.run('forbid-prop-types', rule, {
       '  }',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: 2,
     settings: {
       propWrapperFunctions: ['forbidExtraProps']
@@ -883,7 +912,8 @@ ruleTester.run('forbid-prop-types', rule, {
     ].join('\n'),
     options: [{checkContextTypes: true}],
     errors: [{
-      message: ANY_ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
+      data: {target: 'any'},
       line: 3,
       column: 5,
       type: 'Property'
@@ -900,9 +930,10 @@ ruleTester.run('forbid-prop-types', rule, {
       '}'
     ].join('\n'),
     options: [{checkContextTypes: true}],
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: [{
-      message: ANY_ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
+      data: {target: 'any'},
       line: 3,
       column: 5,
       type: 'Property'
@@ -922,7 +953,8 @@ ruleTester.run('forbid-prop-types', rule, {
     ].join('\n'),
     options: [{checkContextTypes: true}],
     errors: [{
-      message: ANY_ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
+      data: {target: 'any'},
       line: 4,
       column: 7,
       type: 'Property'
@@ -940,7 +972,8 @@ ruleTester.run('forbid-prop-types', rule, {
     ].join('\n'),
     options: [{checkContextTypes: true}],
     errors: [{
-      message: ANY_ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
+      data: {target: 'any'},
       line: 7,
       column: 3,
       type: 'Property'
@@ -956,7 +989,8 @@ ruleTester.run('forbid-prop-types', rule, {
     ].join('\n'),
     options: [{checkContextTypes: true}],
     errors: [{
-      message: ANY_ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
+      data: {target: 'any'},
       line: 5,
       column: 3,
       type: 'Property'
@@ -972,7 +1006,8 @@ ruleTester.run('forbid-prop-types', rule, {
     ].join('\n'),
     options: [{checkContextTypes: true}],
     errors: [{
-      message: ANY_ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
+      data: {target: 'any'},
       line: 5,
       column: 3,
       type: 'Property'
@@ -989,7 +1024,7 @@ ruleTester.run('forbid-prop-types', rule, {
       '  }',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: 2,
     options: [{checkContextTypes: true}],
     settings: {
@@ -1090,7 +1125,7 @@ ruleTester.run('forbid-prop-types', rule, {
       '  }',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: [{
       forbid: ['instanceOf'],
       checkContextTypes: true
@@ -1175,7 +1210,8 @@ ruleTester.run('forbid-prop-types', rule, {
     ].join('\n'),
     options: [{checkChildContextTypes: true}],
     errors: [{
-      message: ANY_ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
+      data: {target: 'any'},
       line: 3,
       column: 5,
       type: 'Property'
@@ -1192,9 +1228,10 @@ ruleTester.run('forbid-prop-types', rule, {
       '}'
     ].join('\n'),
     options: [{checkChildContextTypes: true}],
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: [{
-      message: ANY_ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
+      data: {target: 'any'},
       line: 3,
       column: 5,
       type: 'Property'
@@ -1214,7 +1251,8 @@ ruleTester.run('forbid-prop-types', rule, {
     ].join('\n'),
     options: [{checkChildContextTypes: true}],
     errors: [{
-      message: ANY_ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
+      data: {target: 'any'},
       line: 4,
       column: 7,
       type: 'Property'
@@ -1232,7 +1270,8 @@ ruleTester.run('forbid-prop-types', rule, {
     ].join('\n'),
     options: [{checkChildContextTypes: true}],
     errors: [{
-      message: ANY_ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
+      data: {target: 'any'},
       line: 7,
       column: 3,
       type: 'Property'
@@ -1248,7 +1287,8 @@ ruleTester.run('forbid-prop-types', rule, {
     ].join('\n'),
     options: [{checkChildContextTypes: true}],
     errors: [{
-      message: ANY_ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
+      data: {target: 'any'},
       line: 5,
       column: 3,
       type: 'Property'
@@ -1264,7 +1304,8 @@ ruleTester.run('forbid-prop-types', rule, {
     ].join('\n'),
     options: [{checkChildContextTypes: true}],
     errors: [{
-      message: ANY_ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
+      data: {target: 'any'},
       line: 5,
       column: 3,
       type: 'Property'
@@ -1281,7 +1322,7 @@ ruleTester.run('forbid-prop-types', rule, {
       '  }',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: 2,
     options: [{checkChildContextTypes: true}],
     settings: {
@@ -1382,7 +1423,7 @@ ruleTester.run('forbid-prop-types', rule, {
       '  }',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: [{
       forbid: ['instanceOf'],
       checkChildContextTypes: true
@@ -1434,6 +1475,87 @@ ruleTester.run('forbid-prop-types', rule, {
       forbid: ['instanceOf'],
       checkChildContextTypes: true
     }],
+    errors: 1
+  }, {
+    code: [
+      'import { object, string } from "prop-types";',
+      'function C({ a, b }) { return [a, b]; }',
+      'C.propTypes = {',
+      '  a: object,',
+      '  b: string',
+      '};'
+    ].join('\n'),
+    options: [{
+      forbid: ['object']
+    }],
+    errors: 1
+  }, {
+    code: [
+      'import { objectOf, any } from "prop-types";',
+      'function C({ a }) { return a; }',
+      'C.propTypes = {',
+      '  a: objectOf(any)',
+      '};'
+    ].join('\n'),
+    options: [{
+      forbid: ['any']
+    }],
+    errors: 1
+  }, {
+    code: [
+      'import { objectOf, any } from "prop-types";',
+      'function C({ a }) { return a; }',
+      'C.propTypes = {',
+      '  a: objectOf(any)',
+      '};'
+    ].join('\n'),
+    options: [{
+      forbid: ['objectOf']
+    }],
+    errors: 1
+  },
+  {
+    code: [
+      'import { shape, any } from "prop-types";',
+      'function C({ a }) { return a; }',
+      'C.propTypes = {',
+      '  a: shape({',
+      '    b: any',
+      '  })',
+      '};'
+    ].join('\n'),
+    options: [{
+      forbid: ['any']
+    }],
+    errors: 1
+  },
+  {
+    code: [
+      'import { any } from "prop-types";',
+      'function C({ a }) { return a; }',
+      'C.propTypes = {',
+      '  a: PropTypes.shape({',
+      '    b: any',
+      '  })',
+      '};'
+    ].join('\n'),
+    options: [{
+      forbid: ['any']
+    }],
+    errors: 1
+  }, {
+    code: [
+      'var First = createReactClass({',
+      '  propTypes: {',
+      '    s: PropTypes.shape({',
+      '      o: PropTypes.object',
+      '    })',
+      '  },',
+      '  render: function() {',
+      '    return <div />;',
+      '  }',
+      '});'
+    ].join('\n'),
     errors: 1
   }]
 });

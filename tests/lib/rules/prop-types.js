@@ -2,14 +2,17 @@
  * @fileoverview Prevent missing props validation in a React component definition
  * @author Yannick Croissant
  */
+
 'use strict';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/prop-types');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/prop-types');
+
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -25,16 +28,13 @@ const settings = {
   }
 };
 
-require('babel-eslint');
-
 // ------------------------------------------------------------------------------
 // Tests
 // ------------------------------------------------------------------------------
 
 const ruleTester = new RuleTester({parserOptions});
 ruleTester.run('prop-types', rule, {
-
-  valid: [
+  valid: [].concat(
     {
       code: [
         'var Hello = createReactClass({',
@@ -160,7 +160,7 @@ ruleTester.run('prop-types', rule, {
         '  method;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'class Hello extends React.Component {',
@@ -186,7 +186,7 @@ ruleTester.run('prop-types', rule, {
         '  firstname: PropTypes.string',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'class Hello extends React.Component {',
@@ -207,7 +207,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'class Hello extends React.Component {',
@@ -343,6 +343,51 @@ ruleTester.run('prop-types', rule, {
         '};'
       ].join('\n')
     }, {
+      code: `
+        class Component extends React.Component {
+          render() {
+            return <div>{this.props.foo.baz}</div>;
+          }
+        }
+        Component.propTypes = {
+          foo: PropTypes.oneOfType([
+            PropTypes.shape({
+              bar: PropTypes.string
+            }),
+            PropTypes.shape({
+              baz: PropTypes.string
+            })
+          ])
+        };
+      `
+    }, {
+      code: `
+        class Component extends React.Component {
+          render() {
+            return <div>{this.props.foo.baz}</div>;
+          }
+        }
+        Component.propTypes = {
+          foo: PropTypes.oneOfType([
+            PropTypes.shape({
+              bar: PropTypes.string
+            }),
+            PropTypes.instanceOf(Baz)
+          ])
+        };
+      `
+    }, {
+      code: `
+        class Component extends React.Component {
+          render() {
+            return <div>{this.props.foo.baz}</div>;
+          }
+        }
+        Component.propTypes = {
+          foo: PropTypes.oneOf(['bar', 'baz'])
+        };
+      `
+    }, {
       code: [
         'class Hello extends React.Component {',
         '  render() {',
@@ -398,7 +443,7 @@ ruleTester.run('prop-types', rule, {
         '  "aria-controls": PropTypes.string',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'class Hello extends React.Component {',
@@ -438,6 +483,20 @@ ruleTester.run('prop-types', rule, {
         '};'
       ].join('\n')
     }, {
+      code: `
+        class ArrayLengthTest extends React.Component {
+          render() {
+            use(this.props.arr.length)
+            use(this.props.arr2.length)
+            return <div />
+          }
+        }
+
+        ArrayLengthTest.propTypes = {
+          arr: PropTypes.array,
+          arr2: PropTypes.arrayOf(PropTypes.number),
+        }`
+    }, {
       code: [
         'var TestComp1 = createReactClass({',
         '  propTypes: {',
@@ -460,7 +519,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       options: [{ignore: ['name']}]
     }, {
       code: [
@@ -477,7 +536,21 @@ ruleTester.run('prop-types', rule, {
         '  })',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
+    }, {
+      code: [
+        'const foo = {};',
+        'class Hello extends React.Component {',
+        '  render() {',
+        '    const {firstname, lastname} = this.props.name;',
+        '    return <div>{firstname} {lastname}</div>;',
+        '  }',
+        '}',
+        'Hello.propTypes = {',
+        '  name: PropTypes.shape(foo)',
+        '};'
+      ].join('\n'),
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'class Hello extends React.Component {',
@@ -487,7 +560,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'var Hello = createReactClass({',
@@ -585,14 +658,54 @@ ruleTester.run('prop-types', rule, {
         '  prop2: PropTypes.arrayOf(Comp1.propTypes.prop1)',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
+    }, {
+      code: [
+        'class Comp1 extends Component {',
+        '  render() {',
+        '    return <span />;',
+        '  }',
+        '}',
+        'Comp1.propTypes = {',
+        '  prop1: PropTypes.number',
+        '};',
+        'class Comp2 extends Component {',
+        '  static propTypes = {',
+        '    prop2: PropTypes.arrayOf(Comp1.propTypes.prop1)',
+        '  }',
+        '  render() {',
+        '    return <span />;',
+        '  }',
+        '}'
+      ].join('\n'),
+      parser: parsers.BABEL_ESLINT
+    }, {
+      code: [
+        'class Comp1 extends Component {',
+        '  render() {',
+        '    return <span />;',
+        '  }',
+        '}',
+        'Comp1.propTypes = {',
+        '  prop1: PropTypes.number',
+        '};',
+        'var Comp2 = createReactClass({',
+        '  propTypes: {',
+        '    prop2: PropTypes.arrayOf(Comp1.propTypes.prop1)',
+        '  },',
+        '  render() {',
+        '    return <span />;',
+        '  }',
+        '});'
+      ].join('\n'),
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'const SomeComponent = createReactClass({',
         '  propTypes: SomeOtherComponent.propTypes',
         '});'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'var Hello = createReactClass({',
@@ -644,7 +757,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'class Hello extends React.Component {',
@@ -657,7 +770,7 @@ ruleTester.run('prop-types', rule, {
         '  };',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'class Hello extends React.Component {',
@@ -670,7 +783,7 @@ ruleTester.run('prop-types', rule, {
         '  };',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       // Should not be detected as a component
       code: [
@@ -680,7 +793,7 @@ ruleTester.run('prop-types', rule, {
         '  });',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'function HelloComponent() {',
@@ -694,7 +807,7 @@ ruleTester.run('prop-types', rule, {
         '}',
         'module.exports = HelloComponent();'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'function HelloComponent() {',
@@ -708,7 +821,7 @@ ruleTester.run('prop-types', rule, {
         '}',
         'module.exports = HelloComponent();'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'class DynamicHello extends Component {',
@@ -731,7 +844,7 @@ ruleTester.run('prop-types', rule, {
         '  firstname: PropTypes.string,',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'const Hello = (props) => {',
@@ -745,7 +858,7 @@ ruleTester.run('prop-types', rule, {
         '  company: PropTypes.string',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'export default {',
@@ -755,18 +868,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
-    }, {
-      // Reassigned props are ignored
-      code: [
-        'export class Hello extends Component {',
-        '  render() {',
-        '    const props = this.props;',
-        '    return <div>Hello {props.name.firstname} {props[\'name\'].lastname}</div>',
-        '  }',
-        '}'
-      ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'export default function FooBar(props) {',
@@ -779,7 +881,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'var Hello = createReactClass({',
@@ -865,7 +967,7 @@ ruleTester.run('prop-types', rule, {
         '  return <span>{newProps.someProp}</span>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'class Hello extends React.Component {',
@@ -877,7 +979,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'class Hello extends React.Component {',
@@ -889,7 +991,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Props = {name: Object;};',
@@ -900,7 +1002,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Props = {\'data-action\': string};',
@@ -908,7 +1010,7 @@ ruleTester.run('prop-types', rule, {
         '  return <div data-action={dataAction} />;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'import type Props from "fake";',
@@ -919,7 +1021,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'class Hello extends React.Component {',
@@ -933,7 +1035,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Props = {name: {firstname: string;};};',
@@ -944,7 +1046,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Props = {name: {firstname: string; lastname: string;};};',
@@ -955,7 +1057,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Person = {name: {firstname: string;}};',
@@ -970,7 +1072,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Person = {name: {firstname: string;}};',
@@ -986,7 +1088,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Person = {name: {firstname: string;}};',
@@ -1006,7 +1108,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Props = {ok: string | boolean;};',
@@ -1017,7 +1119,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Props = {result: {ok: string | boolean;}|{ok: number | Array}};',
@@ -1028,7 +1130,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Props = {result?: {ok?: ?string | boolean;}|{ok?: ?number | Array}};',
@@ -1039,7 +1141,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'class Hello extends React.Component {',
@@ -1049,7 +1151,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       // Ignore component validation if propTypes are composed using spread
       code: [
@@ -1087,7 +1189,7 @@ ruleTester.run('prop-types', rule, {
         '  return <div>Hello {firstname} {lastname}</div>',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Props = {',
@@ -1099,7 +1201,7 @@ ruleTester.run('prop-types', rule, {
         '  return <div>Hello {firstname} {lastname}</div>',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Props = {',
@@ -1111,7 +1213,7 @@ ruleTester.run('prop-types', rule, {
         '  return <div>Hello {firstname} {lastname}</div>',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Props = {',
@@ -1121,7 +1223,7 @@ ruleTester.run('prop-types', rule, {
         '  return <div>{props[\'completed?\']}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Props = {',
@@ -1135,7 +1237,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type PropsUnionA = {',
@@ -1157,7 +1259,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'import type { FieldProps } from "redux-form"',
@@ -1168,7 +1270,21 @@ ruleTester.run('prop-types', rule, {
         '  options: Array<SelectOption>',
         '} & FieldProps'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
+    }, {
+      // Impossible intersection type
+      code: `
+        import React from 'react';
+        type Props = string & {
+          fullname: string
+        };
+        class Test extends React.PureComponent<Props> {
+          render() {
+            return <div>Hello {this.props.fullname}</div>
+          }
+        }
+      `,
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'Card.propTypes = {',
@@ -1194,7 +1310,7 @@ ruleTester.run('prop-types', rule, {
         '  jobs: PropTypes.array',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Props = {',
@@ -1204,21 +1320,21 @@ ruleTester.run('prop-types', rule, {
         '  return <div>Hello {firstname}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'function Greetings() {',
         '  return <div>{({name}) => <Hello name={name} />}</div>',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'function Greetings() {',
         '  return <div>{function({name}) { return <Hello name={name} />; }}</div>',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       // Should stop at the class when searching for a parent component
       code: [
@@ -1226,7 +1342,7 @@ ruleTester.run('prop-types', rule, {
         '  someMethod = ({width}) => {}',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       // Should stop at the decorator when searching for a parent component
       code: [
@@ -1235,7 +1351,7 @@ ruleTester.run('prop-types', rule, {
         '}])',
         'class Something extends Component {}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       // Should not find any used props
       code: [
@@ -1288,7 +1404,7 @@ ruleTester.run('prop-types', rule, {
         '  });',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Target = { target: EventTarget }',
@@ -1302,7 +1418,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'class Hello extends Component {}',
@@ -1313,7 +1429,7 @@ ruleTester.run('prop-types', rule, {
         '  foo: PropTypes.node',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'var Hello = createReactClass({',
@@ -1331,7 +1447,8 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '});'
       ].join('\n'),
-      options: [{skipUndeclared: true}]
+      options: [{skipUndeclared: true}],
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'class Hello extends React.Component {',
@@ -1372,7 +1489,7 @@ ruleTester.run('prop-types', rule, {
         '  return <div>Hello {props.name}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       // Async functions can't be components.
       code: [
@@ -1380,7 +1497,7 @@ ruleTester.run('prop-types', rule, {
         '  return <div>Hello {props.name}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       // Async functions can't be components.
       code: [
@@ -1388,7 +1505,7 @@ ruleTester.run('prop-types', rule, {
         '  return <div>Hello {props.name}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       // Flow annotations with variance
       code: [
@@ -1401,7 +1518,7 @@ ruleTester.run('prop-types', rule, {
         '  return <div>Hello {firstname} {lastname}</div>',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'class Hello extends React.Component {',
@@ -1425,7 +1542,7 @@ ruleTester.run('prop-types', rule, {
         '  handleSubmit = async ({certificate, key}) => {};',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Person = {',
@@ -1439,7 +1556,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Person = {|',
@@ -1453,7 +1570,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Person = {',
@@ -1467,7 +1584,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'import type {Data} from \'./Data\'',
@@ -1482,7 +1599,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'import type {Data} from \'some-libdef-like-flow-typed-provides\'',
@@ -1497,7 +1614,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'import type {BasePerson} from \'./types\'',
@@ -1514,7 +1631,35 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
+    }, {
+      code: [
+        'type OtherProps = {',
+        '  firstname: string,',
+        '};',
+        'type Props = {',
+        '   ...OtherProps,',
+        '   lastname: string',
+        '};',
+        'class Hello extends React.Component {',
+        '  props: Props;',
+        '  render () {',
+        '    return <div>Hello {this.props.firstname}</div>;',
+        '  }',
+        '}'
+      ].join('\n'),
+      parser: parsers.BABEL_ESLINT
+    }, {
+      code: `
+        type FooProps = {
+          ...any,
+          ...42,
+        }
+        function Foo(props: FooProps) {
+          return <p />;
+        }
+      `,
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Person = {',
@@ -1526,7 +1671,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Person = {',
@@ -1539,7 +1684,7 @@ ruleTester.run('prop-types', rule, {
         '}'
       ].join('\n'),
       settings: {react: {flowVersion: '0.52'}},
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Person = {',
@@ -1552,7 +1697,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Person = {',
@@ -1566,7 +1711,7 @@ ruleTester.run('prop-types', rule, {
         '}'
       ].join('\n'),
       settings: {react: {flowVersion: '0.52'}},
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Props = {name: {firstname: string;};};',
@@ -1576,7 +1721,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Props = {name: {firstname: string;};};',
@@ -1587,7 +1732,7 @@ ruleTester.run('prop-types', rule, {
         '}'
       ].join('\n'),
       settings: {react: {flowVersion: '0.52'}},
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Note = {text: string, children?: Note[]};',
@@ -1601,7 +1746,7 @@ ruleTester.run('prop-types', rule, {
         '}'
       ].join('\n'),
       settings: {react: {flowVersion: '0.52'}},
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'import type Props from "fake";',
@@ -1611,7 +1756,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'import type Props from "fake";',
@@ -1622,7 +1767,7 @@ ruleTester.run('prop-types', rule, {
         '}'
       ].join('\n'),
       settings: {react: {flowVersion: '0.52'}},
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Person = {',
@@ -1634,7 +1779,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Person = {',
@@ -1647,7 +1792,7 @@ ruleTester.run('prop-types', rule, {
         '}'
       ].join('\n'),
       settings: {react: {flowVersion: '0.52'}},
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Props = {result?: {ok?: ?string | boolean;}|{ok?: ?number | Array}};',
@@ -1657,7 +1802,7 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Props = {result?: {ok?: ?string | boolean;}|{ok?: ?number | Array}};',
@@ -1668,7 +1813,7 @@ ruleTester.run('prop-types', rule, {
         '}'
       ].join('\n'),
       settings: {react: {flowVersion: '0.52'}},
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: `
         type Props = {
@@ -1681,7 +1826,21 @@ ruleTester.run('prop-types', rule, {
           }
         }
       `,
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
+    }, {
+      code: `
+        type Props = {
+          foo: string,
+        };
+
+        class Bar extends React.Component<Props> {
+          render() {
+            return <div>{this.props.foo}</div>
+          }
+        }
+      `,
+      settings: {react: {flowVersion: '0.52'}},
+      parser: parsers.BABEL_ESLINT
     }, {
       code: `
         type Props = {
@@ -1695,7 +1854,7 @@ ruleTester.run('prop-types', rule, {
         }
       `,
       settings: {react: {flowVersion: '0.53'}},
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: `
         type FancyProps = {
@@ -1708,7 +1867,7 @@ ruleTester.run('prop-types', rule, {
           }
         }
       `,
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: `
         type FancyProps = {
@@ -1722,7 +1881,7 @@ ruleTester.run('prop-types', rule, {
         }
       `,
       settings: {react: {flowVersion: '0.53'}},
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: `
         type PropsA = { foo: string };
@@ -1737,7 +1896,7 @@ ruleTester.run('prop-types', rule, {
           }
         }
       `,
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: `
         type PropsA = { foo: string };
@@ -1753,7 +1912,7 @@ ruleTester.run('prop-types', rule, {
           }
         }
       `,
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: `
         import type { PropsA } from "./myPropsA";
@@ -1769,7 +1928,7 @@ ruleTester.run('prop-types', rule, {
           }
         }
       `,
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: `
         type PropsA = { bar: string };
@@ -1786,7 +1945,7 @@ ruleTester.run('prop-types', rule, {
           }
         }
       `,
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: `
         type PropsA = { bar: string };
@@ -1803,7 +1962,7 @@ ruleTester.run('prop-types', rule, {
           }
         }
       `,
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: `
         type Props = { foo: string }
@@ -1815,7 +1974,7 @@ ruleTester.run('prop-types', rule, {
           }
         }
       `,
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: `
         function higherOrderComponent<P: { foo: string }>() {
@@ -1826,7 +1985,7 @@ ruleTester.run('prop-types', rule, {
           }
         }
       `,
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: `
         const withOverlayState = <P: {foo: string}>(WrappedComponent: ComponentType<P>): CpmponentType<P> => (
@@ -1841,7 +2000,7 @@ ruleTester.run('prop-types', rule, {
           }
         )
       `,
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
 
     // issue #1288
@@ -1879,7 +2038,7 @@ ruleTester.run('prop-types', rule, {
         ...SharedPropTypes // eslint-disable-line object-shorthand
       };
     `,
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: `
@@ -1898,11 +2057,1111 @@ ruleTester.run('prop-types', rule, {
         }
       }
     `,
-      parser: 'babel-eslint'
-    }
-  ],
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: `
+        const Slider = props => (
+          <RcSlider {...props} />
+        );
 
-  invalid: [
+        Slider.propTypes = RcSlider.propTypes;
+      `
+    },
+    {
+      code: `
+        const Slider = props => (
+          <RcSlider foo={props.bar} />
+        );
+
+        Slider.propTypes = RcSlider.propTypes;
+      `
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          bar() {
+            this.setState((state, props) => ({ current: props.current }));
+          }
+          render() {
+            return <div />;
+          }
+        }
+
+        Foo.propTypes = {
+          current: PropTypes.number.isRequired,
+        };
+      `
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          bar() {
+            this.setState((state, props) => {
+              function f(_, {aaaaaaa}) {}
+            });
+          }
+        }
+      `
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          static getDerivedStateFromProps(props) {
+            const { foo } = props;
+            return {
+              foobar: foo
+            };
+          }
+
+          render() {
+            const { foobar } = this.state;
+            return <div>{foobar}</div>;
+          }
+        }
+
+        Foo.propTypes = {
+          foo: PropTypes.func.isRequired,
+        };
+      `,
+      settings: {react: {version: '16.3.0'}}
+    },
+    {
+      code: `
+        const HeaderBalance = React.memo(({ cryptoCurrency }) => (
+          <div className="header-balance">
+            <div className="header-balance__balance">
+              BTC
+              {cryptoCurrency}
+            </div>
+          </div>
+        ));
+        HeaderBalance.propTypes = {
+          cryptoCurrency: PropTypes.string
+        };
+      `
+    },
+    {
+      code: `
+        import React, { memo } from 'react';
+        const HeaderBalance = memo(({ cryptoCurrency }) => (
+          <div className="header-balance">
+            <div className="header-balance__balance">
+              BTC
+              {cryptoCurrency}
+            </div>
+          </div>
+        ));
+        HeaderBalance.propTypes = {
+          cryptoCurrency: PropTypes.string
+        };
+      `
+    },
+    {
+      code: `
+        import Foo, { memo } from 'foo';
+        const HeaderBalance = memo(({ cryptoCurrency }) => (
+          <div className="header-balance">
+            <div className="header-balance__balance">
+              BTC
+              {cryptoCurrency}
+            </div>
+          </div>
+        ));
+        HeaderBalance.propTypes = {
+          cryptoCurrency: PropTypes.string
+        };
+      `,
+      settings: {
+        react: {
+          pragma: 'Foo'
+        }
+      }
+    },
+    {
+      code: `
+        const Label = React.forwardRef(({ text }, ref) => {
+          return <div ref={ref}>{text}</div>;
+        });
+        Label.propTypes = {
+          text: PropTypes.string,
+        };
+      `
+    },
+    {
+      code: `
+        const Label = Foo.forwardRef(({ text }, ref) => {
+          return <div ref={ref}>{text}</div>;
+        });
+        Label.propTypes = {
+          text: PropTypes.string,
+        };
+      `,
+      settings: {
+        react: {
+          pragma: 'Foo'
+        }
+      }
+    },
+    {
+      code: `
+        import React, { forwardRef } from 'react';
+        const Label = forwardRef(({ text }, ref) => {
+          return <div ref={ref}>{text}</div>;
+        });
+        Label.propTypes = {
+          text: PropTypes.string,
+        };
+      `
+    },
+    {
+      code: `
+        import Foo, { forwardRef } from 'foo';
+        const Label = forwardRef(({ text }, ref) => {
+          return <div ref={ref}>{text}</div>;
+        });
+        Label.propTypes = {
+          text: PropTypes.string,
+        };
+      `,
+      settings: {
+        react: {
+          pragma: 'Foo'
+        }
+      }
+    },
+    {
+      code: `
+      class Foo extends React.Component {
+        propTypes = {
+          actions: PropTypes.object.isRequired,
+        };
+        componentWillReceiveProps (nextProps) {
+          this.props.actions.doSomething();
+        }
+
+        componentWillUnmount () {
+          this.props.actions.doSomething();
+        }
+
+        render() {
+          return <div>foo</div>;
+        }
+      }
+      `,
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: `
+      class Foo extends React.Component {
+        componentDidUpdate() { this.inputRef.focus(); }
+        render() {
+          return (
+            <div>
+              <input ref={(node) => { this.inputRef = node; }} />
+            </div>
+          )
+        }
+      }
+      `
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          componentDidUpdate(nextProps, nextState) {
+            const {
+                first_organization,
+                second_organization,
+            } = this.state;
+            return true;
+          }
+          render() {
+            return <div>hi</div>;
+          }
+        }
+      `
+    },
+    {
+      code: `
+      class Foo extends React.Component {
+        shouldComponentUpdate(nextProps) {
+          if (this.props.search !== nextProps.search) {
+            let query = nextProps.query;
+            let result = nextProps.list.filter(item => {
+              return (item.name.toLowerCase().includes(query.trim().toLowerCase()));
+            });
+
+            this.setState({ result });
+
+            return true;
+          }
+        }
+        render() {
+          return <div>foo</div>;
+        }
+      }
+      Foo.propTypes = {
+        search: PropTypes.object,
+        list: PropTypes.array,
+        query: PropTypes.string,
+      };
+      `
+    },
+    {
+      code: [
+        'export default class LazyLoader extends Component {',
+        '  static propTypes = {',
+        '    children: PropTypes.node,',
+        '    load: PropTypes.any,',
+        '  };',
+        '  state = { mod: null };',
+        '  shouldComponentUpdate(prevProps) {',
+        '    assert(prevProps.load === this.props.load);',
+        '    return true;',
+        '  }',
+        '  load() {',
+        '    this.props.load(mod => {',
+        '      this.setState({',
+        '        mod: mod.default ? mod.default : mod',
+        '      });',
+        '    });',
+        '  }',
+        '  render() {',
+        '    if (this.state.mod !== null) {',
+        '      return this.props.children(this.state.mod);',
+        '    }',
+        '    this.load();',
+        '    return null;',
+        '  }',
+        '}'
+      ].join('\n'),
+      parser: parsers.BABEL_ESLINT
+    }, {
+      code: `
+        import React from 'react';
+        import PropTypes from 'prop-types';
+        import {connect} from 'react-redux';
+
+        class Foo extends React.Component {
+          render() {
+            return this.props.children;
+          }
+        }
+
+        Foo.propTypes = {
+          children: PropTypes.element.isRequired
+        };
+
+        export const Unconnected = Foo;
+        export default connect(Foo);
+      `
+    }, {
+      code: `
+        const a = {};
+        function fn1() {}
+        const b = a::fn1();
+      `,
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      // issue #2138
+      code: `
+        type UsedProps = {|
+          usedProp: number,
+        |};
+
+        type UnusedProps = {|
+          unusedProp: number,
+        |};
+
+        type Props = {| ...UsedProps, ...UnusedProps |};
+
+        function MyComponent({ usedProp }: Props) {
+          return <div>{usedProp}</div>;
+        }
+      `,
+      parser: parsers.BABEL_ESLINT,
+      errors: [{
+        message: "'notOne' is missing in props validation",
+        line: 8,
+        column: 34
+      }]
+    },
+    {
+      // issue #1259
+      code: `
+        const Hello = props => {
+          const { notInProp } = dict[props.foo];
+          return <div />
+        }
+
+        Hello.propTypes = {
+          foo: PropTypes.number,
+        }
+      `
+    },
+    {
+      // issue #2298
+      code: `
+      type Props = {|
+        firstname?: string
+      |};
+
+      function Hello({ firstname = 'John' }: Props = {}) {
+        return <div>Hello {firstname}</div>
+      }
+      `,
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      // issue #2326
+      code: `
+        for (const {result} of results) {}
+      `
+    },
+    {
+      // issue #2330
+      code: `
+        type Props = {
+          user: {
+            [string]: string
+          }
+        };
+
+        export function Bar(props: Props) {
+          return (
+            <div>
+              {props.user}
+              {props.user.name}
+            </div>
+          );
+        }
+      `,
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: `
+        const Label = React.memo(React.forwardRef(({ text }, ref) => {
+          return <div ref={ref}>{text}</div>;
+        }));
+        Label.propTypes = {
+          text: PropTypes.string
+        };
+      `
+    },
+    {
+      code: `
+        import React, { memo, forwardRef } from 'react';
+        const Label = memo(forwardRef(({ text }, ref) => {
+          return <div ref={ref}>{text}</div>;
+        }));
+        Label.propTypes = {
+          text: PropTypes.string
+        };
+      `
+    },
+    {
+      code: `
+        import Foo, { memo, forwardRef } from 'foo';
+        const Label = memo(forwardRef(({ text }, ref) => {
+          return <div ref={ref}>{text}</div>;
+        }));
+        Label.propTypes = {
+          text: PropTypes.string
+        };
+      `,
+      settings: {
+        react: {
+          pragma: 'Foo'
+        }
+      }
+    },
+    {
+      code: `
+        const Foo = ({length, ordering}) => (
+          length > 0 && (
+            <Paginator items={ordering} pageSize={10} />
+          )
+        );
+        Foo.propTypes = {
+          length: PropTypes.number,
+          ordering: PropTypes.array
+        };
+      `
+    },
+    // shouldn't trigger this rule since functions stating with a lowercase
+    // letter are not considered components
+    `
+      function noAComponent(props) {
+        return <div>{props.text}</div>
+      }
+    `,
+    {
+      code: `
+      export default function() {}
+      `
+    },
+    {
+      code: `
+        function Component(props) {
+          return 0,
+          <div>
+            Hello, { props.name }!
+          </div>
+        }
+
+        Component.propTypes = {
+          name: PropTypes.string.isRequired
+        }
+      `
+    },
+    {
+      code: `
+      const SideMenu = styled(
+        ({ componentId }) => (
+          <S.Container>
+            <S.Head />
+            <UserInfo />
+            <Separator />
+            <MenuList componentId={componentId} />
+          </S.Container>
+        ),
+      );
+      SideMenu.propTypes = {
+        componentId: PropTypes.string.isRequired
+      }
+      `,
+      settings: {
+        componentWrapperFunctions: [{property: 'styled'}]
+      }
+    },
+    parsers.TS([
+      {
+        code: `
+          interface Props {
+            'aria-label': string // 'undefined' PropType is defined but prop is never used eslint(react/no-unused-prop-types)
+            // 'undefined' PropType is defined but prop is never used eslint(react-redux/no-unused-prop-types)
+          }
+
+          export default function Component({
+            'aria-label': ariaLabel, // 'aria-label' is missing in props validation eslint(react/prop-types)
+          }: Props): JSX.Element {
+            return <div aria-label={ariaLabel} />
+          }
+        `,
+        parser: parsers.TYPESCRIPT_ESLINT
+      },
+      {
+        code: `
+          interface Props {
+            value?: string;
+          }
+
+          // without the | null, all ok, with it, it is broken
+          function Test ({ value }: Props): React.ReactElement<Props> | null {
+            if (!value) {
+              return null;
+            }
+
+            return <div>{value}</div>;
+          }
+        `,
+        parser: parsers.TYPESCRIPT_ESLINT
+      },
+      {
+        code: `
+          interface Props {
+            value?: string;
+          }
+
+          // without the | null, all ok, with it, it is broken
+          function Test ({ value }: Props): React.ReactElement<Props> | null {
+            if (!value) {
+              return <div>{value}</div>;;
+            }
+
+            return null;
+          }
+        `,
+        parser: parsers.TYPESCRIPT_ESLINT
+      },
+      {
+        code: `
+          interface Props {
+            value?: string;
+          }
+          const Hello = (props: Props) => {
+            if (props.value) {
+              return <div></div>;
+            }
+            return null;
+          }
+        `,
+        parser: parsers.TYPESCRIPT_ESLINT
+      },
+      {
+        code: `
+          interface Props {
+            'aria-label': string // 'undefined' PropType is defined but prop is never used eslint(react/no-unused-prop-types)
+            // 'undefined' PropType is defined but prop is never used eslint(react-redux/no-unused-prop-types)
+          }
+
+          export default function Component({
+            'aria-label': ariaLabel, // 'aria-label' is missing in props validation eslint(react/prop-types)
+          }: Props): JSX.Element {
+            return <div aria-label={ariaLabel} />
+          }
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      // shouldn't trigger this rule for 'render' since functions stating with a lowercase
+      // letter are not considered components
+      {
+        code: `
+        const MyComponent = (props) => {
+          const render = () => {
+            return <test>{props.hello}</test>;
+          }
+          return render();
+        };
+        MyComponent.propTypes = {
+          hello: PropTypes.string.isRequired,
+        };
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      {
+        code: `
+          interface Props {
+            value?: string;
+          }
+
+          // without the | null, all ok, with it, it is broken
+          function Test ({ value }: Props): React.ReactElement<Props> | null {
+            if (!value) {
+              return null;
+            }
+            return <div>{value}</div>;
+          }
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      {
+        code: `
+          interface Props {
+            value?: string;
+          }
+
+          // without the | null, all ok, with it, it is broken
+          function Test ({ value }: Props): React.ReactElement<Props> | null {
+            if (!value) {
+              return <div>{value}</div>;;
+            }
+
+            return null;
+          }
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      {
+        code: `
+          interface Props {
+            value?: string;
+          }
+          const Hello = (props: Props) => {
+            if (props.value) {
+              return <div></div>;
+            }
+            return null;
+          }
+        `,
+        parser: parsers.TYPESCRIPT_ESLINT
+      },
+      {
+        code: `
+          import * as React from 'react';
+
+          interface Props {
+            text: string;
+          }
+
+          export const Test: React.FC<Props> = (props: Props) => {
+            const createElement = (text: string) => {
+              return (
+                <div>
+                  {text}
+                </div>
+              );
+            };
+
+            return <>{createElement(props.text)}</>;
+          };
+        `,
+        parser: parsers.TYPESCRIPT_ESLINT
+      },
+      {
+        code: `
+          interface Props {
+            value?: string;
+          }
+          const Hello = (props: Props) => {
+            if (props.value) {
+              return <div></div>;
+            }
+            return null;
+          }
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      {
+        code: `
+          const mapStateToProps = state => ({
+            books: state.books
+          });
+
+          interface InfoLibTableProps extends ReturnType<typeof mapStateToProps> {
+          }
+
+          const App = (props: InfoLibTableProps) => {
+            props.books();
+            return <div></div>;
+          }
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      {
+        code: `
+          const mapStateToProps = state => ({
+            books: state.books
+          });
+
+          interface BooksTable extends ReturnType<typeof mapStateToProps> {
+            username: string;
+          }
+
+          const App = (props: BooksTable) => {
+            props.books();
+            return <div><span>{props.username}</span></div>;
+          }
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      {
+        code: `
+          interface infoLibTable {
+            removeCollection(): Array<string>;
+          }
+
+          interface InfoLibTableProps extends ReturnType<(dispatch: storeDispatch) => infoLibTable> {
+          }
+
+          const App = (props: InfoLibTableProps) => {
+            props.removeCollection();
+            return <div></div>;
+          }
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      {
+        code: `
+          interface addTable {
+            createCollection: () => Array<string>
+          }
+
+          type infoLibTable = addTable & {
+            removeCollection: () => Array<string>
+          }
+
+          interface InfoLibTableProps extends ReturnType<(dispatch: storeDispatch) => infoLibTable> {
+          }
+
+          const App = (props: InfoLibTableProps) => {
+            props.createCollection();
+            props.removeCollection();
+            return <div></div>;
+          }
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      {
+        code: `
+          interface InfoLibTableProps extends ReturnType<(dispatch: storeDispatch) => {
+            removeCollection:  () => Array<string>,
+          }> {
+          }
+
+          const App = (props: InfoLibTableProps) => {
+            props.removeCollection();
+            return <div></div>;
+          }
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      {
+        code: `
+          interface addTable {
+            createCollection: () => Array<string>;
+          }
+
+          type infoLibTable = {
+            removeCollection: () => Array<string>,
+          };
+
+          interface InfoLibTableProps extends  ReturnType<
+          (dispatch: storeDispatch) => infoLibTable & addTable,
+          >{}
+
+          const App = (props: InfoLibTableProps) => {
+            props.createCollection();
+            props.removeCollection();
+            return <div></div>;
+          };
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      {
+        code: `
+          interface addTable {
+            createCollection: () => Array<string>;
+          }
+
+          type infoLibTable = ReturnType<(dispatch: storeDispatch) => infoLibTable & addTable> & {
+            removeCollection: () => Array<string>,
+          };
+
+          interface InfoLibTableProps {}
+
+          const App = (props: infoLibTable) => {
+            props.createCollection();
+            props.removeCollection();
+            return <div></div>;
+          };
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      {
+        code: `
+          interface InfoLibTableProps extends ReturnType<(dispatch: storeDispatch) => ({
+            removeCollection:  () => Array<string>,
+          })> {
+          }
+
+          const App = (props: InfoLibTableProps) => {
+            props.removeCollection();
+            return <div></div>;
+          }
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      {
+        code: `
+          interface ThingProps extends React.HTMLAttributes<HTMLDivElement> {
+            thing?: number
+          }
+
+          export const Thing = ({ thing = 1, style, ...props }: ThingProps) => {
+            return <div />;
+          }
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      {
+        code: `
+          interface ThingProps {
+            thing?: number
+          }
+
+          export const Thing = ({ thing = 1, style, ...props }: ThingProps & React.HTMLAttributes<HTMLDivElement>) => {
+            return <div />;
+          }
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      {
+        code: `
+          type User = {
+            user: string;
+          }
+
+          type Props = User & UserProps;
+
+          export default (props: Props) => {
+            const { userId, user } = props;
+
+            if (userId === 0) {
+              return <p>userId is 0</p>;
+            }
+
+            return null;
+          };
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      {
+        code: `
+          type User = {
+          }
+
+          type Props = User & UserProps;
+
+          export default (props: Props) => {
+            const { user } = props;
+
+            if (user === 0) {
+              return <p>user is 0</p>;
+            }
+
+            return null;
+          };
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      {
+        code: `
+          interface GenericProps {
+            onClose: () => void
+          }
+
+          interface ImplementationProps extends GenericProps {
+            onClick: () => void
+          }
+
+          export const Implementation: FC<ImplementationProps> = (
+            {
+              onClick,
+              onClose,
+            }: ImplementationProps
+          ) => (<div />)
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      {
+        code: `
+          interface Props extends V2SocialLoginProps {
+            autoLoad: boolean;
+          }
+
+          export const DKFacebookButton = ({
+            autoLoad,
+            authAction,
+            errorHandler,
+            redirectUrl,
+            isSignup,
+          }: Props): JSX.Element | null => {
+            if (!APP_ID) {
+              rollbar.error('Missing Facebook OAuth App Id');
+              return null;
+            }
+
+            const fbButtonText = isSignup ? 'Sign up with Facebook' : 'Log in with Facebook';
+
+            const responseCallback = async ({
+              accessToken,
+              email = '',
+              name = '',
+            }: ReactFacebookLoginInfo) => {
+              const [firstName, lastName] = name.split(' ');
+
+              const requestData: DK.SocialLogin = {
+                accessToken,
+                email,
+                firstName,
+                lastName,
+                intercomUserId: intercomService.getVisitorId(),
+              };
+
+              try {
+                await authAction(requestData, redirectUrl);
+              } catch (err) {
+                errorHandler(err.message);
+              }
+            };
+
+            const FacebookIcon = () => (
+              <img
+                style={{ marginRight: '8px' }}
+                src={facebookIcon}
+                alt='Facebook Login'
+              />
+            );
+
+            return (
+              <FacebookLogin
+                cssClass='ant-btn dk-button dk-facebook-button dk-button--secondary ant-btn-primary ant-btn-lg'
+                autoLoad={autoLoad}
+                textButton={fbButtonText}
+                size='small'
+                icon={<FacebookIcon />}
+                appId={APP_ID}
+                fields='name,email'
+                callback={responseCallback}
+                data-testId='dk-facebook-button'
+              />
+            );
+          };
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      {
+        code: `
+          function Foo({ bar = "" }: { bar: string }): JSX.Element {
+            return <div>{bar}</div>;
+          }
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      // Issue: #2795
+      {
+        code: `
+        type ConnectedProps = DispatchProps &
+          StateProps
+
+        const Component = ({ prop1, prop2, prop3 }: ConnectedProps) => {
+          // Do stuff
+          return (
+            <StyledComponent>...</StyledComponent>
+          )
+        }
+
+        const mapDispatchToProps = (dispatch: ThunkDispatch<State, null, Action>) => ({
+          ...bindActionCreators<{prop1: ()=>void,prop2: ()=>string}>(
+            { prop1: importedAction, prop2: anotherImportedAction },
+            dispatch,
+          ),
+        })
+
+        const mapStateToProps = (state: State) => ({
+          prop3: Selector.value(state),
+        })
+
+        type StateProps = ReturnType<typeof mapStateToProps>
+        type DispatchProps = ReturnType<typeof mapDispatchToProps>`,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      // Issue: #2795
+      {
+        code: `
+        type ConnectedProps = DispatchProps &
+          StateProps
+
+        const Component = ({ prop1, prop2, prop3 }: ConnectedProps) => {
+          // Do stuff
+          return (
+            <StyledComponent>...</StyledComponent>
+          )
+        }
+
+        const mapDispatchToProps = (dispatch: ThunkDispatch<State, null, Action>) => ({
+          ...bindActionCreators<ActionCreatorsMapObject<Types.RootAction>>(
+            { prop1: importedAction, prop2: anotherImportedAction },
+            dispatch,
+          ),
+        })
+
+        const mapStateToProps = (state: State) => ({
+          prop3: Selector.value(state),
+        })
+
+        type StateProps = ReturnType<typeof mapStateToProps>
+        type DispatchProps = ReturnType<typeof mapDispatchToProps>`,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      // Issue: #2795
+      {
+        code: `
+        type ConnectedProps = DispatchProps &
+          StateProps
+
+        const Component = ({ prop1, prop2, prop3 }: ConnectedProps) => {
+          // Do stuff
+          return (
+            <StyledComponent>...</StyledComponent>
+          )
+        }
+
+        const mapDispatchToProps = (dispatch: ThunkDispatch<State, null, Action>) =>
+          bindActionCreators<{prop1: ()=>void,prop2: ()=>string}>(
+            { prop1: importedAction, prop2: anotherImportedAction },
+            dispatch,
+          )
+
+        const mapStateToProps = (state: State) => ({
+          prop3: Selector.value(state),
+        })
+
+        type StateProps = ReturnType<typeof mapStateToProps>
+        type DispatchProps = ReturnType<typeof mapDispatchToProps>`,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      {
+        code: `
+        import React from 'react'
+
+        interface Meta {
+          touched: boolean,
+          error: string;
+        }
+
+        interface Props {
+          input: string,
+          meta: Meta,
+          cssClasses: object
+        }
+        const InputField = ({ input, meta: { touched, error }, cssClasses = {}, ...restProps }: Props) => {
+          restProps.className = cssClasses.base
+
+          if (cssClasses.custom) {
+            restProps.className += 'cssClasses.custom'
+          }
+          if (touched && error) {
+            restProps.className += 'cssClasses.error'
+          }
+
+          return(
+            <input
+              {...input}
+              {...restProps}
+            />
+          )
+        }
+        export default InputField`,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      {
+        code: `
+          import React from 'react'
+
+          type ComponentProps = {
+            name: string
+          }
+
+          class Factory {
+            getComponent() {
+              return function Component({ name }: ComponentProps) {
+                return <div>Hello {name}</div>
+              }
+            }
+          }
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      }
+    ]),
+    {
+      code: `
+        import React from 'react'
+
+        class Factory {
+          getRenderFunction() {
+            return function renderFunction({ name }) {
+              return <div>Hello {name}</div>
+            }
+          }
+        }
+      `
+    }
+  ),
+
+  invalid: [].concat(
     {
       code: [
         'type Props = {',
@@ -1916,12 +3175,13 @@ ruleTester.run('prop-types', rule, {
         '}'
       ].join('\n'),
       errors: [{
-        message: '\'name\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'name'},
         line: 7,
         column: 23,
         type: 'Identifier'
       }],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'var Hello = createReactClass({',
@@ -1931,7 +3191,8 @@ ruleTester.run('prop-types', rule, {
         '});'
       ].join('\n'),
       errors: [{
-        message: '\'name\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'name'},
         line: 3,
         column: 54,
         type: 'Identifier'
@@ -1945,7 +3206,8 @@ ruleTester.run('prop-types', rule, {
         '});'
       ].join('\n'),
       errors: [{
-        message: '\'name\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'name'},
         line: 3,
         column: 35,
         type: 'Identifier'
@@ -1959,10 +3221,202 @@ ruleTester.run('prop-types', rule, {
         '}'
       ].join('\n'),
       errors: [{
-        message: '\'name\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'name'},
         line: 3,
         column: 35,
         type: 'Identifier'
+      }]
+    }, {
+      code: `
+        class Hello extends React.Component {
+          render() {
+            const { foo: { bar } } = this.props;
+            return <p>{bar}</p>
+          }
+        }
+      `,
+      errors: [
+        {message: "'foo' is missing in props validation"},
+        {message: "'foo.bar' is missing in props validation"}
+      ]
+    }, {
+      code: `
+        class Hello extends React.Component {
+          render() {
+            const { foo: { bar } } = this.props;
+            return <p>{bar}</p>
+          }
+        }
+
+        Hello.propTypes = {
+          foo: PropTypes.shape({
+            _: PropTypes.string,
+          })
+        }
+      `,
+      errors: [
+        {message: "'foo.bar' is missing in props validation"}
+      ]
+    }, {
+      code: `
+        function Foo({ foo: { bar } }) {
+          return <p>{bar}</p>
+        }
+      `,
+      errors: [
+        {message: "'foo' is missing in props validation"},
+        {message: "'foo.bar' is missing in props validation"}
+      ]
+    },
+    {
+      code: `
+        function Foo({ a }) {
+          return <p>{ a.nope }</p>
+        }
+
+        Foo.propTypes = {
+          a: PropTypes.shape({
+            _: PropType.string,
+          })
+        }
+      `,
+      errors: [
+        {message: "'a.nope' is missing in props validation"}
+      ]
+    },
+    {
+      code: `
+        function Foo({ a }) {
+          const { b } = a
+          return <p>{ b.nope }</p>
+        }
+
+        Foo.propTypes = {
+          a: PropTypes.shape({
+            b: PropType.shape({
+              _: PropType.string,
+            }),
+          })
+        }
+      `,
+      errors: [
+        {message: "'a.b.nope' is missing in props validation"}
+      ]
+    },
+    {
+      code: `
+        function Foo(props) {
+          const { a } = props
+          return <p>{ a.nope }</p>
+        }
+
+        Foo.propTypes = {
+          a: PropTypes.shape({
+            _: PropType.string,
+          })
+        }
+      `,
+      errors: [
+        {message: "'a.nope' is missing in props validation"}
+      ]
+    },
+    {
+      code: `
+        function Foo(props) {
+          const a = props.a
+          return <p>{ a.nope }</p>
+        }
+
+        Foo.propTypes = {
+          a: PropTypes.shape({
+            _: PropType.string,
+          })
+        }
+      `,
+      errors: [
+        {message: "'a.nope' is missing in props validation"}
+      ]
+    },
+    {
+      code: `
+        class Foo extends Component {
+          render() {
+            const props = this.props
+            return <div>{props.cat}</div>
+          }
+        }
+      `,
+      errors: [
+        {message: "'cat' is missing in props validation"}
+      ]
+    },
+    {
+      code: `
+        class Foo extends Component {
+          render() {
+            const {props} = this
+            return <div>{props.cat}</div>
+          }
+        }
+      `,
+      errors: [
+        {message: "'cat' is missing in props validation"}
+      ]
+    }, {
+      code: [
+        'class Hello extends React.Component {',
+        '  render() {',
+        '    const { name, ...rest } = this.props',
+        '    return <div>Hello</div>;',
+        '  }',
+        '}'
+      ].join('\n'),
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'name'},
+        line: 3,
+        column: 13,
+        type: 'Property'
+      }]
+    }, {
+      code: [
+        'class Hello extends React.Component {',
+        '  render() {',
+        '    const { name, title, ...rest } = this.props',
+        '    return <div>Hello</div>;',
+        '  }',
+        '}',
+        'Hello.propTypes = {',
+        '  name: PropTypes.string',
+        '}'
+      ].join('\n'),
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'title'},
+        line: 3,
+        column: 19,
+        type: 'Property'
+      }]
+    }, {
+      code: [
+        'class Hello extends React.Component {',
+        '   renderStuff() {',
+        '    const { name, ...rest } = this.props',
+        '    return (<div {...rest}>{name}</div>);',
+        '  }',
+        '  render() {',
+        '    this.renderStuff()',
+        '  }',
+        '}',
+        'Hello.propTypes = {}'
+      ].join('\n'),
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'name'},
+        line: 3,
+        column: 13,
+        type: 'Property'
       }]
     }, {
       code: [
@@ -1974,7 +3428,8 @@ ruleTester.run('prop-types', rule, {
         '}'
       ].join('\n'),
       errors: [{
-        message: '\'name\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'name'},
         line: 4,
         column: 35,
         type: 'Identifier'
@@ -1991,7 +3446,8 @@ ruleTester.run('prop-types', rule, {
         '};'
       ].join('\n'),
       errors: [{
-        message: '\'lastname\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'lastname'}
       }]
     }, {
       code: [
@@ -2010,7 +3466,8 @@ ruleTester.run('prop-types', rule, {
         '}'
       ].join('\n'),
       errors: [{
-        message: '\'name\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'name'}
       }]
     }, {
       code: [
@@ -2029,9 +3486,11 @@ ruleTester.run('prop-types', rule, {
         '});'
       ].join('\n'),
       errors: [{
-        message: '\'propWithoutTypeDefinition\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'propWithoutTypeDefinition'}
       }, {
-        message: '\'name\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'name'}
       }]
     }, {
       code: [
@@ -2046,7 +3505,8 @@ ruleTester.run('prop-types', rule, {
         '};'
       ].join('\n'),
       errors: [{
-        message: '\'lastname\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'lastname'}
       }]
     }, {
       code: [
@@ -2059,9 +3519,10 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: '\'firstname\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'firstname'}
       }]
     }, {
       code: [
@@ -2077,7 +3538,8 @@ ruleTester.run('prop-types', rule, {
         '};'
       ].join('\n'),
       errors: [{
-        message: '\'a.b\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'a.b'}
       }]
     }, {
       code: [
@@ -2095,7 +3557,25 @@ ruleTester.run('prop-types', rule, {
         '};'
       ].join('\n'),
       errors: [{
-        message: '\'a.b.c\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'a.b.c'}
+      }]
+    }, {
+      code: [
+        'class Hello extends React.Component {',
+        '  render() {',
+        '    this.props.a.b.c;',
+        '    return <div>Hello</div>;',
+        '  }',
+        '}',
+        'Hello.propTypes = {',
+        '  a: PropTypes.shape({})',
+        '};',
+        'Hello.propTypes.a.b = PropTypes.shape({});'
+      ].join('\n'),
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'a.b.c'}
       }]
     }, {
       code: [
@@ -2115,10 +3595,22 @@ ruleTester.run('prop-types', rule, {
         '};'
       ].join('\n'),
       errors: [
-        {message: '\'a.b.c\' is missing in props validation'},
-        {message: '\'a.__.d\' is missing in props validation'},
-        {message: '\'a.__.d.length\' is missing in props validation'},
-        {message: '\'a.anything.e\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'a.b.c'}
+        },
+        {
+          messageId: 'missingPropType',
+          data: {name: 'a.__.d'}
+        },
+        {
+          messageId: 'missingPropType',
+          data: {name: 'a.__.d.length'}
+        },
+        {
+          messageId: 'missingPropType',
+          data: {name: 'a.anything.e'}
+        }
       ]
     }, {
       code: [
@@ -2140,10 +3632,22 @@ ruleTester.run('prop-types', rule, {
         '};'
       ].join('\n'),
       errors: [
-        {message: '\'a[].c\' is missing in props validation'},
-        {message: '\'a[].d\' is missing in props validation'},
-        {message: '\'a[].d.length\' is missing in props validation'},
-        {message: '\'a[].e\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'a[].c'}
+        },
+        {
+          messageId: 'missingPropType',
+          data: {name: 'a[].d'}
+        },
+        {
+          messageId: 'missingPropType',
+          data: {name: 'a[].d.length'}
+        },
+        {
+          messageId: 'missingPropType',
+          data: {name: 'a[].e'}
+        }
       ]
     }, {
       code: [
@@ -2168,8 +3672,14 @@ ruleTester.run('prop-types', rule, {
         '};'
       ].join('\n'),
       errors: [
-        {message: '\'a.length\' is missing in props validation'},
-        {message: '\'a.b\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'a.length'}
+        },
+        {
+          messageId: 'missingPropType',
+          data: {name: 'a.b'}
+        }
       ]
     }, {
       code: [
@@ -2186,9 +3696,12 @@ ruleTester.run('prop-types', rule, {
         '  "aria-controls": PropTypes.string',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'propX\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'propX'}
+        }
       ]
     }, {
       code: [
@@ -2202,7 +3715,10 @@ ruleTester.run('prop-types', rule, {
         '};'
       ].join('\n'),
       errors: [
-        {message: '\'some.value\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'some.value'}
+        }
       ]
     }, {
       code: [
@@ -2216,7 +3732,10 @@ ruleTester.run('prop-types', rule, {
         '};'
       ].join('\n'),
       errors: [
-        {message: '\'arr\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'arr'}
+        }
       ]
     }, {
       code: [
@@ -2233,7 +3752,10 @@ ruleTester.run('prop-types', rule, {
         '};'
       ].join('\n'),
       errors: [
-        {message: '\'arr[].some.value\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'arr[].some.value'}
+        }
       ]
     }, {
       code: [
@@ -2246,9 +3768,12 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'firstname\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'firstname'}
+        }
       ]
     }, {
       code: [
@@ -2259,9 +3784,12 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'firstname\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'firstname'}
+        }
       ]
     }, {
       code: [
@@ -2278,9 +3806,12 @@ ruleTester.run('prop-types', rule, {
         '  lastname: PropTypes.string',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'firstname\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'firstname'}
+        }
       ]
     }, {
       code: [
@@ -2288,9 +3819,10 @@ ruleTester.run('prop-types', rule, {
         '  return <div>Hello {props.name}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: '\'name\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'name'}
       }]
     }, {
       code: [
@@ -2298,9 +3830,10 @@ ruleTester.run('prop-types', rule, {
         '  return <div>Hello {props.name}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: '\'name\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'name'}
       }]
     }, {
       code: [
@@ -2308,9 +3841,10 @@ ruleTester.run('prop-types', rule, {
         '  return <div>Hello {props.name}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: '\'name\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'name'}
       }]
     }, {
       code: [
@@ -2319,9 +3853,10 @@ ruleTester.run('prop-types', rule, {
         '  return <div>Hello {name}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: '\'name\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'name'}
       }]
     }, {
       code: [
@@ -2329,9 +3864,10 @@ ruleTester.run('prop-types', rule, {
         '  return <div>Hello {name}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: '\'name\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'name'}
       }]
     }, {
       code: [
@@ -2339,9 +3875,10 @@ ruleTester.run('prop-types', rule, {
         '  return <div>Hello {name}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: '\'name\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'name'}
       }]
     }, {
       code: [
@@ -2349,9 +3886,10 @@ ruleTester.run('prop-types', rule, {
         '  return <div>Hello {name}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: '\'name\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'name'}
       }]
     }, {
       code: [
@@ -2362,9 +3900,12 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'lastname\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'lastname'}
+        }
       ]
     }, {
       code: [
@@ -2375,9 +3916,12 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'source\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'source'}
+        }
       ]
     }, {
       code: [
@@ -2388,10 +3932,16 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'source\' is missing in props validation'},
-        {message: '\'source.uri\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'source'}
+        },
+        {
+          messageId: 'missingPropType',
+          data: {name: 'source.uri'}
+        }
       ]
     }, {
       code: [
@@ -2402,9 +3952,12 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'source\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'source'}
+        }
       ]
     }, {
       code: [
@@ -2415,10 +3968,16 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'source\' is missing in props validation'},
-        {message: '\'source.uri\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'source'}
+        },
+        {
+          messageId: 'missingPropType',
+          data: {name: 'source.uri'}
+        }
       ]
     }, {
       code: [
@@ -2432,9 +3991,12 @@ ruleTester.run('prop-types', rule, {
         '}',
         'module.exports = HelloComponent();'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'name\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'name'}
+        }
       ]
     }, {
       code: [
@@ -2448,9 +4010,12 @@ ruleTester.run('prop-types', rule, {
         '}',
         'module.exports = HelloComponent();'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'name\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'name'}
+        }
       ]
     }, {
       code: [
@@ -2468,10 +4033,16 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'firstname\' is missing in props validation'},
-        {message: '\'name\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'firstname'}
+        },
+        {
+          messageId: 'missingPropType',
+          data: {name: 'name'}
+        }
       ]
     }, {
       code: [
@@ -2482,11 +4053,20 @@ ruleTester.run('prop-types', rule, {
         '  return <ul>{team}</ul>;',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'names\' is missing in props validation'},
-        {message: '\'names.map\' is missing in props validation'},
-        {message: '\'company\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'names'}
+        },
+        {
+          messageId: 'missingPropType',
+          data: {name: 'names.map'}
+        },
+        {
+          messageId: 'missingPropType',
+          data: {name: 'company'}
+        }
       ]
     }, {
       code: [
@@ -2496,9 +4076,12 @@ ruleTester.run('prop-types', rule, {
         '  </div>',
         ')'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'text\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'text'}
+        }
       ]
     }, {
       code: [
@@ -2510,9 +4093,12 @@ ruleTester.run('prop-types', rule, {
         '  });',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'name\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'name'}
+        }
       ]
     }, {
       code: [
@@ -2528,9 +4114,12 @@ ruleTester.run('prop-types', rule, {
         '}',
         'Test.propTypes = propTypes;'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'lastname\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'lastname'}
+        }
       ]
     }, {
       code: [
@@ -2545,10 +4134,13 @@ ruleTester.run('prop-types', rule, {
         '  firstname: PropTypes.string',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint',
-      settings: settings,
+      parser: parsers.BABEL_ESLINT,
+      settings,
       errors: [
-        {message: '\'lastname\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'lastname'}
+        }
       ]
     }, {
       code: [
@@ -2563,12 +4155,15 @@ ruleTester.run('prop-types', rule, {
         '  firstname: PropTypes.string',
         '});'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       settings: Object.assign({}, settings, {
         propWrapperFunctions: ['forbidExtraProps']
       }),
       errors: [
-        {message: '\'lastname\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'lastname'}
+        }
       ]
     }, {
       code: [
@@ -2583,12 +4178,15 @@ ruleTester.run('prop-types', rule, {
         '  firstname: PropTypes.string',
         '});'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       settings: Object.assign({}, settings, {
         propWrapperFunctions: ['Object.freeze']
       }),
       errors: [
-        {message: '\'lastname\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'lastname'}
+        }
       ]
     }, {
       code: [
@@ -2604,9 +4202,12 @@ ruleTester.run('prop-types', rule, {
         '  firstname: PropTypes.string',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'lastname\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'lastname'}
+        }
       ]
     }, {
       code: [
@@ -2617,9 +4218,12 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'name\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'name'}
+        }
       ]
     }, {
       code: [
@@ -2632,9 +4236,12 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'firstname\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'firstname'}
+        }
       ]
     }, {
       code: [
@@ -2646,9 +4253,12 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'firstname\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'firstname'}
+        }
       ]
     }, {
       code: [
@@ -2663,9 +4273,12 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'name.lastname\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'name.lastname'}
+        }
       ]
     }, {
       code: [
@@ -2677,9 +4290,12 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'name.lastname\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'name.lastname'}
+        }
       ]
     }, {
       code: [
@@ -2690,9 +4306,12 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'person.name.lastname\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'person.name.lastname'}
+        }
       ]
     }, {
       code: [
@@ -2704,9 +4323,12 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'person.name.lastname\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'person.name.lastname'}
+        }
       ]
     }, {
       code: [
@@ -2722,9 +4344,12 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'people[].name.lastname\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'people[].name.lastname'}
+        }
       ]
     }, {
       code: [
@@ -2741,9 +4366,12 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'people[].name.lastname\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'people[].name.lastname'}
+        }
       ]
     }, {
       code: [
@@ -2755,9 +4383,12 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'result.notok\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'result.notok'}
+        }
       ]
     }, {
       code: [
@@ -2769,7 +4400,8 @@ ruleTester.run('prop-types', rule, {
         'Greetings.propTypes = {};'
       ].join('\n'),
       errors: [{
-        message: '\'name\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'name'}
       }]
     }, {
       code: [
@@ -2783,7 +4415,8 @@ ruleTester.run('prop-types', rule, {
         'Greetings.Hello.propTypes = {};'
       ].join('\n'),
       errors: [{
-        message: '\'name\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'name'}
       }]
     }, {
       code: [
@@ -2796,7 +4429,8 @@ ruleTester.run('prop-types', rule, {
         'Greetings.Hello.propTypes = {};'
       ].join('\n'),
       errors: [{
-        message: '\'name\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'name'}
       }]
     }, {
       code: [
@@ -2806,7 +4440,11 @@ ruleTester.run('prop-types', rule, {
         '}'
       ].join('\n'),
       errors: [{
-        message: '\'names\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'names'}
+      }, {
+        messageId: 'missingPropType',
+        data: {name: 'names.map'}
       }]
     }, {
       code: [
@@ -2815,14 +4453,16 @@ ruleTester.run('prop-types', rule, {
         ')'
       ].join('\n'),
       errors: [{
-        message: '\'toggle\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'toggle'}
       }]
     }, {
       code: [
         'const MyComponent = props => props.test ? <div /> : <span />'
       ].join('\n'),
       errors: [{
-        message: '\'test\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'test'}
       }]
     }, {
       code: [
@@ -2833,7 +4473,8 @@ ruleTester.run('prop-types', rule, {
         '})'
       ].join('\n'),
       errors: [{
-        message: '\'test\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'test'}
       }]
     }, {
       code: [
@@ -2844,9 +4485,10 @@ ruleTester.run('prop-types', rule, {
         '  return <div>Hello {firstname} {lastname}</div>;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: '\'lastname\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'lastname'}
       }]
     }, {
       code: [
@@ -2862,10 +4504,16 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'firstname\' is missing in props validation'},
-        {message: '\'lastname\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'firstname'}
+        },
+        {
+          messageId: 'missingPropType',
+          data: {name: 'lastname'}
+        }
       ]
     }, {
       code: [
@@ -2878,11 +4526,29 @@ ruleTester.run('prop-types', rule, {
         '  })',
         '};'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'name.constructor.firstname\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'name.constructor.firstname'}
+        }
       ]
-    }, {
+    },
+    {
+      code: `
+      function Hello({ foo = '' }) {
+        return <p>{foo}</p>
+      }
+    `,
+      errors: [
+        {
+          messageId: 'missingPropType',
+          data: {name: 'foo'}
+        }
+      ],
+      parser: parsers.BABEL_ESLINT
+    },
+    {
       code: [
         'function SomeComponent({bar}) {',
         '  function f({foo}) {}',
@@ -2890,7 +4556,23 @@ ruleTester.run('prop-types', rule, {
         '}'
       ].join('\n'),
       errors: [
-        {message: '\'bar\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'bar'}
+        }
+      ]
+    }, {
+      code: [
+        'function SomeComponent({bar} = baz) {',
+        '  function f({foo}) {}',
+        '  return <div className={f()}>{bar}</div>;',
+        '}'
+      ].join('\n'),
+      errors: [
+        {
+          messageId: 'missingPropType',
+          data: {name: 'bar'}
+        }
       ]
     }, {
       code: [
@@ -2901,7 +4583,8 @@ ruleTester.run('prop-types', rule, {
         '}'
       ].join('\n'),
       errors: [{
-        message: '\'name\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'name'},
         line: 3,
         column: 35,
         type: 'Identifier'
@@ -2915,7 +4598,8 @@ ruleTester.run('prop-types', rule, {
         '}'
       ].join('\n'),
       errors: [{
-        message: '\'name\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'name'},
         line: 3,
         column: 35,
         type: 'Identifier'
@@ -2929,9 +4613,10 @@ ruleTester.run('prop-types', rule, {
         '  return <div />;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: '\'b\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'b'},
         line: 4,
         column: 27,
         type: 'Property'
@@ -2947,7 +4632,8 @@ ruleTester.run('prop-types', rule, {
       ].join('\n'),
       options: [{skipUndeclared: true}],
       errors: [{
-        message: '\'firstname\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'firstname'},
         line: 4,
         column: 29
       }]
@@ -2960,7 +4646,8 @@ ruleTester.run('prop-types', rule, {
       ].join('\n'),
       options: [{skipUndeclared: true}],
       errors: [{
-        message: '\'firstname\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'firstname'},
         line: 2,
         column: 22
       }]
@@ -2977,7 +4664,8 @@ ruleTester.run('prop-types', rule, {
       ].join('\n'),
       options: [{skipUndeclared: true}],
       errors: [{
-        message: '\'firstname\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'firstname'},
         line: 6,
         column: 29
       }]
@@ -2992,7 +4680,8 @@ ruleTester.run('prop-types', rule, {
       ].join('\n'),
       options: [{skipUndeclared: true}],
       errors: [{
-        message: '\'firstname\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'firstname'},
         line: 3,
         column: 29
       }]
@@ -3006,7 +4695,8 @@ ruleTester.run('prop-types', rule, {
       ].join('\n'),
       options: [{skipUndeclared: false}],
       errors: [{
-        message: '\'firstname\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'firstname'},
         line: 3,
         column: 29
       }]
@@ -3019,9 +4709,10 @@ ruleTester.run('prop-types', rule, {
         '  return <div />;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: '\'b\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'b'},
         line: 4,
         column: 27,
         type: 'Property'
@@ -3035,9 +4726,10 @@ ruleTester.run('prop-types', rule, {
         '  return <div />;',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: '\'b\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'b'},
         line: 4,
         column: 27,
         type: 'Property'
@@ -3052,9 +4744,12 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'firstname\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'firstname'}
+        }
       ]
     }, {
       code: [
@@ -3067,9 +4762,12 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'foo\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'foo'}
+        }
       ]
     }, {
       code: [
@@ -3087,12 +4785,15 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       settings: Object.assign({}, settings, {
         propWrapperFunctions: ['forbidExtraProps']
       }),
       errors: [
-        {message: '\'foo\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'foo'}
+        }
       ]
     }, {
       code: [
@@ -3110,9 +4811,12 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'foo\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'foo'}
+        }
       ]
     }, {
       code: [
@@ -3131,9 +4835,12 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'foo\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'foo'}
+        }
       ]
     }, {
       code: [
@@ -3151,9 +4858,12 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [
-        {message: '\'foo\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'foo'}
+        }
       ]
     }, {
       code: [
@@ -3172,7 +4882,10 @@ ruleTester.run('prop-types', rule, {
         '  }'
       ].join('\n'),
       errors: [
-        {message: '\'foo\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'foo'}
+        }
       ]
     }, {
       code: [
@@ -3190,12 +4903,15 @@ ruleTester.run('prop-types', rule, {
         '  }',
         '}'
       ].join('\n'),
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       settings: Object.assign({}, settings, {
         propWrapperFunctions: ['forbidExtraProps']
       }),
       errors: [
-        {message: '\'foo\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'foo'}
+        }
       ]
     }, {
       code: [
@@ -3214,7 +4930,10 @@ ruleTester.run('prop-types', rule, {
         '  }'
       ].join('\n'),
       errors: [
-        {message: '\'foo\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'foo'}
+        }
       ]
     }, {
       code: [
@@ -3230,7 +4949,10 @@ ruleTester.run('prop-types', rule, {
         '}'
       ].join('\n'),
       errors: [
-        {message: '\'name\' is missing in props validation'}
+        {
+          messageId: 'missingPropType',
+          data: {name: 'name'}
+        }
       ]
     }, {
       code: [
@@ -3244,12 +4966,13 @@ ruleTester.run('prop-types', rule, {
         '}'
       ].join('\n'),
       errors: [{
-        message: '\'lastname\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'lastname'},
         line: 6,
         column: 35,
         type: 'Identifier'
       }],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Person = {',
@@ -3263,12 +4986,13 @@ ruleTester.run('prop-types', rule, {
       ].join('\n'),
       settings: {react: {flowVersion: '0.52'}},
       errors: [{
-        message: '\'lastname\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'lastname'},
         line: 6,
         column: 35,
         type: 'Identifier'
       }],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Person = {',
@@ -3284,12 +5008,13 @@ ruleTester.run('prop-types', rule, {
         '}'
       ].join('\n'),
       errors: [{
-        message: '\'lastname\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'lastname'},
         line: 7,
         column: 7,
         type: 'Property'
       }],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Person = {',
@@ -3306,12 +5031,13 @@ ruleTester.run('prop-types', rule, {
       ].join('\n'),
       settings: {react: {flowVersion: '0.52'}},
       errors: [{
-        message: '\'lastname\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'lastname'},
         line: 7,
         column: 7,
         type: 'Property'
       }],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Props = {name: {firstname: string;};};',
@@ -3322,12 +5048,13 @@ ruleTester.run('prop-types', rule, {
         '}'
       ].join('\n'),
       errors: [{
-        message: '\'name.lastname\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'name.lastname'},
         line: 4,
         column: 40,
         type: 'Identifier'
       }],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Props = {name: {firstname: string;};};',
@@ -3339,12 +5066,13 @@ ruleTester.run('prop-types', rule, {
       ].join('\n'),
       settings: {react: {flowVersion: '0.52'}},
       errors: [{
-        message: '\'name.lastname\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'name.lastname'},
         line: 4,
         column: 40,
         type: 'Identifier'
       }],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Props = {result?: {ok: string | boolean;}|{ok: number | Array}};',
@@ -3355,12 +5083,13 @@ ruleTester.run('prop-types', rule, {
         '}'
       ].join('\n'),
       errors: [{
-        message: '\'result.notok\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'result.notok'},
         line: 4,
         column: 42,
         type: 'Identifier'
       }],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Props = {result?: {ok: string | boolean;}|{ok: number | Array}};',
@@ -3372,12 +5101,13 @@ ruleTester.run('prop-types', rule, {
       ].join('\n'),
       settings: {react: {flowVersion: '0.52'}},
       errors: [{
-        message: '\'result.notok\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'result.notok'},
         line: 4,
         column: 42,
         type: 'Identifier'
       }],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Person = {',
@@ -3390,12 +5120,13 @@ ruleTester.run('prop-types', rule, {
         '}'
       ].join('\n'),
       errors: [{
-        message: '\'person.lastname\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'person.lastname'},
         line: 6,
         column: 42,
         type: 'Identifier'
       }],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: [
         'type Person = {',
@@ -3409,12 +5140,13 @@ ruleTester.run('prop-types', rule, {
       ].join('\n'),
       settings: {react: {flowVersion: '0.52'}},
       errors: [{
-        message: '\'person.lastname\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'person.lastname'},
         line: 6,
         column: 42,
         type: 'Identifier'
       }],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: `
         type Props = {
@@ -3428,12 +5160,13 @@ ruleTester.run('prop-types', rule, {
         }
       `,
       errors: [{
-        message: '\'bar\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'bar'},
         line: 8,
         column: 37,
         type: 'Identifier'
       }],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: `
         type Props = {
@@ -3448,12 +5181,13 @@ ruleTester.run('prop-types', rule, {
       `,
       settings: {react: {flowVersion: '0.53'}},
       errors: [{
-        message: '\'bar\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'bar'},
         line: 8,
         column: 37,
         type: 'Identifier'
       }],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: `
         type FancyProps = {
@@ -3467,12 +5201,13 @@ ruleTester.run('prop-types', rule, {
         }
       `,
       errors: [{
-        message: '\'bar\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'bar'},
         line: 8,
         column: 37,
         type: 'Identifier'
       }],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: `
         type FancyProps = {
@@ -3487,12 +5222,13 @@ ruleTester.run('prop-types', rule, {
       `,
       settings: {react: {flowVersion: '0.53'}},
       errors: [{
-        message: '\'bar\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'bar'},
         line: 8,
         column: 37,
         type: 'Identifier'
       }],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: `
         type Person = {
@@ -3505,12 +5241,13 @@ ruleTester.run('prop-types', rule, {
         }
       `,
       errors: [{
-        message: '\'person.lastname\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'person.lastname'},
         line: 7,
         column: 50,
         type: 'Identifier'
       }],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: `
         type Person = {
@@ -3524,12 +5261,13 @@ ruleTester.run('prop-types', rule, {
       `,
       settings: {react: {flowVersion: '0.53'}},
       errors: [{
-        message: '\'person.lastname\' is missing in props validation',
+        messageId: 'missingPropType',
+        data: {name: 'person.lastname'},
         line: 7,
         column: 50,
         type: 'Identifier'
       }],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: `
         type Props = { foo: string }
@@ -3542,9 +5280,10 @@ ruleTester.run('prop-types', rule, {
         }
       `,
       errors: [{
-        message: '\'bar\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'bar'}
       }],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: `
         function higherOrderComponent<P: { foo: string }>() {
@@ -3556,9 +5295,10 @@ ruleTester.run('prop-types', rule, {
         }
       `,
       errors: [{
-        message: '\'bar\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'bar'}
       }],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: `
         const withOverlayState = <P: {foo: string}>(WrappedComponent: ComponentType<P>): CpmponentType<P> => (
@@ -3574,9 +5314,10 @@ ruleTester.run('prop-types', rule, {
         )
       `,
       errors: [{
-        message: '\'bar\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'bar'}
       }],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: `
         type PropsA = {foo: string };
@@ -3591,9 +5332,10 @@ ruleTester.run('prop-types', rule, {
           }
         }
       `,
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: '\'fooBar\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'fooBar'}
       }]
     }, {
       code: `
@@ -3610,9 +5352,10 @@ ruleTester.run('prop-types', rule, {
           }
         }
       `,
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: '\'fooBar\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'fooBar'}
       }]
     }, {
       code: `
@@ -3631,9 +5374,10 @@ ruleTester.run('prop-types', rule, {
         }
       `,
       errors: [{
-        message: '\'fooBar\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'fooBar'}
       }],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     }, {
       code: `
         type PropsB = { bar: string };
@@ -3651,9 +5395,10 @@ ruleTester.run('prop-types', rule, {
         }
       `,
       errors: [{
-        message: '\'fooBar\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'fooBar'}
       }],
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: `
@@ -3683,9 +5428,1197 @@ ruleTester.run('prop-types', rule, {
       );
     `,
       errors: [{
-        message: '\'bad\' is missing in props validation'
+        messageId: 'missingPropType',
+        data: {name: 'bad'}
       }],
-      parser: 'babel-eslint'
-    }
-  ]
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: `
+        class Component extends React.Component {
+          render() {
+            return <div>{this.props.foo.baz}</div>;
+          }
+        }
+        Component.propTypes = {
+          foo: PropTypes.oneOfType([
+            PropTypes.shape({
+              bar: PropTypes.string
+            })
+          ])
+        };
+      `,
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'foo.baz'}
+      }]
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          bar() {
+            this.setState((state, props) => ({ current: props.current, bar: props.bar }));
+          }
+          render() {
+            return <div />;
+          }
+        }
+
+        Foo.propTypes = {
+          current: PropTypes.number.isRequired,
+        };
+      `,
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'bar'}
+      }]
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          setZoo() {
+            this.setState((state, {zoo}) => ({ zoo }));
+          }
+          render() {
+            return <div />;
+          }
+        }
+      `,
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'zoo'}
+      }]
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          static getDerivedStateFromProps(props) {
+            const { foo, bar } = props;
+            return {
+              foobar: foo + bar
+            };
+          }
+
+          render() {
+            const { foobar } = this.state;
+            return <div>{foobar}</div>;
+          }
+        }
+
+        Foo.propTypes = {
+          foo: PropTypes.func.isRequired,
+        };
+      `,
+      settings: {react: {version: '16.3.0'}},
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'bar'}
+      }]
+    },
+    {
+      code: `
+        const ForAttendees = ({ page }) => (
+          <>
+            <section>{page}</section>
+          </>
+        );
+
+        export default ForAttendees;
+      `,
+      parser: parsers.BABEL_ESLINT,
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'page'}
+      }]
+    },
+    {
+      code: `
+        const HeaderBalance = React.memo(({ cryptoCurrency }) => (
+          <div className="header-balance">
+            <div className="header-balance__balance">
+              BTC
+              {cryptoCurrency}
+            </div>
+          </div>
+        ));
+      `,
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'cryptoCurrency'}
+      }]
+    },
+    {
+      code: `
+        import React, { memo } from 'react';
+        const HeaderBalance = memo(({ cryptoCurrency }) => (
+          <div className="header-balance">
+            <div className="header-balance__balance">
+              BTC
+              {cryptoCurrency}
+            </div>
+          </div>
+        ));
+      `,
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'cryptoCurrency'}
+      }]
+    },
+    {
+      code: `
+        const HeaderBalance = Foo.memo(({ cryptoCurrency }) => (
+          <div className="header-balance">
+            <div className="header-balance__balance">
+              BTC
+              {cryptoCurrency}
+            </div>
+          </div>
+        ));
+      `,
+      settings: {
+        react: {
+          pragma: 'Foo'
+        }
+      },
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'cryptoCurrency'}
+      }]
+    },
+    {
+      code: `
+        import Foo, { memo } from 'foo';
+        const HeaderBalance = memo(({ cryptoCurrency }) => (
+          <div className="header-balance">
+            <div className="header-balance__balance">
+              BTC
+              {cryptoCurrency}
+            </div>
+          </div>
+        ));
+      `,
+      settings: {
+        react: {
+          pragma: 'Foo'
+        }
+      },
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'cryptoCurrency'}
+      }]
+    },
+    {
+      code: `
+        const Label = React.forwardRef(({ text }, ref) => {
+          return <div ref={ref}>{text}</div>;
+        });
+      `,
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'text'}
+      }]
+    },
+    {
+      code: `
+        import React, { forwardRef } from 'react';
+        const Label = forwardRef(({ text }, ref) => {
+          return <div ref={ref}>{text}</div>;
+        });
+      `,
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'text'}
+      }]
+    },
+    {
+      code: `
+        const Label = Foo.forwardRef(({ text }, ref) => {
+          return <div ref={ref}>{text}</div>;
+        });
+      `,
+      settings: {
+        react: {
+          pragma: 'Foo'
+        }
+      },
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'text'}
+      }]
+    },
+    {
+      code: `
+        import Foo, { forwardRef } from 'foo';
+        const Label = forwardRef(({ text }, ref) => {
+          return <div ref={ref}>{text}</div>;
+        });
+      `,
+      settings: {
+        react: {
+          pragma: 'Foo'
+        }
+      },
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'text'}
+      }]
+    }, {
+      code: `
+        import PropTypes from 'prop-types';
+        import React from 'react';
+
+        const MyComponent = (props) => {
+          switch (props.usedProp) {
+            case 1:
+              return (<div />);
+            default:
+              return <div />;
+          }
+        };
+
+        export default MyComponent;
+      `,
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'usedProp'}
+      }]
+    },
+    {
+      code: `
+        export default class Controller extends React.Component {
+          handleAdd = id => {
+            this.setState((state, { name }) => {
+                const item = this.buildItem(id);
+            });
+          };
+        }
+      `,
+      parser: parsers.BABEL_ESLINT,
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'name'}
+      }]
+    },
+    {
+      code: `
+        export default class extends React.Component {
+          onSubmit = () => {
+            this.setState((state, { a }) => {
+              a.b.c();
+              return null;
+            });
+          };
+
+          render() {
+            return null;
+          }
+        }
+      `,
+      parser: parsers.BABEL_ESLINT,
+      errors: [
+        {
+          messageId: 'missingPropType',
+          data: {name: 'a'}
+        },
+        {
+          messageId: 'missingPropType',
+          data: {name: 'a.b'}
+        },
+        {
+          messageId: 'missingPropType',
+          data: {name: 'a.b.c'}
+        }
+      ]
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          contructor(props) {
+            super(props);
+            this.initialValues = {
+              test: '',
+            };
+          }
+
+          render = () => {
+            return (
+              <Component
+                initialValues={this.props.initialValues || this.initialValues}
+              >
+                {formikProps => (
+                  <Input {...formikProps} />
+                )}
+              </Component>
+            );
+          }
+        }
+      `,
+      parser: parsers.BABEL_ESLINT,
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'initialValues'}
+      }]
+    },
+    {
+      // issue #2138
+      code: `
+        type UsedProps = {|
+          usedProp: number,
+        |};
+
+        type UnusedProps = {|
+          unusedProp: number,
+        |};
+
+        type Props = {| ...UsedProps, ...UnusedProps |};
+
+        function MyComponent({ usedProp, notOne }: Props) {
+          return <div>{usedProp}</div>;
+        }
+      `,
+      parser: parsers.BABEL_ESLINT,
+      errors: [{
+        message: "'notOne' is missing in props validation",
+        line: 12,
+        column: 42
+      }]
+    },
+    {
+      // issue #2298
+      code: `
+        type Props = {|
+          firstname?: string
+        |};
+
+        function Hello({ firstname = 'John', lastname = 'Doe' }: Props = {}) {
+          return <div>Hello {firstname} {lastname}</div>
+        }
+      `,
+      parser: parsers.BABEL_ESLINT,
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'lastname'}
+      }]
+    },
+    {
+      // issue #2330
+      code: `
+        type Props = {
+          user: {
+            name: {
+              firstname: string,
+              [string]: string
+            }
+          }
+        };
+
+        export function Bar(props: Props) {
+          return (
+            <div>
+              {props.user}
+              {props.user.name.firstname}
+              {props.user.name.lastname}
+              {props.user.age}
+            </div>
+          );
+        }
+      `,
+      parser: parsers.BABEL_ESLINT,
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'user.age'}
+      }]
+    },
+    {
+      code: `
+        const Label = React.memo(React.forwardRef(({ text }, ref) => {
+          return <div ref={ref}>{text}</div>;
+        }));
+      `,
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'text'}
+      }]
+    },
+    {
+      code: `
+        import React, { memo, forwardRef } from 'react';
+        const Label = memo(forwardRef(({ text }, ref) => {
+          return <div ref={ref}>{text}</div>;
+        }));
+      `,
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'text'}
+      }]
+    },
+    {
+      code: `
+        import Foo, { memo, forwardRef } from 'foo';
+        const Label = memo(forwardRef(({ text }, ref) => {
+          return <div ref={ref}>{text}</div>;
+        }));
+      `,
+      settings: {
+        react: {
+          pragma: 'Foo'
+        }
+      },
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'text'}
+      }]
+    },
+    {
+      code: `
+        function Foo({
+          foo: {
+            bar: foo,
+            baz
+          },
+        }) {
+          return <p>{foo.reduce(() => 5)}</p>;
+        }
+
+        Foo.propTypes = {
+          foo: PropTypes.shape({
+            bar: PropTypes.arrayOf(PropTypes.string).isRequired,
+          }).isRequired,
+        };
+      `,
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'foo.baz'}
+      }]
+    },
+    {
+      code: `
+        const Foo = ({length, ordering}) => (
+          length > 0 && (
+            <Paginator items={ordering} pageSize={10} />
+          )
+        );
+      `,
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'length'}
+      },
+      {
+        messageId: 'missingPropType',
+        data: {name: 'ordering'}
+      }]
+    },
+    {
+      code: `
+        const firstType = PropTypes.shape({
+          id: PropTypes.number,
+        });
+        class ComponentX extends React.Component {
+          static propTypes = {
+            first: firstType.isRequired,
+          };
+          render() {
+            return (
+              <div>
+                <div>Counter = {this.props.first.name}</div>
+              </div>
+            );
+          }
+        }
+      `,
+      parser: parsers.BABEL_ESLINT,
+      errors: [{
+        message: "'first.name' is missing in props validation"
+      }]
+    },
+    {
+      code: `
+        const firstType = PropTypes.shape({
+          id: PropTypes.number,
+        }).isRequired;
+        class ComponentX extends React.Component {
+          static propTypes = {
+            first: firstType,
+          };
+          render() {
+            return (
+              <div>
+                <div>Counter = {this.props.first.name}</div>
+              </div>
+            );
+          }
+        }
+      `,
+      parser: parsers.BABEL_ESLINT,
+      errors: [{
+        message: "'first.name' is missing in props validation"
+      }]
+    },
+    {
+      code: `
+        const firstType = PropTypes.shape({
+          id: PropTypes.number,
+        });
+        class ComponentX extends React.Component {
+          static propTypes = {
+            first: firstType,
+          };
+          render() {
+            return (
+              <div>
+                <div>Counter = {this.props.first.name}</div>
+              </div>
+            );
+          }
+        }
+      `,
+      parser: parsers.BABEL_ESLINT,
+      errors: [{
+        message: "'first.name' is missing in props validation"
+      }]
+    },
+    {
+      code: `
+        function Foo({
+          foo: {
+            bar: foo,
+            baz
+          },
+        }) {
+          return <p>{foo.reduce(() => 5)}</p>;
+        }
+        const fooType = PropTypes.shape({
+          bar: PropTypes.arrayOf(PropTypes.string).isRequired,
+        }).isRequired
+        Foo.propTypes = {
+          foo: fooType,
+        };
+      `,
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'foo.baz'}
+      }]
+    },
+    {
+      code: `
+        function Foo({
+          foo: {
+            bar: foo,
+            baz
+          },
+        }) {
+          return <p>{foo.reduce(() => 5)}</p>;
+        }
+        const fooType = PropTypes.shape({
+          bar: PropTypes.arrayOf(PropTypes.string).isRequired,
+        })
+        Foo.propTypes = {
+          foo: fooType.isRequired,
+        };
+      `,
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'foo.baz'}
+      }]
+    },
+    {
+      code: `
+        function Foo({
+          foo: {
+            bar: foo,
+            baz
+          },
+        }) {
+          return <p>{foo.reduce(() => 5)}</p>;
+        }
+        const fooType = PropTypes.shape({
+          bar: PropTypes.arrayOf(PropTypes.string).isRequired,
+        })
+        Foo.propTypes = {
+          foo: fooType,
+        };
+      `,
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'foo.baz'}
+      }]
+    },
+    {
+      code: `
+        function Component(props) {
+          return 0,
+          <div>
+            Hello, { props.name }!
+          </div>
+        }
+      `,
+      errors: [{
+        messageId: 'missingPropType',
+        data: {name: 'name'}
+      }]
+    },
+    {
+      code: `
+      const SideMenu = observer(
+        ({ componentId }) => (
+          <S.Container>
+            <S.Head />
+            <UserInfo />
+            <Separator />
+            <MenuList componentId={componentId} />
+          </S.Container>
+        ),
+      );`,
+      settings: {
+        componentWrapperFunctions: ['observer']
+      },
+      errors: [{
+        message: '\'componentId\' is missing in props validation'
+      }]
+    },
+    {
+      code: `
+      const SideMenu = Mobx.observer(
+        ({ id }) => (
+          <S.Container>
+            <S.Head />
+            <UserInfo />
+            <Separator />
+            <MenuList componentId={id} />
+          </S.Container>
+        ),
+      );
+      `,
+      settings: {
+        componentWrapperFunctions: [{property: 'observer', object: 'Mobx'}]
+      },
+      errors: [{
+        message: '\'id\' is missing in props validation'
+      }]
+    },
+    parsers.TS([
+      {
+        code: `
+          interface Props {
+          }
+          const Hello = (props: Props) => {
+            if (props.value) {
+              return <div></div>;
+            }
+            return null;
+          }
+        `,
+        parser: parsers.TYPESCRIPT_ESLINT,
+        errors: [{
+          messageId: 'missingPropType',
+          data: {name: 'value'}
+        }]
+      },
+      {
+        code: `
+          interface Props {
+          }
+          const Hello = (props: Props) => {
+            if (props.value) {
+              return <div></div>;
+            }
+            return null;
+          }
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT'],
+        errors: [{
+          messageId: 'missingPropType',
+          data: {name: 'value'}
+        }]
+      },
+      {
+        code: `
+          type User = {
+            user: string;
+          }
+
+          type Props = User & {
+          };
+
+          export default (props: Props) => {
+            const { userId, user } = props;
+
+            if (userId === 0) {
+              return <p>userId is 0</p>;
+            }
+
+            return null;
+          };
+        `,
+        parser: parsers.TYPESCRIPT_ESLINT,
+        errors: [{
+          messageId: 'missingPropType',
+          data: {name: 'userId'}
+        }]
+      },
+      {
+        code: `
+          type User = {
+            user: string;
+          }
+
+          type Props = User & {
+          };
+
+          export default (props: Props) => {
+            const { userId, user } = props;
+
+            if (userId === 0) {
+              return <p>userId is 0</p>;
+            }
+
+            return null;
+          };
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT'],
+        errors: [{
+          messageId: 'missingPropType',
+          data: {name: 'userId'}
+        }]
+      },
+      {
+        code: `
+          type User = {
+          }
+
+          type Props = User & {
+            userId
+          };
+
+          export default (props: Props) => {
+            const { userId, user } = props;
+
+            if (userId === 0) {
+              return <p>userId is 0</p>;
+            }
+
+            return null;
+          };
+        `,
+        parser: parsers.TYPESCRIPT_ESLINT,
+        errors: [{
+          messageId: 'missingPropType',
+          data: {name: 'user'}
+        }]
+      },
+      {
+        code: `
+          type User = {
+          }
+
+          type Props = User & {
+            userId
+          };
+
+          export default (props: Props) => {
+            const { userId, user } = props;
+
+            if (userId === 0) {
+              return <p>userId is 0</p>;
+            }
+
+            return null;
+          };
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT'],
+        errors: [{
+          messageId: 'missingPropType',
+          data: {name: 'user'}
+        }]
+      },
+      {
+        code: `
+          type User = {
+            user: string;
+          }
+          type UserProps = {
+          }
+
+          type Props = User & UserProps;
+
+          export default (props: Props) => {
+            const { userId, user } = props;
+
+            if (userId === 0) {
+              return <p>userId is 0</p>;
+            }
+
+            return null;
+          };
+        `,
+        parser: parsers.TYPESCRIPT_ESLINT,
+        errors: [{
+          messageId: 'missingPropType',
+          data: {name: 'userId'}
+        }]
+      },
+      {
+        code: `
+          type User = {
+            user: string;
+          }
+          type UserProps = {
+          }
+
+          type Props = User & UserProps;
+
+          export default (props: Props) => {
+            const { userId, user } = props;
+
+            if (userId === 0) {
+              return <p>userId is 0</p>;
+            }
+
+            return null;
+          };
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT'],
+        errors: [{
+          messageId: 'missingPropType',
+          data: {name: 'userId'}
+        }]
+      },
+      {
+        code: `
+          interface GenericProps {
+            onClose: () => void
+          }
+
+          interface ImplementationProps extends GenericProps {
+          }
+
+          export const Implementation: FC<ImplementationProps> = (
+            {
+              onClick,
+              onClose,
+            }: ImplementationProps
+          ) => (<div />)
+        `,
+        parser: parsers.TYPESCRIPT_ESLINT,
+        errors: [{
+          messageId: 'missingPropType',
+          data: {name: 'onClick'}
+        }]
+      },
+      {
+        code: `
+          interface GenericProps {
+            onClose: () => void
+          }
+
+          interface ImplementationProps extends GenericProps {
+          }
+
+          export const Implementation: FC<ImplementationProps> = (
+            {
+              onClick,
+              onClose,
+            }: ImplementationProps
+          ) => (<div />)
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT'],
+        errors: [{
+          messageId: 'missingPropType',
+          data: {name: 'onClick'}
+        }]
+      },
+      {
+        code: `
+          const mapStateToProps = state => ({
+          });
+
+          interface BooksTable extends ReturnType<typeof mapStateToProps> {
+            username: string;
+          }
+
+          const App = (props: BooksTable) => {
+            props.books();
+            return <div><span>{props.username}</span></div>;
+          }
+        `,
+        parser: parsers.TYPESCRIPT_ESLINT,
+        errors: [{
+          messageId: 'missingPropType',
+          data: {name: 'books'}
+        }]
+      },
+      {
+        code: `
+          const mapStateToProps = state => ({
+          });
+
+          interface BooksTable extends ReturnType<typeof mapStateToProps> {
+            username: string;
+          }
+
+          const App = (props: BooksTable) => {
+            props.books();
+            return <div><span>{props.username}</span></div>;
+          }
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT'],
+        errors: [{
+          messageId: 'missingPropType',
+          data: {name: 'books'}
+        }]
+      },
+      {
+        code: `
+          const mapStateToProps = state => ({
+            books: state.books,
+          });
+
+          interface BooksTable extends ReturnType<typeof mapStateToProps> {
+          }
+
+          const App = (props: BooksTable) => {
+            props.books();
+            return <div><span>{props.username}</span></div>;
+          }
+        `,
+        parser: parsers.TYPESCRIPT_ESLINT,
+        errors: [{
+          messageId: 'missingPropType',
+          data: {name: 'username'}
+        }]
+      },
+      {
+        code: `
+          const mapStateToProps = state => ({
+            books: state.books,
+          });
+
+          interface BooksTable extends ReturnType<typeof mapStateToProps> {
+          }
+
+          const App = (props: BooksTable) => {
+            props.books();
+            return <div><span>{props.username}</span></div>;
+          }
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT'],
+        errors: [{
+          messageId: 'missingPropType',
+          data: {name: 'username'}
+        }]
+      },
+      {
+        code: `
+          type Event = {
+              name: string;
+              type: string;
+          }
+
+          interface UserEvent extends Event {
+              UserId: string;
+          }
+          const App = (props: UserEvent) => {
+            props.name();
+            props.type;
+            props.UserId;
+            return <div><span>{props.dateCreated}</span></div>;
+          }
+        `,
+        parser: parsers.TYPESCRIPT_ESLINT,
+        errors: [{
+          messageId: 'missingPropType',
+          data: {name: 'dateCreated'}
+        }]
+      },
+      {
+        code: `
+          type Event = {
+              name: string;
+              type: string;
+          }
+
+          interface UserEvent extends Event {
+              UserId: string;
+          }
+          const App = (props: UserEvent) => {
+            props.name();
+            props.type;
+            props.UserId;
+            return <div><span>{props.dateCreated}</span></div>;
+          }
+        `,
+        parser: parsers['@TYPESCRIPT_ESLINT'],
+        errors: [{
+          messageId: 'missingPropType',
+          data: {name: 'dateCreated'}
+        }]
+      },
+      {
+        code: `
+          function Zoo(props) {
+            return (
+              <>
+                {props.foo.c}
+              </>
+            );
+          }
+
+          Zoo.propTypes = {
+            foo: PropTypes.exact({
+              a: PropTypes.number,
+              b: PropTypes.number,
+            }),
+          };
+        `,
+        errors: [{
+          message: "'foo.c' is missing in props validation"
+        }]
+      },
+      {
+        code: `
+          function Zoo(props) {
+            return (
+              <>
+                {props.foo.c}
+              </>
+            );
+          }
+
+          Zoo.propTypes = {
+            foo: React.PropTypes.exact({
+              a: PropTypes.number,
+              b: PropTypes.number,
+            }),
+          };
+        `,
+        errors: [{
+          message: "'foo.c' is missing in props validation"
+        }]
+      },
+      {
+        code: `
+          function Zoo(props) {
+            return (
+              <>
+                {props.foo.c}
+              </>
+            );
+          }
+
+          Zoo.propTypes = {
+            foo: Foo.PropTypes.exact({
+              a: PropTypes.number,
+              b: PropTypes.number,
+            }),
+          };
+        `,
+        settings,
+        errors: [{
+          message: "'foo.c' is missing in props validation"
+        }]
+      },
+      {
+        code: `
+          const Foo: JSX.Element = ({ bar }) => {
+            return <div>{bar}</div>;
+          }
+        `,
+        settings,
+        parser: parsers['@TYPESCRIPT_ESLINT'],
+        errors: [{
+          message: "'bar' is missing in props validation"
+        }]
+      },
+      {
+        code: `
+          const Foo: JSX.Element = function foo ({ bar }) {
+            return <div>{bar}</div>;
+          }
+        `,
+        settings,
+        parser: parsers['@TYPESCRIPT_ESLINT'],
+        errors: [{
+          message: "'bar' is missing in props validation"
+        }]
+      },
+      // fix #2804
+      {
+        code: `
+        import React from 'react'
+
+        const InputField = ({ type, ...restProps }) => {
+
+          return(
+            <input
+              type={type}
+              {...restProps}
+            />
+          )
+        }
+
+        export default InputField;
+      `,
+        parser: parsers.BABEL_ESLINT,
+        errors: [{
+          message: "'type' is missing in props validation"
+        }]
+      },
+      {
+        code: `
+        const Foo: JSX.Element = ({ bar = "" }) => {
+          return <div>{bar}</div>;
+        }
+      `,
+        errors: [
+          {
+            messageId: 'missingPropType',
+            data: {name: 'bar'}
+          }
+        ],
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      {
+        code: `
+        function Foo({ foo = "" }): JSX.Element {
+          return <div>{foo}</div>;
+        }
+      `,
+        errors: [
+          {
+            messageId: 'missingPropType',
+            data: {name: 'foo'}
+          }
+        ],
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      {
+        code: `
+        const Foo: JSX.Element = function foo ({ bar = "" }) {
+          return <div>{bar}</div>;
+        }
+      `,
+        errors: [
+          {
+            messageId: 'missingPropType',
+            data: {name: 'bar'}
+          }
+        ],
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      },
+      {
+        code: `
+        function Foo({ bar = "" as string }): JSX.Element {
+          return <div>{bar}</div>;
+        }
+      `,
+        errors: [
+          {
+            messageId: 'missingPropType',
+            data: {name: 'bar'}
+          }
+        ],
+        parser: parsers['@TYPESCRIPT_ESLINT']
+      }
+    ])
+  )
 });

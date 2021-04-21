@@ -1,14 +1,17 @@
 /**
  * @fileoverview Tests for forbid-foreign-prop-types
  */
+
 'use strict';
 
 // -----------------------------------------------------------------------------
 // Requirements
 // -----------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/forbid-foreign-prop-types');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/forbid-foreign-prop-types');
+
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -18,13 +21,9 @@ const parserOptions = {
   }
 };
 
-require('babel-eslint');
-
 // -----------------------------------------------------------------------------
 // Tests
 // -----------------------------------------------------------------------------
-
-const ERROR_MESSAGE = 'Using propTypes from another component is not safe because they may be removed in production builds';
 
 const ruleTester = new RuleTester({parserOptions});
 ruleTester.run('forbid-foreign-prop-types', rule, {
@@ -64,6 +63,19 @@ ruleTester.run('forbid-foreign-prop-types', rule, {
     options: [{
       allowInPropTypes: true
     }]
+  },
+  {
+    code: `
+      class MyComponent extends React.Component {
+        static propTypes = {
+          baz: Qux.propTypes.baz
+        };
+      }
+    `,
+    parser: parsers.BABEL_ESLINT,
+    options: [{
+      allowInPropTypes: true
+    }]
   }],
 
   invalid: [{
@@ -76,7 +88,7 @@ ruleTester.run('forbid-foreign-prop-types', rule, {
       });
     `,
     errors: [{
-      message: ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
       type: 'Identifier'
     }]
   },
@@ -90,7 +102,7 @@ ruleTester.run('forbid-foreign-prop-types', rule, {
       });
     `,
     errors: [{
-      message: ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
       type: 'Literal'
     }]
   },
@@ -105,7 +117,7 @@ ruleTester.run('forbid-foreign-prop-types', rule, {
       });
     `,
     errors: [{
-      message: ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
       type: 'Property'
     }]
   },
@@ -119,9 +131,9 @@ ruleTester.run('forbid-foreign-prop-types', rule, {
         }
       });
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: [{
-      message: ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
       type: 'Property'
     }]
   },
@@ -133,9 +145,9 @@ ruleTester.run('forbid-foreign-prop-types', rule, {
         };
       }
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: [{
-      message: ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
       type: 'Identifier'
     }]
   },
@@ -150,7 +162,7 @@ ruleTester.run('forbid-foreign-prop-types', rule, {
       });
     `,
     errors: [{
-      message: ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
       type: 'Property'
     }]
   },
@@ -169,7 +181,24 @@ ruleTester.run('forbid-foreign-prop-types', rule, {
       allowInPropTypes: false
     }],
     errors: [{
-      message: ERROR_MESSAGE,
+      messageId: 'forbiddenPropType',
+      type: 'Identifier'
+    }]
+  },
+  {
+    code: `
+      class MyComponent extends React.Component {
+        static propTypes = {
+          baz: Qux.propTypes.baz
+        };
+      }
+    `,
+    parser: parsers.BABEL_ESLINT,
+    options: [{
+      allowInPropTypes: false
+    }],
+    errors: [{
+      messageId: 'forbiddenPropType',
       type: 'Identifier'
     }]
   }]

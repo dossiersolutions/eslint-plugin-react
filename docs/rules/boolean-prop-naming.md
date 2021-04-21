@@ -2,9 +2,13 @@
 
 Allows you to enforce a consistent naming pattern for props which expect a boolean value.
 
+> **Note**: You can provide types in runtime types using [PropTypes] and/or
+statically using [TypeScript] or [Flow]. This rule will validate your prop types
+regardless of how you define them.
+
 ## Rule Details
 
-The following patterns are considered warnings:
+Examples of **incorrect** code for this rule:
 
 ```jsx
 var Hello = createReactClass({
@@ -15,7 +19,14 @@ var Hello = createReactClass({
 });
 ```
 
-The following patterns are **not** considered warnings:
+```jsx
+type Props = {
+  enabled: boolean
+}
+const Hello = (props: Props) => <div />;
+```
+
+Examples of **correct** code for this rule:
 
 ```jsx
 var Hello = createReactClass({
@@ -25,12 +36,23 @@ var Hello = createReactClass({
   render: function() { return <div />; };
 });
 ```
+```jsx
+type Props = {
+  isEnabled: boolean
+}
+const Hello = (props: Props) => <div />
+```
 
 ## Rule Options
 
 ```js
 ...
-"react/boolean-prop-naming": [<enabled>, { "propTypeNames": Array<string>, "rule": <string>, "message": <string> }]
+"react/boolean-prop-naming": [<enabled>, {
+  "propTypeNames": Array<string>,
+  "rule": <string>,
+  "message": <string>,
+  "validateNested": <boolean>
+}]
 ...
 ```
 
@@ -86,3 +108,15 @@ And the failure would look like so:
 ```
 It is better if your prop (something) matches this pattern: (^is[A-Z]([A-Za-z0-9]?)+)
 ```
+
+### `validateNested`
+
+This value is boolean. It tells if nested props should be validated as well. By default this is set to false but you can change it to true, to validate deeper layers of object:
+
+```jsx
+"react/boolean-prop-naming": ["error", { "validateNested": true }]
+```
+
+[PropTypes]: https://reactjs.org/docs/typechecking-with-proptypes.html
+[TypeScript]: http://www.typescriptlang.org/
+[Flow]: https://flow.org/

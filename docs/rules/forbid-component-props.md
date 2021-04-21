@@ -7,7 +7,7 @@ By default this rule prevents passing of [props that add lots of complexity](htt
 This rule checks all JSX elements and verifies that no forbidden props are used
 on Components. This rule is off by default.
 
-The following patterns are considered warnings:
+Examples of **incorrect** code for this rule:
 
 ```jsx
 <Hello className='foo' />
@@ -17,7 +17,7 @@ The following patterns are considered warnings:
 <Hello style={{color: 'red'}} />
 ```
 
-The following patterns are **not** considered warnings:
+Examples of **correct** code for this rule:
 
 ```jsx
 <Hello name='Joe' />
@@ -42,15 +42,16 @@ The following patterns are **not** considered warnings:
 ### `forbid`
 
 An array specifying the names of props that are forbidden. The default value of this option is `['className', 'style']`.
-Each array element can either be a string with the property name or object specifying the property name and a component whitelist:
+Each array element can either be a string with the property name or object specifying the property name, an optional
+custom message, and a component whitelist:
 
 ```js
 {
   "propName": "someProp",
-  "allowedFor": [SomeComponent, AnotherComponent]
+  "allowedFor": [SomeComponent, AnotherComponent],
+  "message": "Avoid using someProp"
 }
 ```
-
 
 ### Related rules
 

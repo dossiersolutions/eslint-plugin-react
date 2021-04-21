@@ -2,14 +2,15 @@
  * @fileoverview Prevent usage of findDOMNode
  * @author Yannick Croissant
  */
+
 'use strict';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/no-find-dom-node');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/no-find-dom-node');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -74,9 +75,7 @@ ruleTester.run('no-find-dom-node', rule, {
         }
       });
     `,
-    errors: [{
-      message: 'Do not use findDOMNode'
-    }]
+    errors: [{messageId: 'noFindDOMNode'}]
   }, {
     code: `
       var Hello = createReactClass({
@@ -88,9 +87,7 @@ ruleTester.run('no-find-dom-node', rule, {
         }
       });
     `,
-    errors: [{
-      message: 'Do not use findDOMNode'
-    }]
+    errors: [{messageId: 'noFindDOMNode'}]
   }, {
     code: `
       class Hello extends Component {
@@ -102,9 +99,7 @@ ruleTester.run('no-find-dom-node', rule, {
         }
       };
     `,
-    errors: [{
-      message: 'Do not use findDOMNode'
-    }]
+    errors: [{messageId: 'noFindDOMNode'}]
   }, {
     code: `
       class Hello extends Component {
@@ -116,8 +111,6 @@ ruleTester.run('no-find-dom-node', rule, {
         }
       };
     `,
-    errors: [{
-      message: 'Do not use findDOMNode'
-    }]
+    errors: [{messageId: 'noFindDOMNode'}]
   }]
 });

@@ -1,10 +1,10 @@
 # No `.bind()` or Arrow Functions in JSX Props (react/jsx-no-bind)
 
-A `bind` call or [arrow function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions) in a JSX prop will create a brand new function on every single render. This is bad for performance, as it will result in the garbage collector being invoked way more than is necessary. It may also cause unnecessary re-renders if a brand new function is passed as a prop to a component that uses reference equality check on the prop to determine if it should update.
+A `bind` call or [arrow function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions) in a JSX prop will create a brand new function on every single render. This is bad for performance, as it may cause unnecessary re-renders if a brand new function is passed as a prop to a component that uses reference equality check on the prop to determine if it should update.
 
 ## Rule Details
 
-The following patterns are considered warnings:
+Examples of **incorrect** code for this rule:
 
 ```jsx
 <Foo onClick={this._handleClick.bind(this)}></Foo>
@@ -13,7 +13,7 @@ The following patterns are considered warnings:
 <Foo onClick={() => console.log('Hello!')}></Foo>
 ```
 
-The following patterns are **not** considered warnings:
+Examples of **correct** code for this rule:
 ```jsx
 <Foo onClick={this._handleClick}></Foo>
 ```
@@ -32,17 +32,17 @@ The following patterns are **not** considered warnings:
 
 ### `ignoreDOMComponents`
 
-When `true` the following are **not** considered warnings:
+Examples of **correct** code for this rule, when `ignoreDOMComponents` is `true`:
 
 ```jsx
 <div onClick={this._handleClick.bind(this) />
 <span onClick={() => console.log("Hello!")} />
-<button onClick={function() { alert("1337") }} />
+<button type="button" onClick={function() { alert("1337") }} />
 ```
 
 ### `ignoreRefs`
 
-When `true` the following are **not** considered warnings:
+Examples of **correct** code for this rule, when `ignoreRefs` is `true`:
 
 ```jsx
 <Foo ref={c => this._div = c} />
@@ -51,7 +51,7 @@ When `true` the following are **not** considered warnings:
 
 ### `allowArrowFunctions`
 
-When `true` the following is **not** considered a warning:
+Examples of **correct** code for this rule, when `allowArrowFunctions` is `true`:
 
 ```jsx
 <Foo onClick={() => alert("1337")} />
@@ -59,7 +59,7 @@ When `true` the following is **not** considered a warning:
 
 ### `allowFunctions`
 
-When `true` the following is not considered a warning:
+Examples of **correct** code for this rule, when `allowFunctions` is `true`:
 
 ```jsx
 <Foo onClick={function () { alert("1337") }} />
@@ -67,7 +67,7 @@ When `true` the following is not considered a warning:
 
 ### `allowBind`
 
-When `true` the following is **not** considered a warning:
+Examples of **correct** code for this rule, when `allowBind` is `true`:
 
 ```jsx
 <Foo onClick={this._handleClick.bind(this)} />
@@ -150,6 +150,35 @@ class Foo extends React.Component {
 ```
 
 A more sophisticated approach would be to use something like an [autobind ES7 decorator](https://www.npmjs.com/package/core-decorators#autobind) or [property initializers](https://facebook.github.io/react/blog/2015/01/27/react-v0.13.0-beta-1.html#autobinding).
+
+### React Hooks
+
+Functional components are often used alongside hooks, and the most trivial case would occur if your callback is completely independent from your state. In this case, the solution is as simple as moving the callback out of your component:
+
+```jsx
+const onClick = () => {
+  console.log("Independent callback");
+};
+const Button = () => {
+  return (
+    <button type="button" onClick={onClick}>Label</button>
+  );
+};
+```
+
+Otherwise, the idiomatic way to avoid redefining callbacks on every render would be to memoize them using the [`useCallback`](https://reactjs.org/docs/hooks-reference.html#usecallback) hook:
+
+```jsx
+const Button = () => {
+  const [text, setText] = useState("Before click");
+  const onClick = useCallback(() => {
+    setText("After click");
+  }, [setText]); // Array of dependencies for which the memoization should update
+  return (
+    <button type="button" onClick={onClick}>{text}</button>
+  );
+};
+```
 
 ## When Not To Use It
 

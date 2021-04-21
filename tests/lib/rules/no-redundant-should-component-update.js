@@ -8,8 +8,10 @@
 // Requirements
 // -----------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/no-redundant-should-component-update');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/no-redundant-should-component-update');
+
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -17,10 +19,6 @@ const parserOptions = {
     jsx: true
   }
 };
-
-function errorMessage(node) {
-  return `${node} does not need shouldComponentUpdate when extending React.PureComponent.`;
-}
 
 // -----------------------------------------------------------------------------
 // Tests
@@ -37,18 +35,7 @@ ruleTester.run('no-redundant-should-component-update', rule, {
           }
         }
       `,
-      parserOptions: parserOptions
-    },
-    {
-      code: `
-        class Foo extends React.Component {
-          shouldComponentUpdate = () => {
-            return true;
-          }
-        }
-      `,
-      parser: 'babel-eslint',
-      parserOptions: parserOptions
+      parserOptions
     },
     {
       code: `
@@ -58,7 +45,19 @@ ruleTester.run('no-redundant-should-component-update', rule, {
           }
         }
       `,
-      parserOptions: parserOptions
+      parserOptions,
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          shouldComponentUpdate = () => {
+            return true;
+          }
+        }
+      `,
+      parser: parsers.BABEL_ESLINT,
+      parserOptions
     },
     {
       code: `
@@ -70,7 +69,7 @@ ruleTester.run('no-redundant-should-component-update', rule, {
           };
         }
       `,
-      parserOptions: parserOptions
+      parserOptions
     }
   ],
 
@@ -83,8 +82,11 @@ ruleTester.run('no-redundant-should-component-update', rule, {
           }
         }
       `,
-      errors: [{message: errorMessage('Foo')}],
-      parserOptions: parserOptions
+      errors: [{
+        messageId: 'noShouldCompUpdate',
+        data: {component: 'Foo'}
+      }],
+      parserOptions
     },
     {
       code: `
@@ -94,8 +96,11 @@ ruleTester.run('no-redundant-should-component-update', rule, {
           }
         }
       `,
-      errors: [{message: errorMessage('Foo')}],
-      parserOptions: parserOptions
+      errors: [{
+        messageId: 'noShouldCompUpdate',
+        data: {component: 'Foo'}
+      }],
+      parserOptions
     },
     {
       code: `
@@ -105,9 +110,12 @@ ruleTester.run('no-redundant-should-component-update', rule, {
           }
         }
       `,
-      errors: [{message: errorMessage('Foo')}],
-      parser: 'babel-eslint',
-      parserOptions: parserOptions
+      errors: [{
+        messageId: 'noShouldCompUpdate',
+        data: {component: 'Foo'}
+      }],
+      parser: parsers.BABEL_ESLINT,
+      parserOptions
     },
     {
       code: `
@@ -119,8 +127,11 @@ ruleTester.run('no-redundant-should-component-update', rule, {
           };
         }
       `,
-      errors: [{message: errorMessage('Bar')}],
-      parserOptions: parserOptions
+      errors: [{
+        messageId: 'noShouldCompUpdate',
+        data: {component: 'Bar'}
+      }],
+      parserOptions
     },
     {
       code: `
@@ -132,8 +143,11 @@ ruleTester.run('no-redundant-should-component-update', rule, {
           };
         }
       `,
-      errors: [{message: errorMessage('Bar')}],
-      parserOptions: parserOptions
+      errors: [{
+        messageId: 'noShouldCompUpdate',
+        data: {component: 'Bar'}
+      }],
+      parserOptions
     },
     {
       code: `
@@ -143,8 +157,11 @@ ruleTester.run('no-redundant-should-component-update', rule, {
           }
         }
       `,
-      errors: [{message: errorMessage('Foo')}],
-      parserOptions: parserOptions
+      errors: [{
+        messageId: 'noShouldCompUpdate',
+        data: {component: 'Foo'}
+      }],
+      parserOptions
     }
   ]
 });

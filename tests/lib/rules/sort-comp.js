@@ -2,14 +2,17 @@
  * @fileoverview Enforce component methods order
  * @author Yannick Croissant
  */
+
 'use strict';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/sort-comp');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/sort-comp');
+
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -18,8 +21,6 @@ const parserOptions = {
     jsx: true
   }
 };
-
-require('babel-eslint');
 
 // ------------------------------------------------------------------------------
 // Tests
@@ -160,7 +161,7 @@ ruleTester.run('sort-comp', rule, {
       '  render = () => (<div>Hello</div>)',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: [
       '// Must allow us to create a RegExp-based group',
@@ -247,7 +248,7 @@ ruleTester.run('sort-comp', rule, {
       '  return <div>Hello {props.name}</div>',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: [
       '// Must ignore stateless components (arrow function with explicit return)',
@@ -255,7 +256,7 @@ ruleTester.run('sort-comp', rule, {
       '  <div>Hello {props.name}</div>',
       ')'
     ].join('\n'),
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: [
       '// Must ignore spread operator',
@@ -266,7 +267,7 @@ ruleTester.run('sort-comp', rule, {
       '  }',
       '});'
     ].join('\n'),
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }, {
     code: [
       '// Type Annotations should be first',
@@ -278,7 +279,7 @@ ruleTester.run('sort-comp', rule, {
       '  }',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: [{
       order: [
         'type-annotations',
@@ -300,7 +301,7 @@ ruleTester.run('sort-comp', rule, {
       '  }',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: [{
       order: [
         'type-annotations',
@@ -322,8 +323,8 @@ ruleTester.run('sort-comp', rule, {
       '  state: Object = {};',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
-    parserOptions: parserOptions
+    parser: parsers.BABEL_ESLINT,
+    parserOptions
   }, {
     code: [
       '// Non-react classes should be ignored, even in expressions',
@@ -336,8 +337,8 @@ ruleTester.run('sort-comp', rule, {
       '  state: Object = {};',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
-    parserOptions: parserOptions
+    parser: parsers.BABEL_ESLINT,
+    parserOptions
   }, {
     code: [
       '// Getters should be at the top',
@@ -349,7 +350,7 @@ ruleTester.run('sort-comp', rule, {
       '  }',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: [{
       order: [
         'getters',
@@ -370,7 +371,7 @@ ruleTester.run('sort-comp', rule, {
       '  }',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: [{
       order: [
         'setters',
@@ -393,7 +394,7 @@ ruleTester.run('sort-comp', rule, {
       '  }',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: [{
       order: [
         'instance-methods',
@@ -415,7 +416,7 @@ ruleTester.run('sort-comp', rule, {
       '  }',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: [{
       order: [
         'instance-variables',
@@ -482,6 +483,152 @@ ruleTester.run('sort-comp', rule, {
       '  static getDerivedStateFromProps() {}',
       '}'
     ].join('\n')
+  }, {
+    code: `
+      class MyComponent extends React.Component {
+        state = {};
+        foo;
+        static propTypes;
+
+        render() {
+          return null;
+        }
+      }
+    `,
+    parser: parsers.BABEL_ESLINT,
+    options: [{
+      order: [
+        'state',
+        'instance-variables',
+        'static-methods',
+        'lifecycle',
+        'render',
+        'everything-else'
+      ]
+    }]
+  }, {
+    code: `
+      class MyComponent extends React.Component {
+        static foo;
+        static getDerivedStateFromProps() {}
+
+        render() {
+          return null;
+        }
+      }
+    `,
+    parser: parsers.BABEL_ESLINT,
+    options: [{
+      order: [
+        'static-variables',
+        'static-methods'
+      ]
+    }]
+  }, {
+    code: `
+      class MyComponent extends React.Component {
+        static getDerivedStateFromProps() {}
+        static foo = 'some-str';
+
+        render() {
+          return null;
+        }
+      }
+    `,
+    parser: parsers.BABEL_ESLINT,
+    options: [{
+      order: [
+        'static-methods',
+        'static-variables'
+      ]
+    }]
+  }, {
+    code: `
+      class MyComponent extends React.Component {
+        foo = {};
+        static bar = 0;
+        static getDerivedStateFromProps() {}
+
+        render() {
+          return null;
+        }
+      }
+    `,
+    parser: parsers.BABEL_ESLINT,
+    options: [{
+      order: [
+        'instance-variables',
+        'static-variables',
+        'static-methods'
+      ]
+    }]
+  }, {
+    code: `
+      class MyComponent extends React.Component {
+        static bar = 1;
+        foo = {};
+        static getDerivedStateFromProps() {}
+
+        render() {
+          return null;
+        }
+      }
+    `,
+    parser: parsers.BABEL_ESLINT,
+    options: [{
+      order: [
+        'static-variables',
+        'instance-variables',
+        'static-methods'
+      ]
+    }]
+  }, {
+    code: `
+      class MyComponent extends React.Component {
+        static getDerivedStateFromProps() {}
+        render() {
+          return null;
+        }
+        static bar;
+        foo = {};
+      }
+    `,
+    parser: parsers.BABEL_ESLINT,
+    options: [{
+      order: [
+        'static-methods',
+        'render',
+        'static-variables',
+        'instance-variables'
+      ]
+    }]
+  }, {
+    code: `
+      class MyComponent extends React.Component {
+        static foo = 1;
+        bar;
+
+        constructor() {
+          super(props);
+
+          this.state = {};
+        }
+
+        render() {
+          return null;
+        }
+      }
+    `,
+    parser: parsers.BABEL_ESLINT,
+    options: [{
+      order: [
+        'static-variables',
+        'instance-variables',
+        'constructor',
+        'everything-else',
+        'render'
+      ]
+    }]
   }],
 
   invalid: [{
@@ -494,7 +641,10 @@ ruleTester.run('sort-comp', rule, {
       '  displayName : \'Hello\',',
       '});'
     ].join('\n'),
-    errors: [{message: 'render should be placed after displayName'}]
+    errors: [{
+      messageId: 'unsortedProps',
+      data: {propA: 'render', position: 'after', propB: 'displayName'}
+    }]
   }, {
     code: [
       '// Must run rule when render uses createElement instead of JSX',
@@ -505,7 +655,10 @@ ruleTester.run('sort-comp', rule, {
       '  displayName : \'Hello\',',
       '});'
     ].join('\n'),
-    errors: [{message: 'render should be placed after displayName'}]
+    errors: [{
+      messageId: 'unsortedProps',
+      data: {propA: 'render', position: 'after', propB: 'displayName'}
+    }]
   }, {
     code: [
       '// Must force a custom method to be placed before render',
@@ -516,7 +669,10 @@ ruleTester.run('sort-comp', rule, {
       '  onClick: function() {},',
       '});'
     ].join('\n'),
-    errors: [{message: 'render should be placed after onClick'}]
+    errors: [{
+      messageId: 'unsortedProps',
+      data: {propA: 'render', position: 'after', propB: 'onClick'}
+    }]
   }, {
     code: [
       '// Must force a custom method to be placed before render, even in function',
@@ -529,8 +685,11 @@ ruleTester.run('sort-comp', rule, {
       '  }',
       '};'
     ].join('\n'),
-    parserOptions: parserOptions,
-    errors: [{message: 'render should be placed after onClick'}]
+    parserOptions,
+    errors: [{
+      messageId: 'unsortedProps',
+      data: {propA: 'render', position: 'after', propB: 'onClick'}
+    }]
   }, {
     code: [
       '// Must force a custom method to be placed after render if no \'everything-else\' group is specified',
@@ -548,7 +707,10 @@ ruleTester.run('sort-comp', rule, {
         'render'
       ]
     }],
-    errors: [{message: 'onClick should be placed after render'}]
+    errors: [{
+      messageId: 'unsortedProps',
+      data: {propA: 'onClick', position: 'after', propB: 'render'}
+    }]
   }, {
     code: [
       '// Must validate static properties',
@@ -559,8 +721,11 @@ ruleTester.run('sort-comp', rule, {
       '  static displayName = \'Hello\';',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
-    errors: [{message: 'render should be placed after displayName'}]
+    parser: parsers.BABEL_ESLINT,
+    errors: [{
+      messageId: 'unsortedProps',
+      data: {propA: 'render', position: 'after', propB: 'displayName'}
+    }]
   }, {
     code: [
       '// Type Annotations should not be at the top by default',
@@ -573,8 +738,11 @@ ruleTester.run('sort-comp', rule, {
       '  }',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
-    errors: [{message: 'props should be placed after state'}]
+    parser: parsers.BABEL_ESLINT,
+    errors: [{
+      messageId: 'unsortedProps',
+      data: {propA: 'props', position: 'after', propB: 'state'}
+    }]
   }, {
     code: [
       '// Type Annotations should be first',
@@ -586,8 +754,11 @@ ruleTester.run('sort-comp', rule, {
       '  }',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
-    errors: [{message: 'constructor should be placed after props'}],
+    parser: parsers.BABEL_ESLINT,
+    errors: [{
+      messageId: 'unsortedProps',
+      data: {propA: 'constructor', position: 'after', propB: 'props'}
+    }],
     options: [{
       order: [
         'type-annotations',
@@ -609,8 +780,11 @@ ruleTester.run('sort-comp', rule, {
       '  }',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
-    errors: [{message: 'state should be placed after constructor'}],
+    parser: parsers.BABEL_ESLINT,
+    errors: [{
+      messageId: 'unsortedProps',
+      data: {propA: 'state', position: 'after', propB: 'constructor'}
+    }],
     options: [{
       order: [
         'type-annotations',
@@ -631,8 +805,11 @@ ruleTester.run('sort-comp', rule, {
       '  render() {}',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
-    errors: [{message: 'componentDidMountOk should be placed after getA'}],
+    parser: parsers.BABEL_ESLINT,
+    errors: [{
+      messageId: 'unsortedProps',
+      data: {propA: 'componentDidMountOk', position: 'after', propB: 'getA'}
+    }],
     options: [{
       order: [
         'static-methods',
@@ -655,8 +832,11 @@ ruleTester.run('sort-comp', rule, {
       '  }',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
-    errors: [{message: 'constructor should be placed after getter functions'}],
+    parser: parsers.BABEL_ESLINT,
+    errors: [{
+      messageId: 'unsortedProps',
+      data: {propA: 'constructor', position: 'after getter', propB: 'functions'}
+    }],
     options: [{
       order: [
         'getters',
@@ -677,8 +857,11 @@ ruleTester.run('sort-comp', rule, {
       '  }',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
-    errors: [{message: 'constructor should be placed after setter functions'}],
+    parser: parsers.BABEL_ESLINT,
+    errors: [{
+      messageId: 'unsortedProps',
+      data: {propA: 'constructor', position: 'after setter', propB: 'functions'}
+    }],
     options: [{
       order: [
         'setters',
@@ -701,8 +884,11 @@ ruleTester.run('sort-comp', rule, {
       '  }',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
-    errors: [{message: 'foo should be placed before constructor'}],
+    parser: parsers.BABEL_ESLINT,
+    errors: [{
+      messageId: 'unsortedProps',
+      data: {propA: 'foo', position: 'before', propB: 'constructor'}
+    }],
     options: [{
       order: [
         'instance-methods',
@@ -724,8 +910,11 @@ ruleTester.run('sort-comp', rule, {
       '  }',
       '}'
     ].join('\n'),
-    parser: 'babel-eslint',
-    errors: [{message: 'foo should be placed before constructor'}],
+    parser: parsers.BABEL_ESLINT,
+    errors: [{
+      messageId: 'unsortedProps',
+      data: {propA: 'foo', position: 'before', propB: 'constructor'}
+    }],
     options: [{
       order: [
         'instance-variables',
@@ -743,7 +932,10 @@ ruleTester.run('sort-comp', rule, {
       '  render() {}',
       '}'
     ].join('\n'),
-    errors: [{message: 'setters should be placed after render'}],
+    errors: [{
+      messageId: 'unsortedProps',
+      data: {propA: 'setters', position: 'after', propB: 'render'}
+    }],
     options: [{
       order: [
         'setters',
@@ -759,11 +951,84 @@ ruleTester.run('sort-comp', rule, {
       '  foo() {}',
       '}'
     ].join('\n'),
-    errors: [{message: 'render should be placed after foo'}],
+    errors: [{
+      messageId: 'unsortedProps',
+      data: {propA: 'render', position: 'after', propB: 'foo'}
+    }],
     options: [{
       order: [
         'foo',
         'render'
+      ]
+    }]
+  }, {
+    code: `
+      class MyComponent extends React.Component {
+        static getDerivedStateFromProps() {}
+        static foo;
+
+        render() {
+          return null;
+        }
+      }
+    `,
+    errors: [{
+      messageId: 'unsortedProps',
+      data: {propA: 'getDerivedStateFromProps', position: 'after', propB: 'foo'}
+    }],
+    parser: parsers.BABEL_ESLINT,
+    options: [{
+      order: [
+        'static-variables',
+        'static-methods'
+      ]
+    }]
+  }, {
+    code: `
+      class MyComponent extends React.Component {
+        static foo;
+        bar = 'some-str'
+        static getDerivedStateFromProps() {}
+
+        render() {
+          return null;
+        }
+      }
+    `,
+    errors: [{
+      messageId: 'unsortedProps',
+      data: {propA: 'foo', position: 'after', propB: 'bar'}
+    }],
+    parser: parsers.BABEL_ESLINT,
+    options: [{
+      order: [
+        'instance-variables',
+        'static-variables',
+        'static-methods'
+      ]
+    }]
+  }, {
+    code: `
+      class MyComponent extends React.Component {
+        static getDerivedStateFromProps() {}
+        static bar;
+        render() {
+          return null;
+        }
+        foo = {};
+      }
+    `,
+    parser: parsers.BABEL_ESLINT,
+    errors: [{
+      messageId: 'unsortedProps',
+      data: {propA: 'bar', position: 'after', propB: 'render'}
+    }],
+    options: [{
+      order: [
+        'static-methods',
+        'render',
+        'static-variables',
+        'instance-variables'
       ]
     }]
   }]

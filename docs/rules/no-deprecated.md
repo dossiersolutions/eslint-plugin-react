@@ -4,7 +4,7 @@ Several methods are deprecated between React versions. This rule will warn you i
 
 ## Rule Details
 
-The following patterns are considered warnings:
+Examples of **incorrect** code for this rule:
 
 ```jsx
 React.render(<MyComponent />, root);
@@ -28,29 +28,13 @@ React.DOM.div();
 
 import React, { PropTypes } from 'react';
 
-class Foo extends React.Component {
-  componentWillMount() { }
-  componentWillReceiveProps() { }
-  componentWillUpdate() { }
-  // ...
-}
-
-class Foo extends React.PureComponent {
-  componentWillMount() { }
-  componentWillReceiveProps() { }
-  componentWillUpdate() { }
-  // ...
-}
-
-var Foo = createReactClass({
-  componentWillMount: function() {},
-  componentWillReceiveProps: function() {},
-  componentWillUpdate: function() {},
-  // ...
-})
+// old lifecycles (since React 16.9)
+componentWillMount() { }
+componentWillReceiveProps() { }
+componentWillUpdate() { }
 ```
 
-The following patterns are **not** considered warnings:
+Examples of **correct** code for this rule:
 
 ```jsx
 ReactDOM.render(<MyComponent />, root);
@@ -60,9 +44,7 @@ ReactDOM.findDOMNode(this.refs.foo);
 
 import { PropTypes } from 'prop-types';
 
-class Foo {
-  componentWillMount() { }
-  componentWillReceiveProps() { }
-  componentWillUpdate() { }
-}
+UNSAFE_componentWillMount() { }
+UNSAFE_componentWillReceiveProps() { }
+UNSAFE_componentWillUpdate() { }
 ```

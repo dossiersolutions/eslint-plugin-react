@@ -2,14 +2,17 @@
  * @fileoverview Prevent usage of setState in componentDidMount
  * @author Yannick Croissant
  */
+
 'use strict';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/no-did-mount-set-state');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/no-did-mount-set-state');
+
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -18,8 +21,6 @@ const parserOptions = {
     jsx: true
   }
 };
-
-require('babel-eslint');
 
 // ------------------------------------------------------------------------------
 // Tests
@@ -76,7 +77,7 @@ ruleTester.run('no-did-mount-set-state', rule, {
         }
       });
     `,
-    parser: 'babel-eslint'
+    parser: parsers.BABEL_ESLINT
   }],
 
   invalid: [{
@@ -90,7 +91,8 @@ ruleTester.run('no-did-mount-set-state', rule, {
       });
     `,
     errors: [{
-      message: 'Do not use setState in componentDidMount'
+      messageId: 'noSetState',
+      data: {name: 'componentDidMount'}
     }]
   }, {
     code: `
@@ -102,9 +104,25 @@ ruleTester.run('no-did-mount-set-state', rule, {
         }
       }
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: [{
-      message: 'Do not use setState in componentDidMount'
+      messageId: 'noSetState',
+      data: {name: 'componentDidMount'}
+    }]
+  }, {
+    code: `
+      class Hello extends React.Component {
+        componentDidMount = () => {
+          this.setState({
+            data: data
+          });
+        }
+      }
+    `,
+    parser: parsers.BABEL_ESLINT,
+    errors: [{
+      messageId: 'noSetState',
+      data: {name: 'componentDidMount'}
     }]
   }, {
     code: `
@@ -118,7 +136,8 @@ ruleTester.run('no-did-mount-set-state', rule, {
     `,
     options: ['disallow-in-func'],
     errors: [{
-      message: 'Do not use setState in componentDidMount'
+      messageId: 'noSetState',
+      data: {name: 'componentDidMount'}
     }]
   }, {
     code: `
@@ -130,10 +149,11 @@ ruleTester.run('no-did-mount-set-state', rule, {
         }
       }
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: ['disallow-in-func'],
     errors: [{
-      message: 'Do not use setState in componentDidMount'
+      messageId: 'noSetState',
+      data: {name: 'componentDidMount'}
     }]
   }, {
     code: `
@@ -149,7 +169,8 @@ ruleTester.run('no-did-mount-set-state', rule, {
     `,
     options: ['disallow-in-func'],
     errors: [{
-      message: 'Do not use setState in componentDidMount'
+      messageId: 'noSetState',
+      data: {name: 'componentDidMount'}
     }]
   }, {
     code: `
@@ -163,10 +184,11 @@ ruleTester.run('no-did-mount-set-state', rule, {
         }
       }
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: ['disallow-in-func'],
     errors: [{
-      message: 'Do not use setState in componentDidMount'
+      messageId: 'noSetState',
+      data: {name: 'componentDidMount'}
     }]
   }, {
     code: `
@@ -181,7 +203,8 @@ ruleTester.run('no-did-mount-set-state', rule, {
       });
     `,
     errors: [{
-      message: 'Do not use setState in componentDidMount'
+      messageId: 'noSetState',
+      data: {name: 'componentDidMount'}
     }]
   }, {
     code: `
@@ -195,9 +218,10 @@ ruleTester.run('no-did-mount-set-state', rule, {
         }
       }
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     errors: [{
-      message: 'Do not use setState in componentDidMount'
+      messageId: 'noSetState',
+      data: {name: 'componentDidMount'}
     }]
   }, {
     code: `
@@ -207,10 +231,11 @@ ruleTester.run('no-did-mount-set-state', rule, {
         }
       });
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: ['disallow-in-func'],
     errors: [{
-      message: 'Do not use setState in componentDidMount'
+      messageId: 'noSetState',
+      data: {name: 'componentDidMount'}
     }]
   }, {
     code: `
@@ -220,10 +245,11 @@ ruleTester.run('no-did-mount-set-state', rule, {
         }
       }
     `,
-    parser: 'babel-eslint',
+    parser: parsers.BABEL_ESLINT,
     options: ['disallow-in-func'],
     errors: [{
-      message: 'Do not use setState in componentDidMount'
+      messageId: 'noSetState',
+      data: {name: 'componentDidMount'}
     }]
   }]
 });

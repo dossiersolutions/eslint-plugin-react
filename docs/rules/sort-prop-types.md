@@ -1,15 +1,12 @@
 # Enforce propTypes declarations alphabetical sorting (react/sort-prop-types)
 
-Some developers prefer to sort propTypes declarations alphabetically to be able to find necessary declaration easier at the later time. Others feel that it adds complexity and becomes burden to maintain.
-
-**Fixable:** This rule is automatically fixable using the `--fix` flag on the command line.
-
+Some developers prefer to sort prop type declaratioms alphabetically to be able to find necessary declaration easier at the later time. Others feel that it adds complexity and becomes burden to maintain.
 
 ## Rule Details
 
 This rule checks all components and verifies that all propTypes declarations are sorted alphabetically. A spread attribute resets the verification. The default configuration of the rule is case-sensitive.
 
-The following patterns are considered warnings:
+Examples of **incorrect** code for this rule:
 
 ```jsx
 var Component = createReactClass({
@@ -20,16 +17,18 @@ var Component = createReactClass({
   },
 ...
 });
-
-class Component extends React.Component {
+```
+```jsx
+type Props = {
+  z: number,
+  a: any,
+  b: string
+}
+class Component extends React.Component<Props> {
   ...
 }
-Component.propTypes = {
-  z: PropTypes.number,
-  a: PropTypes.any,
-  b: PropTypes.string
-};
-
+```
+```jsx
 class Component extends React.Component {
   static propTypes = {
     z: PropTypes.any,
@@ -42,7 +41,7 @@ class Component extends React.Component {
 }
 ```
 
-The following patterns are considered okay and do **not** cause warnings:
+Examples of **correct** code for this rule:
 
 ```jsx
 var Component = createReactClass({
@@ -53,16 +52,18 @@ var Component = createReactClass({
   },
 ...
 });
-
-class Component extends React.Component {
+```
+```jsx
+type Props = {
+  a: string,
+  b: any,
+  c: string,
+}
+class Component extends React.Component<Props> {
   ...
 }
-Component.propTypes = {
-  a: PropTypes.string,
-  b: PropTypes.any,
-  c: PropTypes.string
-};
-
+```
+```jsx
 class Component extends React.Component {
   static propTypes = {
     a: PropTypes.any,
@@ -83,7 +84,8 @@ class Component extends React.Component {
   "callbacksLast": <boolean>,
   "ignoreCase": <boolean>,
   "requiredFirst": <boolean>,
-  "sortShapeProp": <boolean>
+  "sortShapeProp": <boolean>,
+  "noSortAlphabetically": <boolean>
 }]
 ...
 ```
@@ -138,6 +140,20 @@ var Component = createReactClass({
       f: PropTypes.bool,
     }),
     c: PropTypes.string,
+  },
+...
+});
+```
+### `noSortAlphabetically`
+
+When `true`, alphabetical order is not enforced:
+
+```js
+var Component = createReactClass({
+  propTypes: {
+    barRequired: PropTypes.any.isRequired,
+    z: PropTypes.string,
+    a: PropTypes.number,
   },
 ...
 });

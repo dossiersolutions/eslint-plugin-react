@@ -9,8 +9,10 @@
 // Requirements
 // -----------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/void-dom-elements-no-children');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/void-dom-elements-no-children');
+
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -19,10 +21,6 @@ const parserOptions = {
     jsx: true
   }
 };
-
-function errorMessage(elementName) {
-  return `Void DOM element <${elementName} /> cannot receive children.`;
-}
 
 // -----------------------------------------------------------------------------
 // Tests
@@ -90,55 +88,85 @@ ruleTester.run('void-dom-elements-no-children', rule, {
   invalid: [
     {
       code: '<br>Foo</br>;',
-      errors: [{message: errorMessage('br')}]
+      errors: [{
+        messageId: 'noChildrenInVoidEl',
+        data: {element: 'br'}
+      }]
     },
     {
       code: '<br children="Foo" />;',
-      errors: [{message: errorMessage('br')}]
+      errors: [{
+        messageId: 'noChildrenInVoidEl',
+        data: {element: 'br'}
+      }]
     },
     {
       code: '<img {...props} children="Foo" />;',
-      errors: [{message: errorMessage('img')}]
+      errors: [{
+        messageId: 'noChildrenInVoidEl',
+        data: {element: 'img'}
+      }]
     },
     {
       code: '<br dangerouslySetInnerHTML={{ __html: "Foo" }} />;',
-      errors: [{message: errorMessage('br')}]
+      errors: [{
+        messageId: 'noChildrenInVoidEl',
+        data: {element: 'br'}
+      }]
     },
     {
       code: 'React.createElement("br", {}, "Foo");',
-      errors: [{message: errorMessage('br')}]
+      errors: [{
+        messageId: 'noChildrenInVoidEl',
+        data: {element: 'br'}
+      }]
     },
     {
       code: 'React.createElement("br", { children: "Foo" });',
-      errors: [{message: errorMessage('br')}]
+      errors: [{
+        messageId: 'noChildrenInVoidEl',
+        data: {element: 'br'}
+      }]
     },
     {
       code: 'React.createElement("br", { dangerouslySetInnerHTML: { __html: "Foo" } });',
-      errors: [{message: errorMessage('br')}]
+      errors: [{
+        messageId: 'noChildrenInVoidEl',
+        data: {element: 'br'}
+      }]
     },
     {
       code: `
         import React, {createElement} from "react";
         createElement("img", {}, "Foo");
       `,
-      errors: [{message: errorMessage('img')}],
-      parser: 'babel-eslint'
+      errors: [{
+        messageId: 'noChildrenInVoidEl',
+        data: {element: 'img'}
+      }],
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: `
         import React, {createElement} from "react";
         createElement("img", { children: "Foo" });
       `,
-      errors: [{message: errorMessage('img')}],
-      parser: 'babel-eslint'
+      errors: [{
+        messageId: 'noChildrenInVoidEl',
+        data: {element: 'img'}
+      }],
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: `
         import React, {createElement} from "react";
         createElement("img", { dangerouslySetInnerHTML: { __html: "Foo" } });
       `,
-      errors: [{message: errorMessage('img')}],
-      parser: 'babel-eslint'
+      errors: [{
+        messageId: 'noChildrenInVoidEl',
+        data: {element: 'img'}
+      }],
+      parser: parsers.BABEL_ESLINT
     }
   ]
 });

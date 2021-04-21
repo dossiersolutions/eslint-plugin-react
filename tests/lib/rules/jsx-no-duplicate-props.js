@@ -9,8 +9,8 @@
 // Requirements
 // -----------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/jsx-no-duplicate-props');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/jsx-no-duplicate-props');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -27,7 +27,7 @@ const parserOptions = {
 const ruleTester = new RuleTester({parserOptions});
 
 const expectedError = {
-  message: 'No duplicate props allowed',
+  messageId: 'noDuplicateProps',
   type: 'JSXAttribute'
 };
 
